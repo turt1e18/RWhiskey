@@ -1,11 +1,8 @@
-// components/RWhiskey.tsx
-import React from "react";
-
-const RWhiskey: React.FC = () => {
+const RWhiskey = () => {
   return (
     <div className="flex justify-center items-center h-fit">
       <svg
-        viewBox="0 0 800 400"
+        viewBox="0 0 800 450"
         className="w-full max-w-4xl"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -25,7 +22,7 @@ const RWhiskey: React.FC = () => {
               textAnchor="middle"
               dominantBaseline="middle"
               fontFamily="sans-serif"
-              fontSize="148"
+              fontSize="173"
               fontWeight="bold"
               fill="white"
             >
