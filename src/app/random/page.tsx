@@ -1,6 +1,7 @@
 "use client";
 import { randomTestImage } from "@/api/unsplash";
 import { Whiskey } from "@/type/RandomInterface";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function MainScreen() {
@@ -14,10 +15,19 @@ export default function MainScreen() {
   const [isImageLoad, setIsImageLoad] = useState<boolean>(false);
   // 랜덤으로 불러온 위스키 정보
   const [whiskey, setWhiskey] = useState<Whiskey | null>(null);
+  const router = useRouter();
 
   /**
    * 이미지 검색 후 이미지 url 불러오기
    */
+
+  const routing = (index: number) => {
+    if (index === 0) router.push("/main");
+    else if (index === 1) router.refresh();
+    else if (index === 2) router.push("/mood");
+    else router.push("/cocktail");
+  };
+
   const searchWhiskey = async () => {
     setLoading(true);
     setIsClicked(true);
@@ -76,6 +86,9 @@ export default function MainScreen() {
                 className="p-4 bg-black/20 text-white rounded-xl ring-1 ring-white/20 shadow-lg shadow-white/20 
                         hover:ring-4 hover:bg-white/20 hover:ring-white/30 hover:shadow-white/30 
                         transition duration-200 ease-in-out"
+                onClick={() => {
+                  routing(index);
+                }}
               >
                 {icon}
               </button>
