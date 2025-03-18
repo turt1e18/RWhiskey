@@ -1,4 +1,5 @@
 "use client";
+import { customSearchApi } from "@/api/google";
 import { randomTestImage } from "@/api/unsplash";
 import { Whiskey } from "@/type/RandomInterface";
 import { useRouter } from "next/navigation";
@@ -62,8 +63,7 @@ export default function MainScreen() {
       const selectedWhiskey = filteredWhiskeys[randomIndex];
       setWhiskey(selectedWhiskey);
       console.log(selectedWhiskey); // 선택된 whiskey 출력
-
-      const res = await randomTestImage(whiskey?.name);
+      const res = await customSearchApi(selectedWhiskey?.name);
       setImage(res);
     } catch (err) {
       console.error("err : ", err);

@@ -1,5 +1,4 @@
 import axios from "axios";
-import { NextApiRequest, NextApiResponse } from "next";
 
 const ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
 
