@@ -74,7 +74,7 @@ export default function MainScreen() {
   };
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-[#000000]/60">
+    <div className="flex flex-col w-screen h-screen bg-[#868e96]/30">
       {/* 상단 영역 */}
       <div className="flex flex-col justify-center items-center h-1/6">
         {/* 상단 아이콘 */}

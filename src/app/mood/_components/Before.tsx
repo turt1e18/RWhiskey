@@ -1,5 +1,6 @@
 "use client";
 
+import { jemini } from "@/api/google";
 import { useState } from "react";
 
 /**
@@ -9,6 +10,10 @@ import { useState } from "react";
  */
 export default function BeforeScreen(props: any) {
   const { setSwitchState, userInput, setUserInput } = props;
+
+  async function callJemini() {
+    await jemini();
+  }
 
   const recommendation = {
     whiskey: "글렌피딕 12년",
@@ -45,7 +50,12 @@ export default function BeforeScreen(props: any) {
         />
       </div>
 
-      <button className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors">
+      <button
+        className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors"
+        onClick={() => {
+          callJemini();
+        }}
+      >
         위스키 추천 받으러 가기
       </button>
     </div>

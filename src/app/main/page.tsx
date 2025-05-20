@@ -4,7 +4,7 @@ import MainRouterButton from "./_components/MainRouterButton";
 
 export default function MainScreen() {
   return (
-    <div className="flex flex-col overflow-auto bg-[#000000]/60 bg-cover w-screen h-screen justify-center items-center">
+    <div className="flex flex-col overflow-auto bg-[#868e96]/30 bg-cover w-screen h-screen justify-center items-center">
       <div className="flex flex-col basis-48 justify-center items-center">
         <RWhiskeyLogo />
       </div>

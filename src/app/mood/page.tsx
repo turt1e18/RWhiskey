@@ -32,13 +32,13 @@ export default function MoodScreen() {
 
   const routing = (index: number) => {
     if (index === 0) router.push("/main");
-    else if (index === 1) router.refresh();
+    else if (index === 1) router.push("/random");
     else if (index === 2) router.push("/mood");
     else router.push("/cocktail");
   };
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-[#000000]/60">
+    <div className="flex flex-col w-screen h-screen  bg-[#868e96]/30">
       {/* 상단 영역 */}
       <div className="flex flex-col justify-center items-center h-1/6">
         {/* 상단 아이콘 */}
