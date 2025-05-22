@@ -1,6 +1,6 @@
 "use client";
 
-import { jemini } from "@/api/google";
+import { gemini } from "@/api/google";
 import { useState } from "react";
 
 /**
@@ -11,8 +11,8 @@ import { useState } from "react";
 export default function BeforeScreen(props: any) {
   const { setSwitchState, userInput, setUserInput } = props;
 
-  async function callJemini() {
-    await jemini();
+  async function callGemini(data: string) {
+    await gemini(data);
   }
 
   const recommendation = {
@@ -53,7 +53,7 @@ export default function BeforeScreen(props: any) {
       <button
         className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors"
         onClick={() => {
-          callJemini();
+          callGemini(userInput);
         }}
       >
         위스키 추천 받으러 가기
