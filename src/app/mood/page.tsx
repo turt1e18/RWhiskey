@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BeforeScreen from "./_components/Before";
 import AfterScreen from "./_components/After";
 import { useRouter } from "next/navigation";
+import { MoodWhiskyDataInterface } from "@/type/MoodDataInterface";
 
 export default function MoodScreen() {
   /**
@@ -12,6 +14,11 @@ export default function MoodScreen() {
    */
   const [screenState, serScreenState] = useState(0);
   const [userInput, setUserInput] = useState("");
+  const [resultData, setResultData] = useState<MoodWhiskyDataInterface>({
+    whiskyName: "",
+    foodName: "",
+    pairingNote: ""
+  });
   const router = useRouter();
   const switchScreen = () => {
     switch (screenState) {
@@ -21,10 +28,18 @@ export default function MoodScreen() {
             setSwitchState={serScreenState}
             userInput={userInput}
             setUserInput={setUserInput}
+            setResultData={setResultData}
           />
         );
       case 1:
-        return <AfterScreen setSwitchState={serScreenState} />;
+        return (
+          <AfterScreen
+            setSwitchState={serScreenState}
+            resultData={resultData}
+            setResultData={setResultData}
+            setUserInput={setUserInput}
+          />
+        );
       default:
         break;
     }
@@ -36,6 +51,11 @@ export default function MoodScreen() {
     else if (index === 2) router.push("/mood");
     else router.push("/cocktail");
   };
+
+  useEffect(() => {
+    console.log("상위", resultData);
+    return () => {};
+  }, [resultData]);
 
   return (
     <div className="flex flex-col w-screen h-screen  bg-[#868e96]/30">

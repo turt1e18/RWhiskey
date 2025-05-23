@@ -1,9 +1,10 @@
 "use client";
 import { customSearchApi } from "@/api/google";
-import { randomTestImage } from "@/api/unsplash";
+// import { randomTestImage } from "@/api/unsplash";
 import { Whiskey } from "@/type/RandomInterface";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function MainScreen() {
   // 기능을 클릭했는가?
@@ -74,7 +75,7 @@ export default function MainScreen() {
   };
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-[#868e96]/30">
+    <div className="flex flex-col min-h-screen bg-[#868e96]/30 py-8">
       {/* 상단 영역 */}
       <div className="flex flex-col justify-center items-center h-1/6">
         {/* 상단 아이콘 */}
@@ -111,7 +112,7 @@ export default function MainScreen() {
 
       {/* 하단 영역 */}
       <div
-        className={`${isClicked ? "flex" : "hidden"} justify-center items-start h-5/6 transition-all duration-300 `}
+        className={`${isClicked ? "flex" : "hidden"} justify-center items-start h-5/6 transition-all duration-300 mt-5`}
       >
         {/* 위스키 정보 영역 */}
         <div className="bg-black/40 px-6 py-12 rounded-2xl shadow-lg text-white w-[90%] max-w-[650px] text-center">
@@ -128,24 +129,29 @@ export default function MainScreen() {
                   <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
-
               {/* 검색된 위스키 이미지 */}
-              <img
-                src={image || "https://placehold.co/600x650"}
-                alt="Image is MIA"
-                className={`w-[600px] h-[650px] object-cover rounded-lg mb-4 transition-opacity duration-500 ${
-                  isImageLoad ? "opacity-100" : "opacity-0"
-                }`}
-                onLoad={() => setIsImageLoad(true)} // 이미지 로드 완료 시 상태 변경
-              />
-
-              {/* 랜덤으로 불러온 위스키 정보 */}
-              <h2 className="text-xl font-bold">{whiskey?.name}</h2>
-              <p className="text-sm text-gray-400">
-                {whiskey?.category} &nbsp;&nbsp; {whiskey?.currency}
-                {whiskey?.price} &nbsp;&nbsp; {whiskey?.rating}/100
-              </p>
-              <p className="text-sm mt-2">{whiskey?.description}</p>
+              <div className="relative w-full aspect-[600/650] max-w-full mx-auto">
+                <Image
+                  src={image || "https://placehold.co/600x650"}
+                  alt="Image is MIA"
+                  fill={true}
+                  unoptimized
+                  className={`rounded-lg mb-4 transition-opacity duration-500 ${
+                    isImageLoad ? "opacity-100" : "opacity-0"
+                  }`}
+                  onLoad={() => setIsImageLoad(true)}
+                  style={{ objectFit: "cover" }}
+                />
+              </div>
+              <div className="pt-5">
+                {/* 랜덤으로 불러온 위스키 정보 */}
+                <h2 className="text-xl font-bold">{whiskey?.name}</h2>
+                <p className="text-sm text-gray-400">
+                  {whiskey?.category} &nbsp;&nbsp; {whiskey?.currency}
+                  {whiskey?.price} &nbsp;&nbsp; {whiskey?.rating}/100
+                </p>
+                <p className="text-sm mt-2">{whiskey?.description}</p>
+              </div>
             </>
           )}
         </div>

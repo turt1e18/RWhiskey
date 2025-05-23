@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { gemini } from "@/api/google";
@@ -9,10 +12,19 @@ import { useState } from "react";
  * @returns
  */
 export default function BeforeScreen(props: any) {
-  const { setSwitchState, userInput, setUserInput } = props;
+  const { setSwitchState, userInput, setUserInput, setResultData } = props;
 
   async function callGemini(data: string) {
-    await gemini(data);
+    await gemini(data)
+      .then((res) => {
+        console.log(res);
+        if (res != undefined) {
+          setResultData(res);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   const recommendation = {
@@ -54,6 +66,7 @@ export default function BeforeScreen(props: any) {
         className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors"
         onClick={() => {
           callGemini(userInput);
+          setSwitchState(1);
         }}
       >
         위스키 추천 받으러 가기

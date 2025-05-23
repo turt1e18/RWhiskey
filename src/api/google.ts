@@ -56,7 +56,7 @@ export async function gemini(data: string) {
   Recommend one whisky and one food pairing.
   The whisky must be under 150,000 KRW.
   Consider the user's mood and current weather for the recommendations.
-  Only include 'whisky_name', 'food_name', and 'pairing_note'.
+  Only include 'whiskyName', 'foodName', and 'pairingNote'.
   The 'pairing_note' should briefly describe the recommended whisky (1 reason for recommendation) and the food pairing (1 reason for recommendation), explaining why they go well together. Do NOT include price information in the 'pairing_note'.
   reason : ${data}
   `;
@@ -73,5 +73,6 @@ export async function gemini(data: string) {
     resultText = resultText?.trim(); // 이상한 공백 제거
     resultText = JSON.parse(resultText);
   }
-  console.log(resultText);
+  console.log("안쪽 : ", resultText);
+  return resultText;
 }
