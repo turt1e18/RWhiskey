@@ -58,7 +58,7 @@ export default function MoodScreen() {
   }, [resultData]);
 
   return (
-    <div className="flex flex-col w-screen h-screen  bg-[#868e96]/30">
+    <div className="flex flex-col min-h-screen bg-[#868e96]/30 py-8">
       {/* 상단 영역 */}
       <div className="flex flex-col justify-center items-center h-1/6">
         {/* 상단 아이콘 */}

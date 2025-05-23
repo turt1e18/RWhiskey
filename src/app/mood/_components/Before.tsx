@@ -65,8 +65,12 @@ export default function BeforeScreen(props: any) {
       <button
         className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors"
         onClick={() => {
-          callGemini(userInput);
-          setSwitchState(1);
+          if (userInput.length != 0) {
+            callGemini(userInput);
+            setSwitchState(1);
+          } else {
+            alert("내용을 입력해주세요.");
+          }
         }}
       >
         위스키 추천 받으러 가기
