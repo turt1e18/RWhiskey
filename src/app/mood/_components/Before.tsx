@@ -35,7 +35,7 @@ export default function BeforeScreen(props: any) {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-screen h-screen">
+    <div className="flex flex-col justify-center items-center w-screen h-5/6 mt-20">
       <div className="flex flex-col gap-6 mb-8 text-white w-[600px]">
         <p className="text-lg font-bold">위스키 추천 예시</p>
         <p className="text-sm text-gray-400 bg-black/40 p-4 rounded-lg">

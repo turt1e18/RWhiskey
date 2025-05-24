@@ -49,21 +49,32 @@ export async function customSearchApi(name?: string) {
 export async function gemini(data: string) {
   const ai = new GoogleGenAI({ apiKey: ACCESS_KEY3 });
 
-  const promptText = `
-  You are a whisky and food pairing expert and bartender.
-  Provide your single recommendation in JSON format.
-  All values in the JSON output must be in Korean.
-  Recommend one whisky and one food pairing.
-  The whisky must be under 150,000 KRW.
-  Consider the user's mood and current weather for the recommendations.
-  Only include 'whiskyName', 'foodName', and 'pairingNote'.
-  The 'pairing_note' should briefly describe the recommended whisky (1 reason for recommendation) and the food pairing (1 reason for recommendation), explaining why they go well together. Do NOT include price information in the 'pairing_note'.
+  // const promptText = `
+  // You are a whisky and food pairing expert and bartender.
+  // Provide your single recommendation in JSON format.
+  // All values in the JSON output must be in Korean.
+  // Recommend one whisky and one food pairing.
+  // The whisky must be under 150,000 KRW.
+  // Consider the user's mood and current weather for the recommendations.
+  // Only include 'whiskyName', 'foodName', and 'pairingNote'.
+  // The 'pairing_note' should briefly describe the recommended whisky (1 reason for recommendation) and the food pairing (1 reason for recommendation), explaining why they go well together. Do NOT include price information in the 'pairing_note'.
+  // reason : ${data}
+  // `;
+
+  const promptTextV2 = `
+  You are a whisky & food pairing expert for single-person households (자취생).
+  Provide a single JSON recommendation. All values must be in Korean.
+  Recommend one whisky (<150,000 KRW) and one food pairing.
+  Food must be simple, easily prepared/acquired (e.g., convenience store, pantry, no-cook).
+  Consider user's mood and current weather.
+  Include: 'whiskyName', 'foodName', 'pairingNote'.
+  'pairingNote' must be ~2 sentences, explaining 1 whisky reason, 1 food reason, and their pairing synergy. No price.
   reason : ${data}
   `;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
-    contents: promptText
+    contents: promptTextV2
   });
   let resultText = response.text?.toString();
   if (resultText != undefined) {

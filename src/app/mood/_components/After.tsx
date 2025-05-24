@@ -50,43 +50,66 @@ export default function AfterScreen(props: any) {
   }, [resultData?.whiskyName]);
 
   return (
-    <div className="min-h-fit flex items-center justify-center my-12">
+    <div className="min-h-fit flex flex-col items-center justify-center my-12">
+      <div className="w-[90%] max-w-[650px] mb-4">
+        <button
+          className="top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 
+                   bg-black/30 text-white rounded-lg ring-1 ring-white/20 
+                   shadow shadow-white/20 hover:bg-white/20 hover:ring-2 
+                   hover:shadow-white/30 transition"
+          onClick={() => setSwitchState(0)}
+        >
+          ← 뒤로가기
+        </button>
+      </div>
       <div className="bg-black/40 px-6 py-12 rounded-2xl shadow-lg text-white w-[90%] max-w-[650px] text-center">
         {loading ? (
-          // 로딩 동글이
           <div className="flex justify-center items-center w-[400px] h-[450px]">
             <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <>
-            {/* 이미지 불러올 때 까지 동글이 유지 */}
             {!isImageLoad && image && (
               <div className="flex justify-center items-center w-[400px] h-[450px]">
                 <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
-            {/* 검색된 위스키 이미지 */}
-            <div className="relative w-[400px] h-[450px] mx-auto">
-              <Image
-                src={image || "https://placehold.co/600x650"}
-                alt="Image is MIA"
-                fill={true}
-                unoptimized
-                className={`rounded-lg mb-4 transition-opacity duration-500 ${
-                  isImageLoad ? "opacity-100" : "opacity-0"
-                }`}
-                onLoad={() => setIsImageLoad(true)}
-                style={{ objectFit: "cover" }}
-              />
-              kak
-            </div>
-            {isImageLoad && (
-              <div className="pt-5 animate-fadeIn">
-                <h2 className="text-xl font-bold">{resultData?.whiskyName}</h2>
-                <p className="text-sm text-gray-400">{resultData?.foodName}</p>
-                <p className="text-sm mt-2">{resultData?.pairingNote}</p>
+            <div className="flex flex-col items-center gap-8">
+              <div className="relative w-[300px] h-[400px]">
+                <Image
+                  src={image || "https://placehold.co/600x650"}
+                  alt="Whisky"
+                  fill={true}
+                  className={`rounded-lg transition-opacity duration-500 ${
+                    isImageLoad ? "opacity-100" : "opacity-0"
+                  }`}
+                  unoptimized
+                  onLoad={() => setIsImageLoad(true)}
+                  style={{ objectFit: "cover" }}
+                />
               </div>
-            )}
+
+              {isImageLoad && (
+                <div className="bg-black/60 rounded-xl p-6 w-full text-white space-y-6 text-left">
+                  <div>
+                    <p className="text-sm text-gray-400">🥃 위스키</p>
+                    <p className="text-lg font-bold">
+                      {resultData?.whiskyName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">🍽️ 안주</p>
+                    <p className="text-lg font-bold">{resultData?.foodName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">💡 추천 이유</p>
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      {resultData?.pairingNote}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

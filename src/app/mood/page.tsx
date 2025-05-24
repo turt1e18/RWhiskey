@@ -52,13 +52,19 @@ export default function MoodScreen() {
     else router.push("/cocktail");
   };
 
+  // 뒤로가기 리셋 이벤트
   useEffect(() => {
-    console.log("상위", resultData);
+    if (screenState == 0) {
+      setUserInput("");
+      setResultData({ whiskyName: "", foodName: "", pairingNote: "" });
+    } else {
+      return;
+    }
     return () => {};
-  }, [resultData]);
+  }, [screenState]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#868e96]/30 py-8">
+    <div className="flex flex-col min-h-screen bg-[#868e96]/30 py-8 overflow-x-hidden">
       {/* 상단 영역 */}
       <div className="flex flex-col justify-center items-center h-1/6">
         {/* 상단 아이콘 */}
