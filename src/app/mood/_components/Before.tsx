@@ -15,7 +15,7 @@ export default function BeforeScreen(props: any) {
   const { setSwitchState, userInput, setUserInput, setResultData } = props;
 
   async function callGemini(data: string) {
-    await gemini(data)
+    await gemini(data, 0)
       .then((res) => {
         console.log(res);
         if (res != undefined) {
@@ -55,7 +55,7 @@ export default function BeforeScreen(props: any) {
           </p>
         </div>
         <textarea
-          className="mt-4 p-4 bg-black/30 rounded-lg text-white/70 w-full h-[200px]"
+          className="mt-4 p-4 bg-black/30 rounded-lg text-white/70 w-full h-[200px] resize-none"
           placeholder="오늘의 날씨, 기분, 시간대를 자유롭게 입력하세요..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}

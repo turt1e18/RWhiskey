@@ -46,7 +46,7 @@ export async function customSearchApi(name?: string) {
  * @param data 사용자가 입력한 기분과 날씨
  * @returns 프롬프트 생성 데이터
  */
-export async function gemini(data: string) {
+export async function gemini(data: string, type: number) {
   const ai = new GoogleGenAI({ apiKey: ACCESS_KEY3 });
 
   // const promptText = `
@@ -61,7 +61,20 @@ export async function gemini(data: string) {
   // reason : ${data}
   // `;
 
-  const promptTextV2 = `
+  const promptTextV1Cock = `
+  You're a cocktail & food pairing expert/bartender.
+  Provide a single JSON recommendation, all values in Korean.
+  Recommend 1 cocktail & 1 food pairing.
+  Food must be simple, easily prepared/acquired (e.g., convenience store, pantry, no-cook).
+  Consider user's mood & current weather.
+  Include: 'cocktailName', 'checkList', 'method', 'foodName', 'pairingNote'.
+  'checkList': List ingredients/approx. quantities using common cups (mug, paper, water glass).
+  'method': Array of strings, step-by-step prep. No leading numbers/bullets. Reference cup sizes.
+  'pairingNote': Exactly 2 sentences. Explain 1 cocktail reason, 1 food reason, and their synergy.
+  reason: ${data}
+  `;
+
+  const promptTextV2Whisky = `
   You are a whisky & food pairing expert for single-person households (자취생).
   Provide a single JSON recommendation. All values must be in Korean.
   Recommend one whisky (<150,000 KRW) and one food pairing.
@@ -74,7 +87,7 @@ export async function gemini(data: string) {
 
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
-    contents: promptTextV2
+    contents: type == 1 ? promptTextV1Cock : promptTextV2Whisky
   });
   let resultText = response.text?.toString();
   if (resultText != undefined) {

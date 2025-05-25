@@ -13,7 +13,7 @@ export default function AfterScreen(props: any) {
   const { setSwitchState, resultData, setResultData, setUserInput } = props;
 
   // 기능을 클릭했는가?
-  const [isClicked, setIsClicked] = useState<boolean>(false);
+  // const [isClicked, setIsClicked] = useState<boolean>(false);
   // 이미지 url
   const [image, setImage] = useState<string | null>(null);
   // 로딩 중인가?
@@ -28,7 +28,7 @@ export default function AfterScreen(props: any) {
 
   const searchWhiskey = async () => {
     setLoading(true);
-    setIsClicked(true);
+    // setIsClicked(true);
     setIsImageLoad(false);
 
     try {
