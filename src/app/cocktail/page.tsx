@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CocktailDataInterface } from "@/type/CocktailDataInterface";
 import BeforeScreen from "./_components/Before";
+import AfterScreen from "./_components/After";
 
 export default function CocktailScreen() {
   /**
    * 0 데이터 세팅 화면
    * 1 데이터 결과 화면
    */
-  const [screenState, serScreenState] = useState(0);
+  const [screenState, setScreenState] = useState(0);
   const [userInput, setUserInput] = useState("");
   const [resultData, setResultData] = useState<CocktailDataInterface>({
     checkList: [""],
@@ -36,13 +37,18 @@ export default function CocktailScreen() {
             userInput={userInput}
             setUserInput={setUserInput}
             setResultData={setResultData}
+            setSwitchState={setScreenState}
           />
         );
       case 1:
         return (
-          <>
-            <></>
-          </>
+          <AfterScreen
+            setSwitchState={setScreenState}
+            userInput={userInput}
+            setUserInput={setUserInput}
+            setResultData={setResultData}
+            resultData={resultData}
+          />
         );
       default:
         break;
@@ -65,6 +71,11 @@ export default function CocktailScreen() {
     }
     return () => {};
   }, [screenState]);
+
+  useEffect(() => {
+    console.log("데이터 들어옴! : ", resultData);
+    return () => {};
+  }, [resultData]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#868e96]/30 py-8 overflow-x-hidden">

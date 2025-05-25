@@ -1,7 +1,7 @@
 import { gemini } from "@/api/google";
 
 export default function BeforeScreen(props: any) {
-  const { userInput, setUserInput, setResultData } = props;
+  const { userInput, setUserInput, setResultData, setSwitchState } = props;
 
   const recommendation = {
     cocktailName: "진토닉",
@@ -25,13 +25,15 @@ export default function BeforeScreen(props: any) {
   async function callGemini(data: string) {
     await gemini(data, 1)
       .then((res) => {
-        console.log(res);
         if (res != undefined) {
           setResultData(res);
         }
       })
       .catch((err) => {
         console.log(err);
+      })
+      .finally(() => {
+        setSwitchState(1);
       });
   }
 
@@ -93,7 +95,6 @@ export default function BeforeScreen(props: any) {
         onClick={() => {
           if (userInput.length != 0) {
             callGemini(userInput);
-            // setSwitchState(1);
           } else {
             alert("내용을 입력해주세요.");
           }
