@@ -10,7 +10,7 @@ const ACCESS_KEY3 = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
  * @param name 서칭 기준 데이터
  * @returns 이미지 url
  */
-export async function customSearchApi(name?: string) {
+export async function customSearchApi(name?: string, type?: number) {
   if (!ACCESS_KEY) {
     console.log({
       err: "API key is MIA"
@@ -18,19 +18,35 @@ export async function customSearchApi(name?: string) {
   }
 
   try {
-    console.log(name);
     const result = await axios
       .get("https://customsearch.googleapis.com/customsearch/v1", {
         params: {
           q: name,
           searchType: "image",
-          num: 1,
+          num: type === 1 ? 3 : 1,
           key: ACCESS_KEY,
           cx: ACCESS_KEY2
         }
       })
-      .then((res) => {
-        return res.data.items[0].link;
+      .then(async (res) => {
+        console.log(res);
+        if (type === 1) {
+          return res.data.items
+            .map((item: any) => item.image?.thumbnailLink)
+            .filter(
+              (link: string | undefined) =>
+                typeof link === "string" && link.startsWith("http")
+            );
+        } else {
+          if (res.data.items && res.data.items.length > 0) {
+            console.log(res.data.items[0].link);
+            return res.data.items[0].link;
+          } else {
+            console.log(res.data);
+            console.warn("We can't Find Image", name);
+            return null;
+          }
+        }
       })
       .catch((err) => {
         console.log(err);
@@ -97,6 +113,5 @@ export async function gemini(data: string, type: number) {
     resultText = resultText?.trim(); // 이상한 공백 제거
     resultText = JSON.parse(resultText);
   }
-  console.log("안쪽 : ", resultText);
   return resultText;
 }

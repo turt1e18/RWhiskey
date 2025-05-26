@@ -72,11 +72,6 @@ export default function CocktailScreen() {
     return () => {};
   }, [screenState]);
 
-  useEffect(() => {
-    console.log("데이터 들어옴! : ", resultData);
-    return () => {};
-  }, [resultData]);
-
   return (
     <div className="flex flex-col min-h-screen bg-[#868e96]/30 py-8 overflow-x-hidden">
       {/* 상단 영역 */}

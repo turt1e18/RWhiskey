@@ -17,7 +17,6 @@ export default function BeforeScreen(props: any) {
   async function callGemini(data: string) {
     await gemini(data, 0)
       .then((res) => {
-        console.log(res);
         if (res != undefined) {
           setResultData(res);
         }
