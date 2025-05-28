@@ -42,7 +42,7 @@ export default function BeforeScreen(props: any) {
       <div className="flex flex-col gap-6 text-white w-[600px]">
         <p className="text-lg font-bold">칵테일 추천 예시</p>
         <p className="text-sm text-gray-400 bg-black/40 p-4 rounded-lg">
-          "오늘은 조금 나른하고 피곤한데 심지어 날씨는 흐려."
+          &quot;오늘은 조금 나른하고 피곤한데 심지어 날씨는 흐려.&quot;
         </p>
         <div className=" p-6 bg-black/40 rounded-lg text-white/70 w-[600px] space-y-4">
           <p className="text-lg font-bold text-white">추천 결과</p>

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function AfterScreen(props: any) {
-  const { setSwitchState, resultData, setResultData, setUserInput } = props;
+  const { setSwitchState, resultData } = props;
   // 이미지 url
   const [image, setImage] = useState<string[]>([]);
   const [imageIndex, setImageIndex] = useState(0);
