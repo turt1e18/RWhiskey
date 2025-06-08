@@ -58,6 +58,7 @@ export default function BeforeScreen(props: any) {
           placeholder="오늘의 날씨, 기분, 시간대를 자유롭게 입력하세요..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
+          maxLength={80}
         />
       </div>
       <div className="mt-2 px-4 py-3 bg-yellow-100/10 border border-yellow-500/30 text-yellow-300 text-sm rounded-md w-[600px]">
