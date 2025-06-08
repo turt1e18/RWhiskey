@@ -64,6 +64,9 @@ export async function customSearchApi(name?: string, type?: number) {
  */
 export async function gemini(data: string, type: number) {
   const ai = new GoogleGenAI({ apiKey: ACCESS_KEY3 });
+  // 의미없는 데이터 {'ㅋㅋ'} 와 같은 초성 전처리
+  const preClearingData = data.replace(/[하핳ㅎㅋㅏ-ㅣ가-힣]+/g, "").trim();
+  const finalData = preClearingData || "아무 기분이 들지 않으며 평범한 날씨";
 
   // const promptText = `
   // You are a whisky and food pairing expert and bartender.
@@ -87,23 +90,25 @@ export async function gemini(data: string, type: number) {
   'checkList': List ingredients/approx. quantities using common cups (mug, paper, water glass).
   'method': Array of strings, step-by-step prep. No leading numbers/bullets. Reference cup sizes.
   'pairingNote': Exactly 2 sentences. Explain 1 cocktail reason, 1 food reason, and their synergy.
-  reason: ${data}
+  reason: ${finalData}
   `;
 
-  const promptTextV2Whisky = `
-  You are a whisky & food pairing expert for single-person households (자취생).
-  Provide a single JSON recommendation. All values must be in Korean.
-  Recommend one whisky (<150,000 KRW) and one food pairing.
-  Food must be simple, easily prepared/acquired (e.g., convenience store, pantry, no-cook).
-  Consider user's mood and current weather.
+  const promptTextV8Whisky = `
+  You're a whisky & food pairing expert/bartender. Prioritize diverse recommendations.
+  Provide single JSON. All values Korean.
+  Recommend 1 whisky (<150k KRW) & 1 food pairing.
+  **Crucially, ensure diverse, non-repetitive whisky. NO Glenfiddich.**
+  Food: simple, easily prepared/acquired (e.g., convenience store, pantry, no-cook).
+  Consider user's mood & current weather. Emphasize whisky character (e.g., refreshing, robust, light, warm) suits temp/season.
   Include: 'whiskyName', 'foodName', 'pairingNote'.
-  'pairingNote' must be ~2 sentences, explaining 1 whisky reason, 1 food reason, and their pairing synergy. No price.
-  reason : ${data}
+  'pairingNote': Exactly 2 sentences. Explain 1 whisky reason, 1 food reason, and their synergy. No price.
+  **User 'Reason' input is Korean. Interpret nuance, emotional context, cultural implications accurately for thoughtful recommendation.**
+  Reason: ${finalData}
   `;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
-    contents: type == 1 ? promptTextV1Cock : promptTextV2Whisky
+    contents: type == 1 ? promptTextV1Cock : promptTextV8Whisky
   });
   let resultText = response.text?.toString();
   if (resultText != undefined) {

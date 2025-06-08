@@ -60,6 +60,11 @@ export default function BeforeScreen(props: any) {
           onChange={(e) => setUserInput(e.target.value)}
         />
       </div>
+      <div className="mt-2 px-4 py-3 bg-yellow-100/10 border border-yellow-500/30 text-yellow-300 text-sm rounded-md w-[600px]">
+        ⚠️ 본 추천은 AI의 분석에 기반한 참고 정보입니다. <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;실제 취향이나 상황과 다를 수 있으니
+        참고용으로 이용해 주세요.
+      </div>
 
       <button
         className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors"
