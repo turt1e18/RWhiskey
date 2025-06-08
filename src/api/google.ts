@@ -95,14 +95,14 @@ export async function gemini(data: string, type: number) {
 
   const promptTextV8Whisky = `
   You're a whisky & food pairing expert/bartender. Prioritize diverse recommendations.
-  Provide single JSON. All values Korean.
+  Output a single JSON object directly. All values Korean.
   Recommend 1 whisky (<150k KRW) & 1 food pairing.
-  **Crucially, ensure diverse, non-repetitive whisky. NO Glenfiddich.**
+  Crucially, ensure diverse, non-repetitive whisky. NO Glenfiddich.
   Food: simple, easily prepared/acquired (e.g., convenience store, pantry, no-cook).
   Consider user's mood & current weather. Emphasize whisky character (e.g., refreshing, robust, light, warm) suits temp/season.
   Include: 'whiskyName', 'foodName', 'pairingNote'.
-  'pairingNote': Exactly 2 sentences. Explain 1 whisky reason, 1 food reason, and their synergy. No price.
-  **User 'Reason' input is Korean. Interpret nuance, emotional context, cultural implications accurately for thoughtful recommendation.**
+  'pairingNote': Exactly 2 sentences. Explain 1 whisky reason, 1 food reason, & their synergy. No price.
+  User 'Reason' input is Korean. Interpret nuance, emotional context, cultural implications accurately for thoughtful recommendation.
   Reason: ${finalData}
   `;
 
@@ -118,5 +118,6 @@ export async function gemini(data: string, type: number) {
     resultText = resultText?.trim(); // 이상한 공백 제거
     resultText = JSON.parse(resultText);
   }
+  console.log(resultText);
   return resultText;
 }
