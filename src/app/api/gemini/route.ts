@@ -65,7 +65,6 @@ export async function POST(req: Request) {
       resultText = resultText?.trim(); // 이상한 공백 제거
       resultText = JSON.parse(resultText);
     }
-    console.log(resultText);
     return NextResponse.json(resultText);
   } catch (err) {
     console.error("image is MIA", err);

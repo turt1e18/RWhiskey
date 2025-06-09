@@ -18,7 +18,6 @@ export default function BeforeScreen(props: any) {
       });
       if (res != undefined) {
         const jsonData = await res.json();
-        console.log(jsonData);
         setResultData(jsonData);
       }
     } catch (err) {

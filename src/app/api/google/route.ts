@@ -26,7 +26,6 @@ export async function POST(req: Request) {
         }
       })
       .then(async (res) => {
-        console.log(res);
         if (type === 1) {
           const result = res.data.items
             .map((item: any) => item.image?.thumbnailLink)

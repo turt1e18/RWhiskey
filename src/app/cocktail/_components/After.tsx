@@ -49,7 +49,6 @@ export default function AfterScreen(props: any) {
     if (image.length === 0) return;
 
     const timer = setTimeout(() => {
-      console.log("타이머 시작");
       if (!isImageLoad) {
         // 아직 이미지 로드 안됐으면 다음 이미지로 교체
         if (imageIndex < image.length - 1) {
