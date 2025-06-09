@@ -47,7 +47,7 @@ export async function POST(req: Request) {
           } else {
             console.log(res.data);
             console.warn("We can't Find Image", data);
-            return null;
+            return NextResponse.json(null);
           }
         }
       })
