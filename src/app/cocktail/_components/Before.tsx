@@ -1,5 +1,3 @@
-import { gemini } from "@/api/google";
-
 export default function BeforeScreen(props: any) {
   const { userInput, setUserInput, setResultData, setSwitchState } = props;
 
@@ -23,18 +21,34 @@ export default function BeforeScreen(props: any) {
   };
 
   async function callGemini(data: string) {
-    await gemini(data, 1)
-      .then((res) => {
-        if (res != undefined) {
-          setResultData(res);
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .finally(() => {
-        setSwitchState(1);
+    try {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        body: JSON.stringify({ data: data, type: 1 })
       });
+      if (res != undefined) {
+        const jsonData = await res.json();
+        console.log(jsonData);
+        setResultData(jsonData);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSwitchState(1);
+    }
+
+    // await gemini(data, 1)
+    //   .then((res) => {
+    //     if (res != undefined) {
+    //       setResultData(res);
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //   })
+    //   .finally(() => {
+    //     setSwitchState(1);
+    //   });
   }
 
   return (

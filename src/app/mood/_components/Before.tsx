@@ -1,10 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
-
-import { gemini } from "@/api/google";
-import { useState } from "react";
 
 /**
  *
@@ -15,15 +11,20 @@ export default function BeforeScreen(props: any) {
   const { setSwitchState, userInput, setUserInput, setResultData } = props;
 
   async function callGemini(data: string) {
-    await gemini(data, 0)
-      .then((res) => {
-        if (res != undefined) {
-          setResultData(res);
-        }
-      })
-      .catch((err) => {
-        console.log(err);
+    try {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        body: JSON.stringify({ data: data, type: 0 })
       });
+      if (res != undefined) {
+        const jsonData = await res.json();
+        setResultData(jsonData);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSwitchState(1);
+    }
   }
 
   const recommendation = {
