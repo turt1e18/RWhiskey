@@ -1,4 +1,3 @@
-import { customSearchApi } from "@/api/google";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
@@ -18,10 +17,16 @@ export default function AfterScreen(props: any) {
 
     try {
       const selectedWhiskey = resultData.cocktailName;
-      const res = await customSearchApi(selectedWhiskey, 1);
-      console.log("url 더미 : ", res);
-      if (res && res.length > 0) {
-        setImage(res);
+      const res = await fetch("/api/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ data: selectedWhiskey, type: 1 })
+      });
+      const jsonData = await res.json();
+      if (jsonData && jsonData.length > 0) {
+        setImage(jsonData);
         setImageIndex(0);
       } else {
         setIsImageLoad(true); // 이미지가 하나도 없을 때 바로 종료

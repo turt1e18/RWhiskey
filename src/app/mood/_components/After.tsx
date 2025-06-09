@@ -3,9 +3,6 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-"use client";
-
-import { customSearchApi } from "@/api/google";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
@@ -28,13 +25,19 @@ export default function AfterScreen(props: any) {
 
   const searchWhiskey = async () => {
     setLoading(true);
-    // setIsClicked(true);
     setIsImageLoad(false);
 
     try {
       const selectedWhiskey = resultData.whiskyName;
-      const res = await customSearchApi(selectedWhiskey);
-      setImage(res);
+      const res = await fetch("/api/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ data: selectedWhiskey, type: 3 })
+      });
+      const jsonData = await res.json();
+      setImage(jsonData);
     } catch (err) {
       console.error("err : ", err);
       setImage(null);

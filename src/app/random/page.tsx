@@ -1,6 +1,4 @@
 "use client";
-import { customSearchApi } from "@/api/google";
-// import { randomTestImage } from "@/api/unsplash";
 import { Whiskey } from "@/type/RandomInterface";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -63,9 +61,15 @@ export default function MainScreen() {
       const randomIndex = Math.floor(Math.random() * filteredWhiskeys.length);
       const selectedWhiskey = filteredWhiskeys[randomIndex];
       setWhiskey(selectedWhiskey);
-      console.log(selectedWhiskey); // 선택된 whiskey 출력
-      const res = await customSearchApi(selectedWhiskey?.name);
-      setImage(res);
+      const res = await fetch("/api/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ data: selectedWhiskey?.name, type: 0 })
+      });
+      const jsonData = await res.json();
+      setImage(jsonData);
     } catch (err) {
       console.error("err : ", err);
       setImage(null);
