@@ -36,40 +36,49 @@ export default function BeforeScreen(props: any) {
 
   return (
     <div className="flex flex-col justify-center items-center w-screen h-5/6 mt-20">
-      <div className="flex flex-col gap-6 mb-8 text-white w-[600px]">
-        <p className="text-lg font-bold">위스키 추천 예시</p>
-        <p className="text-sm text-gray-400 bg-black/40 p-4 rounded-lg">
+      <div
+        className="flex flex-col gap-6 mb-8 text-white w-[90%] max-w-[600px]
+                     sm:w-full sm:px-4"
+      >
+        <p className="text-lg font-bold sm:text-base">위스키 추천 예시</p>
+        <p className="text-sm text-gray-400 bg-black/40 p-4 rounded-lg sm:text-xs sm:p-3">
           "오늘은 해가 화창하고 날씨가 선선해서 산책을 해서 기분이 좋아. 저녁에
           먹을만한 위스키와 그에 어울리는 안주를 추천해줘."
         </p>
-        <div className="mt-6 p-4 bg-black/40 rounded-lg text-white/70 w-[600px]">
-          <p className="text-lg font-bold">추천 결과:</p>
-          <p>
+        <div className="mt-6 p-4 bg-black/40 rounded-lg text-white/70 w-full sm:p-3">
+          <p className="text-lg font-bold sm:text-base">추천 결과:</p>
+          <p className="sm:text-sm">
             <strong>위스키:</strong> {recommendation.whiskey}
           </p>
-          <p>
+          <p className="sm:text-sm">
             <strong>어울리는 안주:</strong> {recommendation.food}
           </p>
-          <p>
+          <p className="sm:text-sm">
             <strong>추천 이유:</strong> {recommendation.reason}
           </p>
         </div>
         <textarea
-          className="mt-4 p-4 bg-black/30 rounded-lg text-white/70 w-full h-[200px] resize-none"
+          className="mt-4 p-4 bg-black/30 rounded-lg text-white/70 w-full h-[200px] resize-none
+                   sm:p-3 sm:text-sm sm:h-[150px]"
           placeholder="오늘의 날씨, 기분, 시간대를 자유롭게 입력하세요..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           maxLength={80}
         />
       </div>
-      <div className="mt-2 px-4 py-3 bg-yellow-100/10 border border-yellow-500/30 text-yellow-300 text-sm rounded-md w-[600px]">
+      <div
+        className="mt-2 px-4 py-3 bg-yellow-100/10 border border-yellow-500/30 text-yellow-300 text-sm rounded-md
+                     w-[90%] max-w-[600px]
+                     sm:w-full sm:px-4 sm:py-2 sm:text-xs"
+      >
         ⚠️ 본 추천은 AI의 분석에 기반한 참고 정보입니다. <br />
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;실제 취향이나 상황과 다를 수 있으니
         참고용으로 이용해 주세요.
       </div>
 
       <button
-        className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors"
+        className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors
+                 sm:p-2 sm:text-sm"
         onClick={() => {
           if (userInput.length != 0) {
             callGemini(userInput);

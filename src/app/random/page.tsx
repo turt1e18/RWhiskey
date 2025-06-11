@@ -83,14 +83,15 @@ export default function MainScreen() {
       {/* 상단 영역 */}
       <div className="flex flex-col justify-center items-center h-1/6">
         {/* 상단 아이콘 */}
-        <div className="flex gap-4 mb-4">
+        <div className="flex gap-4 mb-4 md:gap-4 md:mb-4 sm:gap-2 sm:mb-2">
           {["🏠", "🎲", "🌧️", "❤️"].map((icon, index) => {
             return (
               <button
                 key={index}
                 className="p-4 bg-black/20 text-white rounded-xl ring-1 ring-white/20 shadow-lg shadow-white/20 
-                        hover:ring-4 hover:bg-white/20 hover:ring-white/30 hover:shadow-white/30 
-                        transition duration-200 ease-in-out"
+                   hover:ring-4 hover:bg-white/20 hover:ring-white/30 hover:shadow-white/30 
+                   transition duration-200 ease-in-out
+                   sm:p-3 text-sm"
                 onClick={() => {
                   routing(index);
                 }}
@@ -100,12 +101,11 @@ export default function MainScreen() {
             );
           })}
         </div>
-
-        {/* 랜덤 위스키 버튼 */}
         <button
           className="px-9 py-3 bg-black/20 text-white rounded-xl ring-1 ring-white/20 shadow-lg shadow-white/20 
-                        hover:ring-4 hover:bg-white/20 hover:ring-white/30 hover:shadow-white/30 
-                        transition duration-200 ease-in-out"
+             hover:ring-4 hover:bg-white/20 hover:ring-white/30 hover:shadow-white/30 
+             transition duration-200 ease-in-out
+             sm:px-6 sm:py-2 sm:text-base"
           onClick={() => {
             searchWhiskey();
           }}
@@ -119,22 +119,31 @@ export default function MainScreen() {
         className={`${isClicked ? "flex" : "hidden"} justify-center items-start h-5/6 transition-all duration-300 mt-5`}
       >
         {/* 위스키 정보 영역 */}
-        <div className="bg-black/40 px-6 py-12 rounded-2xl shadow-lg text-white w-[90%] max-w-[650px] text-center">
+        {/* 위스키 정보 영역 */}
+        <div
+          className="bg-black/40 px-6 py-12 rounded-2xl shadow-lg text-white w-[90%] max-w-[650px] text-center
+             max-w-[600px] max-h-[650px] overflow-hidden
+             sm:px-4 sm:py-8 sm:max-h-none sm:overflow-visible"
+        >
           {loading ? (
-            // 로딩 동글이
-            <div className="flex justify-center items-center w-[600px] h-[650px]">
+            <div
+              className="flex justify-center items-center w-[600px] h-[650px]
+                 sm:w-full sm:h-auto sm:aspect-square"
+            >
               <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
             <>
-              {/* 이미지 불러올 때 까지 동글이 유지 */}
               {!isImageLoad && image && (
-                <div className="flex justify-center items-center w-[600px] h-[650px]">
+                <div
+                  className="flex justify-center items-center w-[600px] h-[650px]
+                     sm:w-full sm:h-auto sm:aspect-square"
+                >
                   <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
               {/* 검색된 위스키 이미지 */}
-              <div className="relative w-full aspect-[600/650] max-w-full mx-auto">
+              <div className="relative w-full aspect-[600/650] max-w-[600px] mx-auto">
                 <Image
                   src={image || "https://placehold.co/600x650"}
                   alt="Image is MIA"
@@ -149,12 +158,16 @@ export default function MainScreen() {
               </div>
               <div className="pt-5">
                 {/* 랜덤으로 불러온 위스키 정보 */}
-                <h2 className="text-xl font-bold">{whiskey?.name}</h2>
-                <p className="text-sm text-gray-400">
+                <h2 className="text-xl font-bold sm:text-lg">
+                  {whiskey?.name}
+                </h2>
+                <p className="text-sm text-gray-400 sm:text-xs">
                   {whiskey?.category} &nbsp;&nbsp; {whiskey?.currency}
                   {whiskey?.price} &nbsp;&nbsp; {whiskey?.rating}/100
                 </p>
-                <p className="text-sm mt-2">{whiskey?.description}</p>
+                <p className="text-sm mt-2 sm:text-xs">
+                  {whiskey?.description}
+                </p>
               </div>
             </>
           )}
