@@ -53,31 +53,34 @@ export default function BeforeScreen(props: any) {
 
   return (
     <div className="flex flex-col justify-center items-center w-screen h-5/6 mt-1">
-      <div className="flex flex-col gap-6 text-white w-[600px]">
-        <p className="text-lg font-bold">칵테일 추천 예시</p>
-        <p className="text-sm text-gray-400 bg-black/40 p-4 rounded-lg">
+      <div
+        className="flex flex-col gap-6 text-white w-[90%] max-w-[600px]
+                     sm:w-full sm:px-4"
+      >
+        <p className="text-lg font-bold sm:text-base">칵테일 추천 예시</p>
+        <p className="text-sm text-gray-400 bg-black/40 p-4 rounded-lg sm:text-xs sm:p-3">
           &quot;오늘은 조금 나른하고 피곤한데 심지어 날씨는 흐려.&quot;
         </p>
-        <div className=" p-6 bg-black/40 rounded-lg text-white/70 w-[600px] space-y-4">
-          <p className="text-lg font-bold text-white">추천 결과</p>
-
+        <div
+          className="p-6 bg-black/40 rounded-lg text-white/70 w-full space-y-4
+                     sm:p-4"
+        >
+          <p className="text-lg font-bold text-white sm:text-base">추천 결과</p>
           <div>
-            <p className="font-semibold text-white">🍸 칵테일:</p>
-            <p>{recommendation.cocktailName}</p>
+            <p className="font-semibold text-white sm:text-sm">🍸 칵테일:</p>
+            <p className="sm:text-sm">{recommendation.cocktailName}</p>
           </div>
-
           <div>
-            <p className="font-semibold text-white">📌 준비물:</p>
-            <ul className="list-disc list-inside space-y-1">
+            <p className="font-semibold text-white sm:text-sm">📌 준비물:</p>
+            <ul className="list-disc list-inside space-y-1 sm:text-sm">
               {recommendation.checkList.map((value, index) => (
                 <li key={index}>{value}</li>
               ))}
             </ul>
           </div>
-
           <div>
-            <p className="font-semibold text-white">🧪 제조 순서:</p>
-            <ul className="list-none space-y-1">
+            <p className="font-semibold text-white sm:text-sm">🧪 제조 순서:</p>
+            <ul className="list-none space-y-1 sm:text-sm">
               {recommendation.method.map((value, index) => (
                 <li key={index}>
                   [{index + 1}단계] {value}
@@ -85,19 +88,18 @@ export default function BeforeScreen(props: any) {
               ))}
             </ul>
           </div>
-
           <div>
-            <p className="font-semibold text-white">🥨 추천 안주:</p>
-            <p>{recommendation.foodName}</p>
+            <p className="font-semibold text-white sm:text-sm">🥨 추천 안주:</p>
+            <p className="sm:text-sm">{recommendation.foodName}</p>
           </div>
-
           <div>
-            <p className="font-semibold text-white">💡 추천 이유:</p>
-            <p>{recommendation.pairingNote}</p>
+            <p className="font-semibold text-white sm:text-sm">💡 추천 이유:</p>
+            <p className="sm:text-sm">{recommendation.pairingNote}</p>
           </div>
         </div>
         <textarea
-          className=" p-4 bg-black/30 rounded-lg text-white/70 w-full h-[200px] resize-none"
+          className="p-4 bg-black/30 rounded-lg text-white/70 w-full h-[200px] resize-none
+                   sm:p-3 sm:text-sm sm:h-[150px]"
           placeholder="오늘의 날씨, 기분, 시간대를 자유롭게 입력하세요..."
           value={userInput}
           maxLength={80}
@@ -106,7 +108,8 @@ export default function BeforeScreen(props: any) {
       </div>
 
       <button
-        className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors"
+        className="mt-8 p-3 bg-[#000000]/60 text-white rounded-lg hover:bg-blue-500 transition-colors
+                 sm:p-2 sm:text-sm"
         onClick={() => {
           if (userInput.length != 0) {
             callGemini(userInput);
