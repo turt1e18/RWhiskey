@@ -36,26 +36,13 @@ export default function BeforeScreen(props: any) {
     } finally {
       setSwitchState(1);
     }
-
-    // await gemini(data, 1)
-    //   .then((res) => {
-    //     if (res != undefined) {
-    //       setResultData(res);
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   })
-    //   .finally(() => {
-    //     setSwitchState(1);
-    //   });
   }
 
   return (
     <div className="flex flex-col justify-center items-center w-screen h-5/6 mt-1">
       <div
         className="flex flex-col gap-6 text-white w-[90%] max-w-[600px]
-                     sm:w-full sm:px-4"
+                     sm:w-full"
       >
         <p className="text-lg font-bold sm:text-base">칵테일 추천 예시</p>
         <p className="text-sm text-gray-400 bg-black/40 p-4 rounded-lg sm:text-xs sm:p-3">
@@ -105,6 +92,11 @@ export default function BeforeScreen(props: any) {
           maxLength={80}
           onChange={(e) => setUserInput(e.target.value)}
         />
+      </div>
+      <div className="mt-5 px-4 py-3 bg-yellow-100/10 border border-yellow-500/30 text-yellow-300 text-sm rounded-md w-[90%] max-w-[600px] sm:px-4 sm:py-2 sm:text-xs">
+        ⚠️ 본 추천은 AI의 분석에 기반한 참고 정보입니다. <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;실제 취향이나 상황과 다를 수 있으니
+        참고용으로 이용해 주세요.
       </div>
 
       <button
