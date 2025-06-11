@@ -69,8 +69,6 @@ export default function MoodScreen() {
       <div className="flex flex-col justify-center items-center h-1/6">
         {/* 상단 아이콘 */}
         <div className="flex gap-4 mb-4 sm:gap-2 sm:mb-2">
-          {" "}
-          {/* 모바일(sm)에서 아이콘 간격 조정 */}
           {["🏠", "🎲", "🌧️", "❤️"].map((icon, index) => {
             return (
               <button
@@ -78,7 +76,7 @@ export default function MoodScreen() {
                 className="p-4 bg-black/20 text-white rounded-xl ring-1 ring-white/20 shadow-lg shadow-white/20 
                         hover:ring-4 hover:bg-white/20 hover:ring-white/30 hover:shadow-white/30 
                         transition duration-200 ease-in-out
-                        sm:p-3 sm:text-sm" // 모바일(sm)에서 패딩 및 텍스트 크기 조정
+                        sm:p-3 sm:text-sm"
                 onClick={() => {
                   routing(index);
                 }}
