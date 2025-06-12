@@ -34,12 +34,6 @@ export async function POST(req: Request) {
                 typeof link === "string" && link.startsWith("http")
             );
           return NextResponse.json(result);
-          // return res.data.items
-          //   .map((item: any) => item.image?.thumbnailLink)
-          //   .filter(
-          //     (link: string | undefined) =>
-          //       typeof link === "string" && link.startsWith("http")
-          //   );
         } else {
           if (res.data.items && res.data.items.length > 0) {
             return NextResponse.json(res.data.items[0].link); // JSON 리턴
