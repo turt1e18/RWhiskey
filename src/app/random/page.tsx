@@ -119,27 +119,34 @@ export default function MainScreen() {
         className={`${isClicked ? "flex" : "hidden"} justify-center items-start h-5/6 transition-all duration-300 mt-5`}
       >
         {/* 위스키 정보 영역 */}
-        {/* 위스키 정보 영역 */}
         <div
           className="bg-black/40 px-6 py-12 rounded-2xl shadow-lg text-white w-[90%] max-w-[650px] text-center
-             max-w-[600px] max-h-[650px] overflow-hidden
+             max-w-[600px] max-h-none overflow-hidden
              sm:px-4 sm:py-8 sm:max-h-none sm:overflow-visible"
         >
           {loading ? (
-            <div
-              className="flex justify-center items-center w-[600px] h-[650px]
-                 sm:w-full sm:h-auto sm:aspect-square"
-            >
-              <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+            // 0613 patch
+            // <div
+            //   className="flex justify-center items-center w-[600px] h-[650px]
+            //      sm:w-full sm:h-auto sm:aspect-square"
+            // >
+            //   <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+            // </div>
+            <div className="flex justify-center items-center w-full min-h-[300px] sm:aspect-square">
+              <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <>
               {!isImageLoad && image && (
-                <div
-                  className="flex justify-center items-center w-[600px] h-[650px]
-                     sm:w-full sm:h-auto sm:aspect-square"
-                >
-                  <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                // 0613 patch
+                // <div
+                //   className="flex justify-center items-center w-[600px] h-[650px]
+                //      sm:w-full sm:h-auto sm:aspect-square"
+                // >
+                //   <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                // </div>
+                <div className="flex justify-center items-center w-full min-h-[300px] sm:aspect-square">
+                  <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
               {/* 검색된 위스키 이미지 */}

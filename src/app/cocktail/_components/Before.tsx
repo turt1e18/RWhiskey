@@ -1,6 +1,9 @@
+"use client";
+import { useState } from "react";
+
 export default function BeforeScreen(props: any) {
   const { userInput, setUserInput, setResultData, setSwitchState } = props;
-
+  const [imRich, setImRich] = useState(false);
   const recommendation = {
     cocktailName: "진토닉",
     checkList: [
@@ -20,11 +23,11 @@ export default function BeforeScreen(props: any) {
       "나른하고 피곤한 날, 시원하고 상큼한 진토닉은 기분 전환에 최고입니다. 최소한의 재료로 쉽게 만들 수 있어 자취생에게 안성맞춤이며, 치즈 스틱이나 견과류처럼 가볍고 바삭한 안주와 곁들이면 더욱 좋습니다. 진토닉의 깔끔한 맛이 안주의 기름진 맛을 잡아주어 조화롭습니다."
   };
 
-  async function callGemini(data: string) {
+  async function callGemini(data: string, imRich: boolean) {
     try {
       const res = await fetch("/api/gemini", {
         method: "POST",
-        body: JSON.stringify({ data: data, type: 1 })
+        body: JSON.stringify({ data: data, type: 1, rich: imRich })
       });
       if (res != undefined) {
         const jsonData = await res.json();
@@ -92,6 +95,37 @@ export default function BeforeScreen(props: any) {
           maxLength={80}
           onChange={(e) => setUserInput(e.target.value)}
         />
+        <div className="flex">
+          <div className="flex items-center h-5">
+            <input
+              id="helper-checkbox"
+              aria-describedby="helper-checkbox-text"
+              type="checkbox"
+              checked={imRich}
+              onChange={() => setImRich(!imRich)}
+              className="
+                w-4 h-4 accent-orange-500 text-white-500 bg-gray-100 border-gray-300 rounded-sm
+                focus:outline-none focus:ring-0
+              "
+            />
+          </div>
+          <div className="ms-2 text-sm">
+            <label
+              htmlFor="helper-checkbox"
+              className="font-medium text-gray-900 dark:text-gray-300"
+            >
+              "오늘 Flex 하길 원해요."
+            </label>
+            <p
+              id="helper-checkbox-text"
+              className="text-xs font-normal text-gray-500 dark:text-gray-300"
+            >
+              기본적으로 추천 위스키는 저가형으로 입력됩니다.
+              <br />
+              다만 이 옵션을 체크하시면 재력에 맞게 추천해드립니다.
+            </p>
+          </div>
+        </div>
       </div>
       <div className="mt-5 px-4 py-3 bg-yellow-100/10 border border-yellow-500/30 text-yellow-300 text-sm rounded-md w-[90%] max-w-[600px] sm:px-4 sm:py-2 sm:text-xs">
         ⚠️ 본 추천은 AI의 분석에 기반한 참고 정보입니다. <br />
@@ -104,7 +138,7 @@ export default function BeforeScreen(props: any) {
                  sm:p-2 sm:text-sm"
         onClick={() => {
           if (userInput.length != 0) {
-            callGemini(userInput);
+            callGemini(userInput, imRich);
           } else {
             alert("내용을 입력해주세요.");
           }
