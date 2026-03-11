@@ -269,5 +269,11 @@ export async function POST(req: Request) {
     // return NextResponse.json(resultText);
   } catch (err) {
     console.error("image is MIA", err);
+    return NextResponse.json(
+      {
+        error: err instanceof Error ? err.message : "Unknown error"
+      },
+      { status: 500 }
+    );
   }
 }
