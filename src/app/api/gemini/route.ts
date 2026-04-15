@@ -218,7 +218,7 @@ export async function POST(req: Request) {
     */
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: type == 1 ? promptTextV1Cock : promptTextV12Whisky,
       config: {
         responseMimeType: "application/json",

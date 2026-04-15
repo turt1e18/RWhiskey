@@ -252,6 +252,7 @@ export default function BeforeScreen(props: any) {
                   className="w-full bg-transparent border-b border-dashed border-[#4a3728]/45 px-0 py-1 text-sm leading-6 text-stone-800 outline-none placeholder:text-stone-400 resize-none min-h-[100px]"
                   placeholder="예: 산책 후라 기분이 편안하고, 저녁에 천천히 즐길 수 있는 위스키면 좋겠어요. 선택지에 없는 날씨나 기분을 고른 경우 이곳에 자세히 적어주세요."
                   value={userInput}
+                  maxLength={60}
                   onChange={(e) => setUserInput(e.target.value)}
                 />
               </div>
