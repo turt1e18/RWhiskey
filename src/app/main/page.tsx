@@ -2,10 +2,12 @@
 
 import RWhiskeyLogo from "./_components/LogoText";
 import MainRouterButton from "./_components/MainRouterButton";
+import NoticeModal from "./_components/NoticeModal";
 
 export default function MainScreen() {
   return (
     <>
+      <NoticeModal />
       {/* =========================
           상단 고정 네비게이션
           모바일에서는 로고만 보여주고,
