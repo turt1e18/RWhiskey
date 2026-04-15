@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 export default function BeforeScreen(props: any) {
-  const { userInput, setUserInput, setResultData, setSwitchState } = props;
+  const { userInput, setUserInput, setDataPromise, setSwitchState } = props;
   const [imRich, setImRich] = useState(false);
   const recommendation = {
     cocktailName: "진토닉",
@@ -23,23 +23,37 @@ export default function BeforeScreen(props: any) {
       "나른하고 피곤한 날, 시원하고 상큼한 진토닉은 기분 전환에 최고입니다. 최소한의 재료로 쉽게 만들 수 있어 자취생에게 안성맞춤이며, 치즈 스틱이나 견과류처럼 가볍고 바삭한 안주와 곁들이면 더욱 좋습니다. 진토닉의 깔끔한 맛이 안주의 기름진 맛을 잡아주어 조화롭습니다."
   };
 
-  async function callGemini(data: string, imRich: boolean) {
-    try {
-      const res = await fetch("/api/gemini", {
+  const startRecommendation = (data: string, imRich: boolean) => {
+    const fetchAllData = async () => {
+      // 1. AI 데이터 호출
+      const aiRes = await fetch("/api/gemini", {
         method: "POST",
         body: JSON.stringify({ data: data, type: 1, rich: imRich })
       });
-      if (res != undefined) {
-        const jsonData = await res.json();
-        console.log(jsonData);
-        setResultData(jsonData);
+      const aiData = await aiRes.json();
+
+      // 2. 이미지 데이터 호출 (AI 결과의 cocktailName을 기반으로)
+      let imgData = [];
+      try {
+        const imgRes = await fetch("/api/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: aiData.cocktailName, type: 1 })
+        });
+        if (imgRes.ok) {
+          imgData = await imgRes.json();
+        }
+      } catch (e) {
+        console.error("Image fetch error:", e);
       }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setSwitchState(1);
-    }
-  }
+
+      return { ...aiData, images: imgData || [] };
+    };
+
+    // 통합 Promise를 부모 상태에 저장하고 다음 화면으로 전환
+    setDataPromise(fetchAllData());
+    setSwitchState(1);
+  };
 
   return (
     <div className="flex flex-col justify-center items-center w-screen h-5/6 mt-1">
@@ -138,7 +152,7 @@ export default function BeforeScreen(props: any) {
                  sm:p-2 sm:text-sm"
         onClick={() => {
           if (userInput.length != 0) {
-            callGemini(userInput, imRich);
+            startRecommendation(userInput, imRich);
           } else {
             alert("내용을 입력해주세요.");
           }

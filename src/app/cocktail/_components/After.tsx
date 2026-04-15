@@ -1,67 +1,41 @@
-import { useEffect, useState } from "react";
-import Image from "next/image";
+"use client";
 
-export default function AfterScreen(props: any) {
-  const { setSwitchState, resultData } = props;
-  // 이미지 url
-  const [image, setImage] = useState<string[]>([]);
+import { useEffect, useState, use } from "react";
+import Image from "next/image";
+import { CocktailDataInterface } from "@/type/CocktailDataInterface"; // Import the shared interface
+
+// Use the imported interface
+// Define the props interface for AfterScreen
+interface AfterScreenProps {
+  setSwitchState: (state: number) => void;
+  dataPromise: Promise<CocktailDataInterface>; // Use the shared type
+}
+
+export default function AfterScreen(props: AfterScreenProps) {
+  const { setSwitchState, dataPromise } = props;
+
+  // 전달받은 Promise가 resolve될 때까지 Suspense 트리거
+  const resultData = use(dataPromise);
+
+  const images = resultData.images || [];
   const [imageIndex, setImageIndex] = useState(0);
-  // 로딩 중인가?
-  const [loading, setLoading] = useState<boolean>(false);
-  // 이미지를 불러 왔는가?
   const [isImageLoad, setIsImageLoad] = useState<boolean>(false);
 
-  const searchCocktail = async () => {
-    setLoading(true);
-    setIsImageLoad(false);
-
-    try {
-      const selectedWhiskey = resultData.cocktailName;
-      const res = await fetch("/api/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ data: selectedWhiskey, type: 1 })
-      });
-      const jsonData = await res.json();
-      if (jsonData && jsonData.length > 0) {
-        setImage(jsonData);
-        setImageIndex(0);
-      } else {
-        setIsImageLoad(true); // 이미지가 하나도 없을 때 바로 종료
-      }
-    } catch (err) {
-      console.error("err : ", err);
-      setIsImageLoad(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (resultData?.cocktailName && resultData?.cocktailName != "") {
-      searchCocktail();
-    }
-  }, [resultData?.cocktailName]);
-
-  useEffect(() => {
-    if (image.length === 0) return;
+    if (images.length === 0) return;
 
     const timer = setTimeout(() => {
       if (!isImageLoad) {
-        // 아직 이미지 로드 안됐으면 다음 이미지로 교체
-        if (imageIndex < image.length - 1) {
+        if (imageIndex < images.length - 1) {
           setImageIndex((prev) => prev + 1);
         } else {
-          // 마지막 이미지까지 다 돌았으면 로딩 중단
           setIsImageLoad(true);
         }
       }
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [imageIndex, isImageLoad, image]);
+  }, [imageIndex, isImageLoad, images]);
 
   return (
     <div className="flex flex-col items-center justify-center my-12 px-4">
@@ -78,12 +52,12 @@ export default function AfterScreen(props: any) {
       <div className="flex flex-col md:flex-row gap-8 bg-black/40 p-6 rounded-2xl shadow-lg text-white w-full max-w-[800px]">
         {/* 이미지 섹션 */}
         <div className="relative w-full md:w-1/2 h-[400px] flex justify-center items-center">
-          {loading || !isImageLoad ? (
-            <div className="w-16 h-16 border-4 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+          {images.length === 0 ? (
+            <div className="text-gray-400">이미지를 찾을 수 없습니다.</div>
           ) : (
             <Image
-              src={image[imageIndex] || "https://placehold.co/600x650"}
-              alt="MIA Image"
+              src={images[imageIndex] || "https://placehold.co/600x650"}
+              alt="Cocktail Image"
               fill
               className={`rounded-lg transition-opacity duration-500 ${isImageLoad ? "opacity-100" : "opacity-0"}`}
               unoptimized
@@ -102,7 +76,7 @@ export default function AfterScreen(props: any) {
           <div>
             <p className="font-semibold">📌 준비물</p>
             <ul className="list-disc list-inside space-y-1">
-              {resultData.checkList.map((value: string, index: number) => (
+              {resultData.checkList?.map((value: string, index: number) => (
                 <li key={index}>{value}</li>
               ))}
             </ul>
@@ -111,7 +85,7 @@ export default function AfterScreen(props: any) {
           <div>
             <p className="font-semibold">🧪 제조 순서</p>
             <ol className="list-decimal list-inside space-y-1">
-              {resultData.method.map((value: string, index: number) => (
+              {resultData.method?.map((value: string, index: number) => (
                 <li key={index}>{value}</li>
               ))}
             </ol>

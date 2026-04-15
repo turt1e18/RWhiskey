@@ -14,11 +14,7 @@ export default function MoodScreen() {
    */
   const [screenState, serScreenState] = useState(0);
   const [userInput, setUserInput] = useState("");
-  const [resultData, setResultData] = useState<MoodWhiskyDataInterface>({
-    whiskyName: "",
-    foodName: "",
-    pairingNote: ""
-  });
+  const [resultData, setResultData] = useState<Promise<MoodWhiskyDataInterface> | null>(null);
   const router = useRouter();
   const switchScreen = () => {
     switch (screenState) {
@@ -56,37 +52,12 @@ export default function MoodScreen() {
   useEffect(() => {
     if (screenState == 0) {
       setUserInput("");
-      setResultData({ whiskyName: "", foodName: "", pairingNote: "" });
-    } else {
-      return;
+      setResultData(null);
     }
-    return () => {};
   }, [screenState]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#868e96]/30 py-8 overflow-x-hidden">
-      {/* 상단 영역 */}
-      <div className="flex flex-col justify-center items-center h-1/6">
-        {/* 상단 아이콘 */}
-        <div className="flex gap-4 mb-4 md:gap-4 md:mb-4 sm:gap-2 sm:mb-2">
-          {["🏠", "🎲", "🌧️", "❤️"].map((icon, index) => {
-            return (
-              <button
-                key={index}
-                className="p-4 bg-black/20 text-white rounded-xl ring-1 ring-white/20 shadow-lg shadow-white/20 
-                   hover:ring-4 hover:bg-white/20 hover:ring-white/30 hover:shadow-white/30 
-                   transition duration-200 ease-in-out
-                   sm:p-3 text-sm"
-                onClick={() => {
-                  routing(index);
-                }}
-              >
-                {icon}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+    <div className="flex flex-col min-h-screen md:h-screen bg-[#1a120d] overflow-y-auto md:overflow-hidden">
       {switchScreen()}
     </div>
   );

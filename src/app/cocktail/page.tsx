@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { CocktailDataInterface } from "@/type/CocktailDataInterface";
 import BeforeScreen from "./_components/Before";
 import AfterScreen from "./_components/After";
+import WhiskeyLoader from "@/components/WhiskeyLoader";
 
 export default function CocktailScreen() {
   /**
@@ -13,13 +13,9 @@ export default function CocktailScreen() {
    */
   const [screenState, setScreenState] = useState(0);
   const [userInput, setUserInput] = useState("");
-  const [resultData, setResultData] = useState<CocktailDataInterface>({
-    checkList: [""],
-    method: [""],
-    cocktailName: "",
-    foodName: "",
-    pairingNote: ""
-  });
+  // 통합 데이터를 가져오는 Promise를 저장
+  const [dataPromise, setDataPromise] = useState<Promise<any> | null>(null);
+  
   const router = useRouter();
 
   const routing = (index: number) => {
@@ -36,19 +32,26 @@ export default function CocktailScreen() {
           <BeforeScreen
             userInput={userInput}
             setUserInput={setUserInput}
-            setResultData={setResultData}
+            setDataPromise={setDataPromise}
             setSwitchState={setScreenState}
           />
         );
       case 1:
         return (
-          <AfterScreen
-            setSwitchState={setScreenState}
-            userInput={userInput}
-            setUserInput={setUserInput}
-            setResultData={setResultData}
-            resultData={resultData}
-          />
+          <Suspense
+            fallback={
+              <div className="flex flex-col items-center justify-center my-12 px-4 h-[60vh]">
+                <WhiskeyLoader />
+              </div>
+            }
+          >
+            {dataPromise && (
+              <AfterScreen
+                setSwitchState={setScreenState}
+                dataPromise={dataPromise}
+              />
+            )}
+          </Suspense>
         );
       default:
         break;
@@ -59,17 +62,8 @@ export default function CocktailScreen() {
   useEffect(() => {
     if (screenState == 0) {
       setUserInput("");
-      setResultData({
-        checkList: [""],
-        method: [""],
-        cocktailName: "",
-        foodName: "",
-        pairingNote: ""
-      });
-    } else {
-      return;
+      setDataPromise(null);
     }
-    return () => {};
   }, [screenState]);
 
   return (

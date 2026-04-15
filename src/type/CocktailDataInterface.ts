@@ -4,4 +4,5 @@ export interface CocktailDataInterface {
   cocktailName: string;
   foodName: string;
   pairingNote: string;
+  images: string[];
 }
