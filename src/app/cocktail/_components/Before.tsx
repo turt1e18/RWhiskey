@@ -106,7 +106,7 @@ export default function BeforeScreen(props: any) {
                    sm:p-3 sm:text-sm sm:h-[150px]"
           placeholder="오늘의 날씨, 기분, 시간대를 자유롭게 입력하세요..."
           value={userInput}
-          maxLength={80}
+          maxLength={60}
           onChange={(e) => setUserInput(e.target.value)}
         />
         <div className="flex">
