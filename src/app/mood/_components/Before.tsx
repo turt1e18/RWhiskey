@@ -4,6 +4,8 @@
 "use client";
 import { useState, useMemo } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
+import { useAuthStore } from "@/store/authStore";
+import { getWhiskyRecommendation } from "@/api/recommendationService";
 
 /**
  * Mood 추천 입력 화면 (Order Sheet 스타일)
@@ -11,6 +13,7 @@ import WhiskeyLoader from "@/components/WhiskeyLoader";
  */
 export default function BeforeScreen(props: any) {
   const { setSwitchState, userInput, setUserInput, setResultData } = props;
+  const { user, isAuthenticated } = useAuthStore();
 
   // 신규 추가된 선택 상태
   const [weather, setWeather] = useState("맑음");
@@ -31,6 +34,11 @@ export default function BeforeScreen(props: any) {
   }, []);
 
   async function callCombinedAPI() {
+    if (!isAuthenticated || !user) {
+      alert("로그인이 필요한 서비스입니다. 로그인 후 이용해주세요.");
+      return;
+    }
+
     if (
       userInput.trim().length === 0 &&
       (weather === "기타" || mood === "기타")
@@ -41,28 +49,22 @@ export default function BeforeScreen(props: any) {
 
     setLoading(true);
 
-    // 선택된 옵션들을 조합하여 최종 프롬프트 데이터 생성
-    const combinedInput = `
-      현재 상태:
-      - 날씨: ${weather}
-      - 기분: ${mood}
-      - 선호 도수: ${strength}
-      - 상세 내용: ${userInput || "특별한 추가 요청 없음"}
-    `.trim();
-
     const combinedPromise = (async () => {
       try {
-        const geminiRes = await fetch("/api/gemini", {
-          method: "POST",
-          body: JSON.stringify({ data: combinedInput, type: 0, rich: imRich })
+        // 1. 백엔드 트랜잭션 서비스 호출 (토큰 차감 -> AI 추천 -> DB 저장)
+        const { aiResult, savedOid } = await getWhiskyRecommendation(user.uid, {
+          weather_value: weather,
+          mood_value: mood,
+          abv_value: strength,
+          additional_value: userInput,
+          flex_flag: imRich,
         });
-        if (!geminiRes.ok) throw new Error("Gemini API failed");
-        const geminiData = await geminiRes.json();
 
+        // 2. 이미지 검색 (Google API 활용 - 기존 로직 유지)
         const googleRes = await fetch("/api/google", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: geminiData.whiskyName, type: 3 })
+          body: JSON.stringify({ data: aiResult.whiskyName, type: 3 })
         });
 
         let imageUrl = null;
@@ -70,9 +72,14 @@ export default function BeforeScreen(props: any) {
           imageUrl = await googleRes.json();
         }
 
-        return { ...geminiData, image: imageUrl };
-      } catch (err) {
-        console.error(err);
+        // 3. 최종 데이터 반환 (savedOid 포함하여 나중에 상세 조회나 삭제 등에 활용 가능)
+        return { 
+          ...aiResult, 
+          image: imageUrl,
+          oid: savedOid 
+        };
+      } catch (err: any) {
+        console.error('Recommendation Error:', err);
         throw err;
       }
     })();
@@ -82,8 +89,8 @@ export default function BeforeScreen(props: any) {
     try {
       await combinedPromise;
       setSwitchState(1);
-    } catch (err) {
-      alert("추천을 가져오는 중 오류가 발생했습니다.");
+    } catch (err: any) {
+      alert(err.message || "추천을 가져오는 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }

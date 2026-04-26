@@ -1,17 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import RWhiskeyLogo from "./_components/LogoText";
 import MainRouterButton from "./_components/MainRouterButton";
 import NoticeModal from "./_components/NoticeModal";
+import { useAuthStore } from "@/store/authStore";
 
 export default function MainScreen() {
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    if (confirm("로그아웃 하시겠습니까?")) {
+      await logout();
+      alert("로그아웃 되었습니다.");
+      setIsMenuOpen(false);
+    }
+  };
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
   return (
     <>
       <NoticeModal />
       {/* =========================
           상단 고정 네비게이션
-          모바일에서는 로고만 보여주고,
-          데스크탑에서만 메뉴 노출
       ========================= */}
       <nav className="fixed top-0 left-0 w-full z-50 bg-gradient-to-b from-black/40 to-transparent backdrop-blur-[2px]">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-24 flex items-center justify-between">
@@ -20,7 +33,7 @@ export default function MainScreen() {
             <RWhiskeyLogo className="w-[112px] sm:w-[128px] md:w-[180px]" />
           </div>
 
-          {/* 우측 네비게이션 메뉴 - 모바일 숨김 */}
+          {/* 우측 네비게이션 메뉴 - 데스크탑 전용 */}
           <div className="hidden md:flex items-center gap-8">
             <a
               href="#intro"
@@ -40,9 +53,129 @@ export default function MainScreen() {
             >
               추천 결과
             </a>
+
+            {isAuthenticated ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-white/90">
+                  <span className="text-[#ffb247] font-bold">{user?.name}</span>님
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm font-medium px-5 py-2 rounded-full bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-colors shadow-lg"
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <a
+                href="/login"
+                className="text-sm font-medium px-5 py-2 rounded-full bg-[#ffb247] text-[#1a140b] hover:bg-[#ffc266] transition-colors shadow-lg"
+              >
+                로그인
+              </a>
+            )}
           </div>
+
+          {/* 모바일/테블릿 메뉴 버튼 (햄버거) */}
+          <button
+            onClick={toggleMenu}
+            className="flex md:hidden flex-col gap-1.5 p-2 z-[60]"
+            aria-label="메뉴 열기"
+          >
+            <span
+              className={`w-6 h-0.5 bg-white transition-transform ${
+                isMenuOpen ? "rotate-45 translate-y-2" : ""
+              }`}
+            />
+            <span
+              className={`w-6 h-0.5 bg-white transition-opacity ${
+                isMenuOpen ? "opacity-0" : ""
+              }`}
+            />
+            <span
+              className={`w-6 h-0.5 bg-white transition-transform ${
+                isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+              }`}
+            />
+          </button>
         </div>
       </nav>
+
+      {/* 모바일 사이드바 메뉴 (Drawer) */}
+      <div
+        className={`fixed inset-0 z-[55] transition-all duration-300 ${
+          isMenuOpen ? "visible" : "invisible delay-300"
+        }`}
+      >
+        {/* 배경 오버레이 */}
+        <div
+          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+            isMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+
+        {/* 메뉴 컨텐츠 */}
+        <div
+          className={`absolute top-0 right-0 w-[280px] h-full bg-[#1a140b] border-l border-white/10 p-8 pt-24 flex flex-col gap-8 shadow-2xl transition-transform duration-300 ease-in-out ${
+            isMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {isAuthenticated && (
+            <div className="pb-6 border-b border-white/10">
+              <p className="text-white/60 text-xs uppercase tracking-widest mb-2">
+                Member
+              </p>
+              <p className="text-lg text-white font-medium">
+                <span className="text-[#ffb247] font-bold">{user?.name}</span>님
+                반갑습니다
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-6">
+            <a
+              href="#intro"
+              onClick={() => setIsMenuOpen(false)}
+              className="text-xl font-medium text-white/90 hover:text-[#ffb247]"
+            >
+              서비스 소개
+            </a>
+            <a
+              href="#how-to"
+              onClick={() => setIsMenuOpen(false)}
+              className="text-xl font-medium text-white/90 hover:text-[#ffb247]"
+            >
+              이용 방법
+            </a>
+            <a
+              href="#start"
+              onClick={() => setIsMenuOpen(false)}
+              className="text-xl font-medium text-white/90 hover:text-[#ffb247]"
+            >
+              추천 결과 확인
+            </a>
+          </div>
+
+          <div className="mt-auto pt-8 border-t border-white/10">
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="w-full py-4 rounded-xl bg-white/5 text-white border border-white/10 text-center font-bold"
+              >
+                로그아웃
+              </button>
+            ) : (
+              <a
+                href="/login"
+                className="block w-full py-4 rounded-xl bg-[#ffb247] text-[#1a140b] text-center font-bold"
+              >
+                로그인 하러가기
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* =========================
           메인 화면
@@ -229,7 +362,7 @@ export default function MainScreen() {
                 <h4 className="text-[1.25rem] md:text-[1.5rem] font-bold text-white mb-3 md:mb-4">
                   상황과 기분 선택
                 </h4>
-                <p className="text-slate-300 font-light leading-relaxed px-2 md:px-4 text-[0.875rem] md:text-[1rem]">
+                <p className="text-slate-300 font-light leading-relaxed px-2 md:px-4 text-[0.875rem] md:text-[1rem] break-keep">
                   오늘의 분위기나 선호하는 맛을 간단히 선택합니다.
                 </p>
               </div>
@@ -241,7 +374,7 @@ export default function MainScreen() {
                 <h4 className="text-[1.25rem] md:text-[1.5rem] font-bold text-white mb-3 md:mb-4">
                   맞춤 정보 분석
                 </h4>
-                <p className="text-slate-300 font-light leading-relaxed px-2 md:px-4 text-[0.875rem] md:text-[1rem]">
+                <p className="text-slate-300 font-light leading-relaxed px-2 md:px-4 text-[0.875rem] md:text-[1rem] break-keep">
                   선택하신 정보를 바탕으로 당신을 위한 주류를 추천합니다.
                 </p>
               </div>
@@ -253,7 +386,7 @@ export default function MainScreen() {
                 <h4 className="text-[1.25rem] md:text-[1.5rem] font-bold text-white mb-3 md:mb-4">
                   결과 확인
                 </h4>
-                <p className="text-slate-300 font-light leading-relaxed px-2 md:px-4 text-[0.875rem] md:text-[1rem]">
+                <p className="text-slate-300 font-light leading-relaxed px-2 md:px-4 text-[0.875rem] md:text-[1rem] break-keep">
                   위스키 이름, 특징, 추천 이유를 확인할 수 있습니다.
                 </p>
               </div>
@@ -268,7 +401,7 @@ export default function MainScreen() {
         ========================= */}
         <section
           id="start"
-          className="relative overflow-hidden bg-[#2d2417] px-4 py-16 sm:px-6 md:h-screen md:snap-start md:flex md:items-center md:px-6 md:py-0"
+          className="relative overflow-hidden bg-[#2d2417] px-4 py-16 sm:px-6 md:min-h-screen md:snap-start md:flex md:items-center md:px-6 md:py-12 lg:py-0"
         >
           {/* 배경 */}
           <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -276,9 +409,9 @@ export default function MainScreen() {
           </div>
 
           {/* 전체 컨테이너 */}
-          <div className="relative z-10 w-full max-w-7xl mx-auto md:h-full md:flex md:flex-col md:justify-center md:pt-[5.5rem] md:pb-[1.5rem]">
+          <div className="relative z-10 w-full max-w-7xl mx-auto md:min-h-full md:flex md:flex-col md:justify-center md:pt-[4rem] lg:pt-[5.5rem] md:pb-[1.5rem]">
             {/* 제목 */}
-            <div className="text-center mb-[2rem] md:mb-[1.25rem]">
+            <div className="text-center mb-[1.5rem] md:mb-[1.25rem]">
               <h3 className="text-[1.75rem] md:text-[2.5rem] lg:text-[3rem] font-bold text-white mb-[0.5rem] md:mb-[0.75rem] leading-tight">
                 추천 결과 미리보기
               </h3>
@@ -289,7 +422,7 @@ export default function MainScreen() {
             </div>
 
             {/* tablet부터 무조건 좌우 2열 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[1rem] md:gap-[1.25rem] lg:gap-[2rem] items-center md:flex-1 md:min-h-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[1.5rem] md:gap-[1.25rem] lg:gap-[2rem] items-center md:flex-1">
               {/* =========================
           좌측 카드
       ========================= */}

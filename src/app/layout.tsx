@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Parisienne } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import AuthProvider from "@/components/AuthProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -12,6 +14,17 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900"
+});
+
+const kyobo = localFont({
+  src: "./fonts/KyoboHandwriting2024psw.ttf",
+  variable: "--font-kyobo",
+});
+
+const parisienne = Parisienne({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-parisienne",
 });
 
 export const metadata: Metadata = {
@@ -34,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="ko" className="dark">
       <head>
         <meta name="color-scheme" content="dark" />
         <meta
@@ -43,10 +56,12 @@ export default function RootLayout({
         ></meta>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark bg-neutral-900 text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${kyobo.variable} ${parisienne.variable} antialiased dark bg-neutral-900 text-white`}
       >
-        {children}
-        <Analytics />
+        <AuthProvider>
+          {children}
+          <Analytics />
+        </AuthProvider>
       </body>
     </html>
   );
