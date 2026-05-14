@@ -1,0 +1,251 @@
+/* Notes 전용 스타일 (Tailwind Layer 대신 일반 CSS로 정의) */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Gowun+Dodum&display=swap');
+
+/* 로컬 교보 손글씨 폰트 직접 정의 */
+@font-face {
+  font-family: 'KyoboHandwriting2024psw';
+  src: url('../fonts/KyoboHandwriting2024psw.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 폰트 설정: 영문은 Cormorant Garamond, 한글은 Pretendard 우선 적용 */
+.notes-font-all * {
+  font-family: "Cormorant Garamond", "Pretendard", "Gowun Dodum", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+/* 라운지 쪽지 전용: 해당 클래스가 부여된 요소와 그 하위의 모든 텍스트에 손글씨 강제 */
+.font-kyobo, .font-kyobo * {
+  font-family: 'KyoboHandwriting2024psw', 'Pretendard', cursive !important;
+}
+
+/* 어두운 나무 책상 + 중앙 핀 조명 */
+.bg-notes-desk {
+  background-color: #0d0704;
+  background-image:
+    radial-gradient(ellipse at center, rgba(255, 190, 120, 0.10) 0%, rgba(0, 0, 0, 0) 55%),
+    repeating-linear-gradient(
+      92deg,
+      rgba(35, 20, 12, 0.7) 0px,
+      rgba(15, 8, 5, 0.7) 2px,
+      rgba(25, 14, 8, 0.7) 5px,
+      rgba(10, 5, 3, 0.7) 8px
+    ),
+    radial-gradient(circle at 30% 20%, rgba(70, 40, 20, 0.18), transparent 60%),
+    radial-gradient(circle at 70% 80%, rgba(50, 28, 14, 0.2), transparent 65%);
+  background-blend-mode: normal, overlay, normal, normal;
+}
+
+/* 가죽 안감 (짙은 다크 브라운) */
+.leather-inner {
+  background-color: #3e240c;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(180, 120, 70, 0.18), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(20, 10, 4, 0.5), transparent 55%),
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(70, 40, 15, 0.2) 0px,
+      rgba(95, 55, 25, 0.12) 2px,
+      rgba(40, 22, 8, 0.25) 4px
+    );
+  box-shadow:
+    inset 0 0 80px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+    inset 0 2px 6px rgba(255, 200, 150, 0.08);
+}
+
+/* 미색 종이 뭉치 */
+.paper-block {
+  background-color: #fdfbf7;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(180, 150, 110, 0.08), transparent 50%),
+    radial-gradient(circle at 85% 75%, rgba(160, 130, 90, 0.1), transparent 55%);
+  box-shadow:
+    0 1px 0 #efe7d3,
+    0 3px 0 #fdfbf7,
+    0 4px 0 #e7dfc8,
+    0 6px 0 #fdfbf7,
+    0 7px 0 #ddd2b6,
+    0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* 코르크 보드 */
+.bg-cork {
+  background-color: #8b5a2b;
+  background-image:
+    radial-gradient(circle at 30% 40%, rgba(60, 30, 10, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 70% 70%, rgba(60, 30, 10, 0.06) 0 1px, transparent 2px),
+    radial-gradient(ellipse at center, rgba(255, 220, 170, 0.10), transparent 75%);
+  background-size: 80px 80px, 110px 110px, 100% 100%;
+  box-shadow: inset 0 0 100px rgba(40, 20, 5, 0.55);
+}
+
+/* 붉은 도장 (큰) */
+.stamp {
+  color: #a8201a;
+  border: 3px solid #a8201a;
+  padding: 4px 14px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  transform: rotate(-12deg);
+  opacity: 0.85;
+  border-radius: 4px;
+  text-transform: uppercase;
+  background: rgba(168, 32, 26, 0.04);
+  box-shadow: 0 0 0 1px rgba(168, 32, 26, 0.2);
+}
+
+/* 작은 원형 도장 */
+.stamp-circle {
+  color: #a8201a;
+  border: 2px solid #a8201a;
+  border-radius: 9999px;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-12deg);
+  opacity: 0.8;
+  background: rgba(168, 32, 26, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(168, 32, 26, 0.25);
+  line-height: 1;
+}
+
+/* 노트 (스프링 노트에서 뜯어낸 사각 종이) */
+.note-paper {
+  position: relative;
+  background: #fdfbf7;
+  border-radius: 2px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  /* 위쪽 가장자리만 미세한 지그재그 */
+  -webkit-mask-image:
+    linear-gradient(#000, #000),
+    radial-gradient(circle at 4px 0, transparent 2.2px, #000 2.4px);
+  -webkit-mask-size: 100% calc(100% - 6px), 8px 6px;
+  -webkit-mask-position: 0 6px, 0 0;
+  -webkit-mask-repeat: no-repeat, repeat-x;
+  -webkit-mask-composite: source-over;
+          mask-image:
+    linear-gradient(#000, #000),
+    radial-gradient(circle at 4px 0, transparent 2.2px, #000 2.4px);
+          mask-size: 100% calc(100% - 6px), 8px 6px;
+          mask-position: 0 6px, 0 0;
+          mask-repeat: no-repeat, repeat-x;
+}
+
+/* 닫기 버튼 - 빈티지 도장 스타일 */
+.btn-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(60, 35, 15, 0.5);
+  background: rgba(253, 251, 247, 0.6);
+  color: #2a1810;
+  border-radius: 3px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: 0.08em;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(253, 251, 247, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.btn-stamp:hover {
+  background: #2a1810;
+  color: #fdfbf7;
+  border-color: #2a1810;
+}
+
+/* Sheet 애니메이션 */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+.sheet-overlay[data-state='open'] {
+  animation: fadeIn 0.3s ease-out;
+}
+.sheet-overlay[data-state='closed'] {
+  animation: fadeOut 0.2s ease-in;
+}
+
+.sheet-content {
+  position: fixed;
+  z-index: 50;
+  background-color: #fdfbf7;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sheet-content[data-state='open'] {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sheet-content[data-state='closed'] {
+  animation: slideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slideOutRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+/* 얇고 은은한 커스텀 스크롤바 (아날로그 톤) */
+.scrollbar-soft {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(60, 35, 15, 0.18) transparent;
+}
+.scrollbar-soft::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-soft::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-soft::-webkit-scrollbar-thumb {
+  background-color: rgba(60, 35, 15, 0.18);
+  border-radius: 9999px;
+}
+.scrollbar-soft::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(60, 35, 15, 0.32);
+}
+
+/* 스크롤바 완전히 숨김 */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* 하단 페이드 마스크 - "더 있음" 시각적 힌트 */
+.fade-bottom-paper {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 56px), transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 56px), transparent 100%);
+}
+.fade-bottom-cork {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 80px), transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 80px), transparent 100%);
+}
+
+/* 숫자용 Pretendard 강제 적용 (손글씨 폰트에서 숫자가 어색할 경우 사용) */
+.font-pretendard-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: "Pretendard", sans-serif !important;
+}

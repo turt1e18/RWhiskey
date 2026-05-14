@@ -6,6 +6,7 @@ interface UserState {
   user: MeResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
 
   // Actions
   setUser: (user: MeResponse | null) => void;
@@ -21,6 +22,7 @@ export const useAuthStore = create<UserState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  isInitialized: false,
 
   setUser: (user) => set({ user, isAuthenticated: !!user }),
   setAuthenticated: (status) => set({ isAuthenticated: status }),
@@ -43,7 +45,7 @@ export const useAuthStore = create<UserState>((set) => ({
       console.error("Failed to fetch user session:", error);
       set({ user: null, isAuthenticated: false });
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, isInitialized: true });
     }
   },
 

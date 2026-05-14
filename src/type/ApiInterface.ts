@@ -38,20 +38,21 @@ export interface MeResponse {
  * Recommendation
  */
 export interface RecommendationSaveRequest {
-  weather_value?: string;
-  mood_value?: string;
-  abv_value?: string;
-  additional_value?: string;
-  flex_flag: boolean;
-  whisky_name: string;
-  whisky_name_en?: string;
+  weatherValue?: string;
+  moodValue?: string;
+  abvValue?: string;
+  additionalValue?: string;
+  flexFlag: boolean;
+  mainTag?: string;
+  whiskyName: string;
+  whiskyNameEn?: string;
   classification?: string;
-  feature_tags?: string[];
-  food_name?: string;
-  pairing_note?: string;
-  bartender_word?: string;
-  region_name?: string; // Keep snake_case for backend save request as per API CONTRACT
-  style_name?: string;  // Keep snake_case for backend save request as per API CONTRACT
+  regionName?: string;
+  styleName?: string;
+  featureTags?: string[];
+  foodName?: string;
+  pairingNote?: string;
+  bartenderWord?: string;
 }
 
 /**
@@ -84,4 +85,56 @@ export interface GeminiCocktailResponse {
   method: string[];
   foodName: string;
   pairingNote: string;
+}
+
+/**
+ * Tasting Note API
+ */
+export interface NoteResponse {
+  id: number;
+  oid: number;
+  status: string;
+  whiskeyName: string;
+  whiskeyNameEn: string;
+  whiskeyCategory: string;
+  regionId?: number;
+  styleId?: number;
+  featureTags?: string[];
+  foodName: string;
+  pairingNote: string;
+  bartenderWord: string;
+  weatherValue: string;
+  moodValue: string;
+  abvValue: string;
+  additionalValue: string;
+  recommendedAt: string;
+  reviewType: "BASIC" | "FREE";
+  rating: number;
+  nose: string;
+  palate: string;
+  finish: string;
+  memo: string;
+  shared: boolean;
+  ratedAt: string;
+  isScrapped: boolean;
+  ownerNickname: string;
+}
+
+export interface NoteReviewRequest {
+  reviewType: "BASIC" | "FREE";
+  rating?: number;
+  nose?: string;
+  palate?: string;
+  finish?: string;
+  memo?: string;
+  shared: boolean;
+}
+
+/**
+ * User Token API
+ */
+export interface TokenStatusResponse {
+  dailyLimit: number;
+  usedCount: number;
+  remaining: number;
 }

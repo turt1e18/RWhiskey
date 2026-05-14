@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
 /* ── Blacksword Display Font (calligraphic) ─────────────── */
@@ -110,7 +110,7 @@ body {
 
 /* ── Stamp/Ticket button style ────────────────────────– */
 .btn-stamp {
-  font-family: 'Pretendard', sans-serif;
+  font-family: "Cormorant Garamond", "Pretendard", sans-serif;
   background: transparent;
   color: var(--ink-dark);
   border: 1px solid var(--ink-dark);

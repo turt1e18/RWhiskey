@@ -1,5 +1,4 @@
-import apiClient from "./apiClient";
-import { recommendationApi } from "./whiskeyApi";
+import { recommendationApi, userTokenApi } from "./whiskeyApi";
 import {
   GeminiWhiskyResponse,
   RecommendationSaveRequest
@@ -9,32 +8,27 @@ import {
  * 위스키 추천 트랜잭션 서비스
  */
 export const getWhiskyRecommendation = async (
-  uid: number,
   userInput: {
-    weather_value?: string;
-    mood_value?: string;
-    abv_value?: string;
-    additional_value?: string;
-    flex_flag: boolean;
+    weatherValue?: string;
+    moodValue?: string;
+    abvValue?: string;
+    additionalValue?: string;
+    flexFlag: boolean;
+    mainTasteTag?: string;
   }
 ) => {
+  let isTokenDecremented = false;
+
   try {
-    // 1. 백엔드에 토큰 차감 요청
-    console.log("[Step 1] Token Decrement for UID:", uid);
+    // 1. 백엔드에 토큰 차감 요청 (선차감)
+    console.log("[Step 1] Token Decrement");
     try {
-      await apiClient("/api/user/token/decrement", {
-        method: "POST",
-        body: JSON.stringify({})
-      });
+      await userTokenApi.decrement();
+      isTokenDecremented = true;
     } catch (tokenError) {
-      console.warn(
-        "Token decrement failed or endpoint missing. Proceeding to AI...",
-        tokenError
-      );
-      // 토큰 엔드포인트가 아직 없는 경우(404)를 대비해 로그만 남기고 진행
-      if (
-        !(tokenError instanceof Error && tokenError.message.includes("404"))
-      ) {
+      console.warn("Token decrement failed:", tokenError);
+      // 404가 아닌 실제 에러(잔액 부족 등)인 경우 추천 진행 중단
+      if (tokenError instanceof Error && !tokenError.message.includes("404")) {
         throw tokenError;
       }
     }
@@ -45,9 +39,10 @@ export const getWhiskyRecommendation = async (
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        data: `날씨: ${userInput.weather_value}, 기분: ${userInput.mood_value}, 요구사항: ${userInput.additional_value}`,
+        data: `날씨: ${userInput.weatherValue}, 기분: ${userInput.moodValue}, 요구사항: ${userInput.additionalValue}${userInput.mainTasteTag ? `, 강조풍미: ${userInput.mainTasteTag}` : ""}`,
         type: 0,
-        rich: userInput.flex_flag
+        rich: userInput.flexFlag,
+        mainTasteTag: userInput.mainTasteTag
       })
     });
 
@@ -59,29 +54,25 @@ export const getWhiskyRecommendation = async (
 
     // 3. 최종 결과 화면 표시용 데이터 구성 및 백엔드 서버에 저장 요청
     const saveRequest: RecommendationSaveRequest = {
-      // userInput의 값들을 명시적으로 할당 (undefined 방지)
-      weather_value: userInput.weather_value || "맑음",
-      mood_value: userInput.mood_value || "차분함",
-      abv_value: userInput.abv_value || "기본도수",
-      additional_value: userInput.additional_value || "",
-      flex_flag: !!userInput.flex_flag,
-
-      // AI 결과 매핑
-      whisky_name: aiResult.whiskyName || "Unknown Whisky",
-      whisky_name_en: aiResult.whiskyNameEn || "",
+      weatherValue: userInput.weatherValue || "맑음",
+      moodValue: userInput.moodValue || "차분함",
+      abvValue: userInput.abvValue || "기본도수",
+      additionalValue: userInput.additionalValue || "",
+      flexFlag: !!userInput.flexFlag,
+      mainTag: userInput.mainTasteTag, 
+      whiskyName: aiResult.whiskyName || "Unknown Whisky",
+      whiskyNameEn: aiResult.whiskyNameEn || "",
       classification: aiResult.classification || "",
-      feature_tags: Array.isArray(aiResult.featureTags)
-        ? aiResult.featureTags
-        : [],
-      food_name: aiResult.foodName || '',
-      pairing_note: aiResult.pairingNote || '',
-      bartender_word: aiResult.bartenderWord || '',
-      region_name: aiResult.regionName || '',
-      style_name: aiResult.styleName || '',
-      };
+      featureTags: Array.isArray(aiResult.featureTags) ? aiResult.featureTags : [],
+      foodName: aiResult.foodName || '',
+      pairingNote: aiResult.pairingNote || '',
+      bartenderWord: aiResult.bartenderWord || '',
+      regionName: aiResult.regionName || '',
+      styleName: aiResult.styleName || '',
+    };
 
     console.log("[Step 3] Saving Recommendation:", saveRequest);
-    const savedOid = await recommendationApi.save(uid, saveRequest);
+    const savedOid = await recommendationApi.save(saveRequest);
 
     return {
       aiResult,
@@ -89,6 +80,18 @@ export const getWhiskyRecommendation = async (
     };
   } catch (error) {
     console.error("Whisky Recommendation Transaction Failed:", error);
+
+    // 보상 트랜잭션: 토큰 선차감은 성공했으나 이후 과정에서 에러 발생 시 롤백 (increment)
+    if (isTokenDecremented) {
+      console.log("[Compensation] Attempting to rollback token");
+      try {
+        await userTokenApi.increment();
+        console.log("[Compensation] Token rollback successful.");
+      } catch (rollbackError) {
+        console.error("[Compensation] Token rollback failed:", rollbackError);
+      }
+    }
+    
     throw error;
   }
 };
