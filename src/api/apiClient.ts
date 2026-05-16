@@ -1,7 +1,13 @@
 /**
  * 백엔드 서버의 기본 URL 설정
+ * 환경 변수(NEXT_PUBLIC_API_BASE_URL)가 있으면 사용하고, 없으면 로컬 기본값을 사용합니다.
  */
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+
+/**
+ * 개발 환경 여부 확인
+ */
+const IS_DEV = process.env.NODE_ENV !== 'production';
 
 /**
  * Fetch API를 사용한 공통 HTTP 요청 함수
@@ -33,16 +39,20 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
     credentials: 'include',
   };
 
-  console.log(`[API Request] ${config.method || 'GET'} ${url}`, body ? `Body: ${body}` : '');
+  if (IS_DEV) {
+    console.log(`[API Request] ${config.method || 'GET'} ${url}`, body ? `Body: ${body}` : '');
+  }
 
   const response = await fetch(url, config);
 
   // 리다이렉트 여부 확인 로그
-  if (response.redirected) {
+  if (response.redirected && IS_DEV) {
     console.warn(`[API Redirected] To: ${response.url}`);
   }
 
-  console.log(`[API Response] ${response.status} ${url}`);
+  if (IS_DEV) {
+    console.log(`[API Response] ${response.status} ${url}`);
+  }
 
   // 204 No Content 처리 (예: 로그아웃 성공 시 데이터가 없는 경우)
   if (response.status === 204) {
