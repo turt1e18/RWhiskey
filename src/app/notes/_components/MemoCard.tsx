@@ -47,27 +47,27 @@ export const MemoCard = ({ whisky }: { whisky: WhiskyEntry }) => {
           <Row
             icon={<Cloud className="h-4 w-4" />}
             label="날씨"
-            value={whisky.weatherValue!}
+            value={whisky.weatherValue}
           />
           <Row
             icon={<Heart className="h-4 w-4" />}
             label="기분"
-            value={whisky.moodValue!}
+            value={whisky.moodValue}
           />
           <Row
             icon={<Thermometer className="h-4 w-4" />}
             label="선호 도수"
-            value={whisky.abvValue!}
+            value={whisky.abvValue}
           />
           <Row
             icon={<MessageSquare className="h-4 w-4" />}
             label="추가 요청"
-            value={whisky.additionalValue!}
+            value={whisky.additionalValue}
           />
           <Row
             icon={<Utensils className="h-4 w-4" />}
             label="추천 간식"
-            value={whisky.foodName!}
+            value={whisky.foodName}
             color="#a8201a"
           />
 
@@ -104,7 +104,7 @@ const Row = ({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value?: string;
   color?: string;
 }) => (
   <div className="flex items-start gap-4">

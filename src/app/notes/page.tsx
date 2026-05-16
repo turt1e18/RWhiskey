@@ -16,7 +16,7 @@ import { LoungeBoard } from "./_components/LoungeBoard";
 import { initialWhiskies, loungeNotes, WhiskyEntry, LoungeNote } from "./_data/mockData";
 import { toast } from "sonner";
 import { notesApi } from "@/api/whiskeyApi";
-import { NoteResponse } from "@/type/ApiInterface";
+import { NoteResponse, NoteReviewRequest } from "@/type/ApiInterface";
 import "./notes.css";
 
 type View = "notes" | "lounge" | "scrapbook";
