@@ -2,11 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+/* ── Blacksword Display Font (calligraphic) ─────────────── */
+@font-face {
+  font-family: 'Blacksword';
+  src: url('https://db.onlinewebfonts.com/t/923e41c94e7da87d6afb0f4826f19af4.woff2') format('woff2'),
+       url('https://db.onlinewebfonts.com/t/923e41c94e7da87d6afb0f4826f19af4.woff') format('woff');
+  font-display: swap;
+  font-weight: normal;
+  font-style: normal;
+}
 
 :root {
   --background: #1a120d;
   --foreground: #ededed;
+
+  /* R-Whiskey Paper Order Slip Design Tokens */
+  --paper-bg:    #F4F1EA;
+  --ink-dark:    #2C2C2C;
+  --ink-sepia:   #3E2A1E;
+  --accent-line: #9B8B7E;
+  --label-text:  #5C4A39;
 }
 
 body {
@@ -14,9 +32,107 @@ body {
   height: 100%;
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Pretendard', sans-serif;
 }
 
 .font-serif {
   font-family: 'Noto Serif KR', serif;
+}
+
+/* ── Fonts ─────────────── */
+.font-parisienne { font-family: var(--font-parisienne), cursive; }
+.font-kyobo { font-family: var(--font-kyobo), cursive; }
+
+:root {
+  --background: #1a120d;
+  --foreground: #ededed;
+
+  /* R-Whiskey Paper Order Slip Design Tokens */
+  --paper-bg:    #F4F1EA;
+  --ink-dark:    #2C2C2C;
+  --ink-sepia:   #3E2A1E;
+  --accent-line: #9B8B7E;
+  --label-text:  #5C4A39;
+}
+
+/* ── Dark Wood Table with Pin Spotlight ────────────────────────────── */
+.wood-table-spotlight {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 245, 200, 0.12) 0%,
+    rgba(26, 17, 13, 0.95) 60%,
+    #1A110D 100%
+  ), #1A110D;
+}
+
+/* ── Paper texture overlay ────────────────────────────── */
+.paper-texture {
+  font-family: 'Pretendard', sans-serif;
+  background-color: var(--paper-bg);
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(155, 139, 126, 0.02) 2px,
+      rgba(155, 139, 126, 0.02) 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(155, 139, 126, 0.02) 2px,
+      rgba(155, 139, 126, 0.02) 4px
+    );
+}
+
+/* ── Order slip dotted border ─────────────────────────── */
+.input-dotted {
+  font-family: 'Pretendard', sans-serif;
+  background: transparent;
+  border: none;
+  border-bottom: 2px dashed #BFAD98;
+  border-radius: 0;
+  color: var(--ink-dark);
+  outline: none;
+  width: 100%;
+  padding: 0.625rem 0;
+  font-size: 1rem;
+  transition: border-color 0.25s ease;
+  padding-bottom: 0.75rem;
+}
+.input-dotted::placeholder {
+  color: rgba(60, 42, 26, 0.4);
+}
+.input-dotted:focus {
+  border-bottom-color: var(--ink-dark);
+}
+
+/* ── Stamp/Ticket button style ────────────────────────– */
+.btn-stamp {
+  font-family: "Cormorant Garamond", "Pretendard", sans-serif;
+  background: transparent;
+  color: var(--ink-dark);
+  border: 1px solid var(--ink-dark);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.btn-stamp:hover {
+  background: rgba(60, 42, 26, 0.05);
+  border-color: var(--ink-dark);
+}
+.btn-stamp:active {
+  background: rgba(60, 42, 26, 0.12);
+}
+
+/* ── Label text style ─────────────────────────────────– */
+.label-style {
+  font-family: 'Pretendard', sans-serif;
+  color: var(--label-text);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
 }
