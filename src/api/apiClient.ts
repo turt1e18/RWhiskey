@@ -1,102 +1,96 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+/**
+ * 브라우저 쿠키에서 특정 이름의 값을 가져오는 유틸리티
+ */
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+}
 
 /**
  * 백엔드 서버의 기본 URL 설정
- * - 개발 환경(Local): Next.js rewrites(proxy)를 이용하기 위해 빈 문자열('')
- * - 운영 환경(Prod): 'https://api.turt1e18.work'
  */
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 /**
  * 개발 환경 여부 확인
  */
-const IS_DEV = process.env.NODE_ENV !== "production";
+const IS_DEV = process.env.NODE_ENV !== 'production';
 
 /**
- * Axios 인스턴스 설정 (운영 환경 보안 스펙 준수)
- * - withCredentials: true (세션 쿠키 및 CSRF 토큰 전송 필수)
- * - xsrfCookieName: 백엔드에서 발급하는 CSRF 쿠키 이름
- * - xsrfHeaderName: 요청 시 포함할 CSRF 헤더 이름
- */
-const api = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "X-XSRF-TOKEN",
-  headers: {
-    "Content-Type": "application/json"
-  }
-});
-
-/**
- * 요청 인터셉터 (디버깅용)
- */
-api.interceptors.request.use(
-  (config) => {
-    if (IS_DEV) {
-      console.log(
-        `[API Request] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
-        config.data ? config.data : ""
-      );
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-/**
- * 응답 인터셉터 (에러 처리 및 데이터 변환)
- */
-api.interceptors.response.use(
-  (response: AxiosResponse) => {
-    if (IS_DEV) {
-      console.log(`[API Response] ${response.status} ${response.config.url}`);
-    }
-    return response;
-  },
-  (error) => {
-    const errorData = error.response?.data || {};
-    const errorMessage =
-      errorData.message || `API Error: ${error.response?.status || "Unknown"}`;
-
-    if (IS_DEV) {
-      console.error(
-        `[API Error] ${error.response?.status} ${error.config?.url}`,
-        errorData
-      );
-    }
-
-    return Promise.reject(new Error(errorMessage));
-  }
-);
-
-/**
- * 공통 HTTP 요청 함수 (기존 Fetch 기반 인터페이스 호환)
+ * Native Fetch API를 사용한 공통 HTTP 요청 함수 (운영 보안 스펙 준수)
  * @param endpoint - API 엔드포인트 경로
- * @param options - method, body, headers 등을 포함한 옵션
+ * @param options - Fetch API 옵션
  */
-async function apiClient<T>(endpoint: string, options: any = {}): Promise<T> {
-  const { method, body, headers, ...rest } = options;
+async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
+  
+  const headers = new Headers(options.headers);
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
 
-  const config: AxiosRequestConfig = {
-    url: endpoint,
-    method: method || "GET",
-    headers: headers,
-    // fetch의 body(string)를 axios의 data(object)로 변환
-    data: typeof body === "string" ? JSON.parse(body) : body,
-    ...rest
+  /**
+   * [CSRF 방어] 
+   * POST, PUT, DELETE 등 상태 변경 요청 시 브라우저 쿠키에서 XSRF-TOKEN을 읽어 
+   * X-XSRF-TOKEN 헤더에 수동으로 포함합니다.
+   */
+  const method = options.method?.toUpperCase() || 'GET';
+  const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+
+  if (isMutation) {
+    const csrfToken = getCookie('XSRF-TOKEN');
+    if (csrfToken) {
+      headers.set('X-XSRF-TOKEN', csrfToken);
+    }
+  }
+
+  const config: RequestInit = {
+    ...options,
+    headers,
+    /**
+     * [인증 보안 핵심]
+     * credentials: 'include' 옵션이 있어야 실서버(api.turt1e18.work) 통신 시
+     * 브라우저가 세션 쿠키(JSESSIONID)를 자동으로 포함합니다.
+     */
+    credentials: 'include',
   };
 
-  const response = await api.request<T>(config);
-
-  // 204 No Content 처리
-  if (response.status === 204) {
-    return {} as T;
+  if (IS_DEV) {
+    console.log(`[API Request] ${method} ${url}`, options.body ? `Body: ${options.body}` : '');
   }
 
-  return response.data;
+  try {
+    const response = await fetch(url, config);
+
+    if (IS_DEV) {
+      console.log(`[API Response] ${response.status} ${url}`);
+    }
+
+    // 204 No Content 처리
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    // 에러 상태 처리
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || `API Error: ${response.status}`;
+      
+      if (IS_DEV) {
+        console.error(`[API Error] ${response.status} ${url}`, errorData);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (IS_DEV && !(error instanceof Error && error.message.includes('API Error'))) {
+      console.error(`[Network Error] ${url}`, error);
+    }
+    throw error;
+  }
 }
 
 export default apiClient;
