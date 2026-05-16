@@ -1,71 +1,102 @@
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+
 /**
  * 백엔드 서버의 기본 URL 설정
- * 환경 변수(NEXT_PUBLIC_API_BASE_URL)가 있으면 사용하고, 없으면 로컬 기본값을 사용합니다.
+ * - 개발 환경(Local): Next.js rewrites(proxy)를 이용하기 위해 빈 문자열('')
+ * - 운영 환경(Prod): 'https://api.turt1e18.work'
  */
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 /**
  * 개발 환경 여부 확인
  */
-const IS_DEV = process.env.NODE_ENV !== 'production';
+const IS_DEV = process.env.NODE_ENV !== "production";
 
 /**
- * Fetch API를 사용한 공통 HTTP 요청 함수
- * @param endpoint - API 엔드포인트 경로 (예: /api/auth/me)
- * @param options - Fetch API 옵션 (method, body, headers 등)
- * @returns Promise<T> - 서버 응답 데이터
+ * Axios 인스턴스 설정 (운영 환경 보안 스펙 준수)
+ * - withCredentials: true (세션 쿠키 및 CSRF 토큰 전송 필수)
+ * - xsrfCookieName: 백엔드에서 발급하는 CSRF 쿠키 이름
+ * - xsrfHeaderName: 요청 시 포함할 CSRF 헤더 이름
  */
-async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`;
-  
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
+const api = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "X-XSRF-TOKEN",
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
+/**
+ * 요청 인터셉터 (디버깅용)
+ */
+api.interceptors.request.use(
+  (config) => {
+    if (IS_DEV) {
+      console.log(
+        `[API Request] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
+        config.data ? config.data : ""
+      );
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * 응답 인터셉터 (에러 처리 및 데이터 변환)
+ */
+api.interceptors.response.use(
+  (response: AxiosResponse) => {
+    if (IS_DEV) {
+      console.log(`[API Response] ${response.status} ${response.config.url}`);
+    }
+    return response;
+  },
+  (error) => {
+    const errorData = error.response?.data || {};
+    const errorMessage =
+      errorData.message || `API Error: ${error.response?.status || "Unknown"}`;
+
+    if (IS_DEV) {
+      console.error(
+        `[API Error] ${error.response?.status} ${error.config?.url}`,
+        errorData
+      );
+    }
+
+    return Promise.reject(new Error(errorMessage));
+  }
+);
+
+/**
+ * 공통 HTTP 요청 함수 (기존 Fetch 기반 인터페이스 호환)
+ * @param endpoint - API 엔드포인트 경로
+ * @param options - method, body, headers 등을 포함한 옵션
+ */
+async function apiClient<T>(endpoint: string, options: any = {}): Promise<T> {
+  const { method, body, headers, ...rest } = options;
+
+  const config: AxiosRequestConfig = {
+    url: endpoint,
+    method: method || "GET",
+    headers: headers,
+    // fetch의 body(string)를 axios의 data(object)로 변환
+    data: typeof body === "string" ? JSON.parse(body) : body,
+    ...rest
   };
 
-  // POST 또는 PUT 요청인데 body가 없는 경우 빈 객체({})를 기본값으로 설정
-  const isPostOrPut = options.method === 'POST' || options.method === 'PUT';
-  const body = isPostOrPut && !options.body ? JSON.stringify({}) : options.body;
+  const response = await api.request<T>(config);
 
-  const config: RequestInit = {
-    ...options,
-    headers,
-    body,
-    /**
-     * credentials: 'include'
-     * 세션 기반 인증을 위해 브라우저 쿠키(JSESSIONID 등)를 
-     * 요청 헤더에 자동으로 포함하도록 설정합니다.
-     */
-    credentials: 'include',
-  };
-
-  if (IS_DEV) {
-    console.log(`[API Request] ${config.method || 'GET'} ${url}`, body ? `Body: ${body}` : '');
-  }
-
-  const response = await fetch(url, config);
-
-  // 리다이렉트 여부 확인 로그
-  if (response.redirected && IS_DEV) {
-    console.warn(`[API Redirected] To: ${response.url}`);
-  }
-
-  if (IS_DEV) {
-    console.log(`[API Response] ${response.status} ${url}`);
-  }
-
-  // 204 No Content 처리 (예: 로그아웃 성공 시 데이터가 없는 경우)
+  // 204 No Content 처리
   if (response.status === 204) {
     return {} as T;
   }
 
-  // HTTP 에러 상태 코드 처리 (4xx, 5xx)
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `API Error: ${response.status}`);
-  }
-
-  return response.json();
+  return response.data;
 }
 
 export default apiClient;
