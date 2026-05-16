@@ -21,7 +21,6 @@ export const getWhiskyRecommendation = async (
 
   try {
     // 1. 백엔드에 토큰 차감 요청 (선차감)
-    console.log("[Step 1] Token Decrement");
     try {
       await userTokenApi.decrement();
       isTokenDecremented = true;
@@ -34,7 +33,6 @@ export const getWhiskyRecommendation = async (
     }
 
     // 2. Gemini AI API 호출
-    console.log("[Step 2] Gemini AI Request");
     const geminiResponse = await fetch("/api/gemini", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -71,7 +69,6 @@ export const getWhiskyRecommendation = async (
       styleName: aiResult.styleName || '',
     };
 
-    console.log("[Step 3] Saving Recommendation:", saveRequest);
     const savedOid = await recommendationApi.save(saveRequest);
 
     return {
@@ -83,10 +80,8 @@ export const getWhiskyRecommendation = async (
 
     // 보상 트랜잭션: 토큰 선차감은 성공했으나 이후 과정에서 에러 발생 시 롤백 (increment)
     if (isTokenDecremented) {
-      console.log("[Compensation] Attempting to rollback token");
       try {
         await userTokenApi.increment();
-        console.log("[Compensation] Token rollback successful.");
       } catch (rollbackError) {
         console.error("[Compensation] Token rollback failed:", rollbackError);
       }

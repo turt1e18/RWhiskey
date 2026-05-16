@@ -10,9 +10,7 @@ export async function POST(req: Request) {
   const type = body.type;
 
   if (!ACCESS_KEY) {
-    console.log({
-      err: "API key is MIA"
-    });
+    console.error("Google Search API key is missing");
   }
   try {
     const result = await axios
@@ -38,14 +36,13 @@ export async function POST(req: Request) {
           if (res.data.items && res.data.items.length > 0) {
             return NextResponse.json(res.data.items[0].link); // JSON 리턴
           } else {
-            console.log(res.data);
-            console.warn("We can't Find Image", data);
+            console.warn("Could not find image for:", data);
             return NextResponse.json(null);
           }
         }
       })
       .catch((err) => {
-        console.log(err);
+        console.error("Google Search Request Failed:", err);
       });
     return result;
   } catch (err) {

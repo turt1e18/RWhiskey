@@ -35,7 +35,6 @@ export const useAuthStore = create<UserState>((set) => ({
     set({ isLoading: true });
     try {
       const userData = await authApi.me();
-      console.log("[authStore] Fetched user from session:", userData);
       if (userData && (userData.uid || userData.authenticated)) {
         set({ user: userData, isAuthenticated: true });
       } else {
