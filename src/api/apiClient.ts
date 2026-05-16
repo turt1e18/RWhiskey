@@ -41,8 +41,16 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
 
   if (isMutation) {
     const csrfToken = getCookie('XSRF-TOKEN');
+    
+    if (IS_DEV) {
+      console.log(`[CSRF Diagnosis] Method: ${method}, URL: ${url}`);
+      console.log(`[CSRF Diagnosis] All Cookies: ${document.cookie}`);
+      console.log(`[CSRF Diagnosis] Extracted XSRF-TOKEN: ${csrfToken || 'NOT FOUND (Check HttpOnly or Domain)'}`);
+    }
+
     if (csrfToken) {
       headers.set('X-XSRF-TOKEN', csrfToken);
+      if (IS_DEV) console.log(`[CSRF Diagnosis] Header X-XSRF-TOKEN set successfully.`);
     }
   }
 
