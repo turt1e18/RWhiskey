@@ -42,15 +42,13 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
   if (isMutation) {
     const csrfToken = getCookie('XSRF-TOKEN');
     
-    if (IS_DEV) {
-      console.log(`[CSRF Diagnosis] Method: ${method}, URL: ${url}`);
-      console.log(`[CSRF Diagnosis] All Cookies: ${document.cookie}`);
-      console.log(`[CSRF Diagnosis] Extracted XSRF-TOKEN: ${csrfToken || 'NOT FOUND (Check HttpOnly or Domain)'}`);
-    }
+    // 운영 환경에서도 진단을 위해 로그 출력 (디버깅 완료 후 제거 필요)
+    console.log(`[CSRF Diagnosis] Method: ${method}, URL: ${url}`);
+    console.log(`[CSRF Diagnosis] Extracted XSRF-TOKEN: ${csrfToken || 'NOT FOUND (Check HttpOnly or Domain)'}`);
 
     if (csrfToken) {
       headers.set('X-XSRF-TOKEN', csrfToken);
-      if (IS_DEV) console.log(`[CSRF Diagnosis] Header X-XSRF-TOKEN set successfully.`);
+      console.log(`[CSRF Diagnosis] Header X-XSRF-TOKEN set successfully.`);
     }
   }
 
