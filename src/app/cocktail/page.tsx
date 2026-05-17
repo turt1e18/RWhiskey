@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, redirect } from "next/navigation";
 import BeforeScreen from "./_components/Before";
 import AfterScreen from "./_components/After";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 
 export default function CocktailScreen() {
-  /**
-   * 0 데이터 세팅 화면
-   * 1 데이터 결과 화면
-   */
-  const [screenState, setScreenState] = useState(0);
+  // 임시 접근 제한
+  redirect("/main");
   const [userInput, setUserInput] = useState("");
   // 통합 데이터를 가져오는 Promise를 저장
   const [dataPromise, setDataPromise] = useState<Promise<any> | null>(null);

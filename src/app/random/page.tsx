@@ -1,12 +1,12 @@
 "use client";
 import { Whiskey } from "@/type/RandomInterface";
-import { useRouter } from "next/navigation";
+import { useRouter, redirect } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 
 export default function MainScreen() {
-  // 기능을 클릭했는가?
-  const [isClicked, setIsClicked] = useState<boolean>(false);
+  // 임시 접근 제한
+  redirect("/main");
   // 이미지 url
   const [image, setImage] = useState<string | null>(null);
   // 로딩 중인가?

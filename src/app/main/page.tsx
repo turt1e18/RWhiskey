@@ -235,16 +235,18 @@ export default function MainScreen() {
                 route={1}
                 variant="primary"
               />
-              <MainRouterButton
-                text="칵테일 추천 받기"
-                route={2}
-                variant="secondary"
-              />
-              <MainRouterButton
-                text="랜덤 위스키 추천"
-                route={0}
-                variant="ghost"
-              />
+              <button
+                onClick={() => alert("추후 추가될 기능입니다.")}
+                className="w-full py-4 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all font-bold text-lg"
+              >
+                칵테일 추천 받기
+              </button>
+              <button
+                onClick={() => alert("추후 추가될 기능입니다.")}
+                className="w-full py-4 rounded-xl bg-transparent border border-[#ffb247]/40 text-[#ffb247]/60 hover:text-[#ffb247] hover:border-[#ffb247] transition-all font-semibold text-base"
+              >
+                랜덤 위스키 추천
+              </button>
             </div>
           </div>
 

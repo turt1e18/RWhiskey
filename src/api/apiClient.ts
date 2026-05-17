@@ -34,7 +34,7 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
   /**
    * [CSRF 방어] 
    * POST, PUT, DELETE 등 상태 변경 요청 시 브라우저 쿠키에서 XSRF-TOKEN을 읽어 
-   * X-XSRF-TOKEN 헤더에 수동으로 포함합니다.
+   * X-XSRF-TOKEN 헤더에 수동으로 포함
    */
   const method = options.method?.toUpperCase() || 'GET';
   const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
@@ -42,13 +42,8 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
   if (isMutation) {
     const csrfToken = getCookie('XSRF-TOKEN');
     
-    // 운영 환경에서도 진단을 위해 로그 출력 (디버깅 완료 후 제거 필요)
-    console.log(`[CSRF Diagnosis] Method: ${method}, URL: ${url}`);
-    console.log(`[CSRF Diagnosis] Extracted XSRF-TOKEN: ${csrfToken || 'NOT FOUND (Check HttpOnly or Domain)'}`);
-
     if (csrfToken) {
       headers.set('X-XSRF-TOKEN', csrfToken);
-      console.log(`[CSRF Diagnosis] Header X-XSRF-TOKEN set successfully.`);
     }
   }
 
@@ -57,8 +52,8 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
     headers,
     /**
      * [인증 보안 핵심]
-     * credentials: 'include' 옵션이 있어야 실서버(api.turt1e18.work) 통신 시
-     * 브라우저가 세션 쿠키(JSESSIONID)를 자동으로 포함합니다.
+     * credentials: 'include' 옵션이 있어야 실서버 통신 시
+     * 브라우저가 세션 쿠키(JSESSIONID)를 자동으로 포함
      */
     credentials: 'include',
   };
