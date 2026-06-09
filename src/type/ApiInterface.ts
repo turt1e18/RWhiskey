@@ -78,13 +78,37 @@ export interface GeminiWhiskyResponse {
   styleName: string;
 }
 
-
 export interface GeminiCocktailResponse {
   cocktailName: string;
+  baseSpirit: string;
+  abv: string;
+  foodPairing: string;
+  bartenderMessage: string;
+  tastingNote: string;
   checkList: string[];
   method: string[];
+}
+
+/**
+ * Cocktail Recommendation Save Request
+ */
+export interface CocktailSaveRequest {
+  experienceLevel: string;
+  isNonAlcoholic: boolean;
+  preferredTaste: string[];
+  carbonation: boolean;
+  dislikes: string[];
+  currentMood: string;
+  requestBaseSpirit: string;
+  cocktailName: string;
+  responseBaseSpirit: string;
+  abv: string;
   foodName: string;
+  bartenderWord: string;
   pairingNote: string;
+  images: string[];
+  checkList: string[];
+  method: string[];
 }
 
 /**

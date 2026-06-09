@@ -10,6 +10,7 @@ import {
   NoteResponse,
   NoteReviewRequest,
   TokenStatusResponse,
+  CocktailSaveRequest,
 } from '../type/ApiInterface';
 
 /**
@@ -176,6 +177,37 @@ export const notesApi = {
   getScrappedNotes: () => {
     return apiClient<NoteResponse[]>('/api/notes/scraps', {
       method: 'GET',
+    });
+  },
+};
+
+/**
+ * 칵테일 추천(Cocktail) 관련 API 서비스
+ */
+export const cocktailApi = {
+  /**
+   * 새로운 칵테일 추천 결과 저장
+   */
+  save: (data: CocktailSaveRequest) => {
+    return apiClient<number>('/api/cocktails', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  /**
+   * 특정 칵테일 추천 결과 상세 조회
+   */
+  getDetail: (oid: number) => {
+    return apiClient<CocktailSaveRequest & { orderDate: string }> (`/api/cocktails/${oid}`, {
+      method: 'GET',
+    });
+  },
+  /**
+   * 칵테일 추천 결과 삭제
+   */
+  delete: (oid: number) => {
+    return apiClient(`/api/cocktails/${oid}`, {
+      method: 'DELETE',
     });
   },
 };

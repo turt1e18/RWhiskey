@@ -35,12 +35,10 @@ export default function LoginForm({ onSignup, onReset }: LoginFormProps) {
         });
         router.push("/main");
       } else {
-        setError(
-          response.message || "입장 승인이 거절되었습니다. 정보를 확인해주세요."
-        );
+        setError("회원 명부에서 찾을 수 없는 이메일 또는 비밀번호입니다.");
       }
     } catch (err: any) {
-      setError(err.message || "서버 통신 중 오류가 발생했습니다.");
+      setError("회원 명부에서 찾을 수 없는 이메일 또는 비밀번호입니다.");
     } finally {
       setIsLoading(false);
     }
