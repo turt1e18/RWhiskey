@@ -10,6 +10,7 @@ import {
   NoteResponse,
   NoteReviewRequest,
   TokenStatusResponse,
+  CocktailSaveRequest,
 } from '../type/ApiInterface';
 
 /**
