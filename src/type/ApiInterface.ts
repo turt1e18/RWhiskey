@@ -69,6 +69,10 @@ export interface WhiskeyCandidateRequest {
     mood?: string;
     preferredFlavor?: string;
     additionalContext?: string;
+    preferredCategory?: string;
+    preferredCountry?: string;
+    preferredRegion?: string;
+    targetAbv?: number;
   };
   limit?: number;
 }
