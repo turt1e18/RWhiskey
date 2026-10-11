@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { getWhiskyRecommendation } from "@/api/recommendationService";
 import { useRecommendationStore } from "@/store/recommendationStore";
 import { recommendationApi } from "@/api/whiskeyApi";
+import { useRouter } from "next/navigation";
 
 /**
  * Mood 추천 입력 화면 (Order Sheet 스타일)
@@ -29,6 +30,7 @@ export default function BeforeScreen(props: any) {
   } = props;
   const { user, isAuthenticated } = useAuthStore();
   const { selectedMainTag, resetMainTag } = useRecommendationStore();
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false);
   const [nextNo, setNextNo] = useState<number | null>(null);
@@ -59,6 +61,7 @@ export default function BeforeScreen(props: any) {
   async function callCombinedAPI() {
     if (!isAuthenticated || !user) {
       alert("로그인이 필요한 서비스입니다. 로그인 후 이용해주세요.");
+      router.push("/login");
       return;
     }
 
