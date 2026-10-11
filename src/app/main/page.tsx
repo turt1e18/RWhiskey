@@ -544,8 +544,8 @@ export default function MainScreen() {
                       바텐더의 한마디
                     </h2>
                     <p className="text-[0.5625rem] md:text-[0.625rem] lg:text-[0.75rem] leading-relaxed italic text-stone-800 font-medium">
-                      "천천히, 시간을 두고 즐겨보세요. 잔 속에서 피어나는 연기가
-                      당신의 밤을 지켜줄 것입니다."
+                      &quot;천천히, 시간을 두고 즐겨보세요. 잔 속에서 피어나는 연기가
+                      당신의 밤을 지켜줄 것입니다.&quot;
                     </p>
                   </div>
 

@@ -35,6 +35,14 @@ export default function AfterScreen({
   const [pendingTag, setPendingTag] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
+  // 이미지가 로드되었는지 확인하는 상태
+  const [isImageLoad, setIsImageLoad] = useState<boolean>(false);
+
+  // 오늘 날짜 표시
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
 
   // 1. resultDataPromise가 null일 경우 예외 처리
   if (!resultDataPromise) {
@@ -52,15 +60,6 @@ export default function AfterScreen({
 
   // 2. use 훅을 사용하여 Promise를 해제
   const resultData = use(resultDataPromise);
-
-  // 이미지가 로드되었는지 확인하는 상태
-  const [isImageLoad, setIsImageLoad] = useState<boolean>(false);
-
-  // 오늘 날짜 표시
-  const todayStr = useMemo(() => {
-    const d = new Date();
-    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
-  }, []);
 
   // 바텐더의 고려 태그 목록
   const mainTasteTags = ["sweet", "spicy", "smoke"];

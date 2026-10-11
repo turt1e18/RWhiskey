@@ -78,7 +78,7 @@ export const MemoCard = ({ whisky }: { whisky: WhiskyEntry }) => {
               </span>
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-[#3e2616]/60 font-black mb-1">
-                  Bartender's Word
+                  Bartender&apos;s Word
                 </p>
                 <p className="text-xs md:text-sm leading-relaxed italic font-serif font-medium text-[#3e2616]/80 whitespace-pre-line">
                   {whisky.bartenderWord}

@@ -52,7 +52,7 @@ export const HelpGuide = ({ parentView }: Props) => {
           <SheetHeader className="mb-6 border-b border-[#3e2616]/20 pb-4">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.4em] opacity-60">
               <HelpCircle className="w-3.5 h-3.5" />
-              <span>Bartender's Guide</span>
+              <span>Bartender&apos;s Guide</span>
             </div>
             <SheetTitle className="font-serif text-3xl text-[#3e2616]">
               바텐더의 가이드북
