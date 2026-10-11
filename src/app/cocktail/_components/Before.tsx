@@ -3,6 +3,14 @@ import { useState, useMemo, Dispatch, SetStateAction } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { CocktailRecommendationRequest, ExperienceLevel } from "@/type/CocktailInterface";
 import { useAuthStore } from "@/store/authStore";
+import { useRouter } from "next/navigation";
+
+interface ModalConfig {
+  show: boolean;
+  title: string;
+  message: string;
+  action?: "login";
+}
 
 interface BeforeScreenProps {
   request: CocktailRecommendationRequest;
@@ -16,10 +24,11 @@ interface BeforeScreenProps {
 export default function BeforeScreen(props: BeforeScreenProps) {
   const { request, setRequest, imRich, setImRich, setDataPromise, setSwitchState } = props;
   const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [dislikeInput, setDislikeInput] = useState("");
   const [customBottle, setCustomBottle] = useState("");
-  const [modalConfig, setModalConfig] = useState<{ show: boolean; title: string; message: string }>({
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
     show: false,
     title: "",
     message: ""
@@ -97,7 +106,8 @@ export default function BeforeScreen(props: BeforeScreenProps) {
       setModalConfig({
         show: true,
         title: "로그인 필요",
-        message: "바텐더의 추천을 받으시려면\n로그인이 필요합니다.\n\n로그인 후 다시 이용해 주세요."
+        message: "바텐더의 추천을 받으시려면\n로그인이 필요합니다.\n\n로그인 후 다시 이용해 주세요.",
+        action: "login"
       });
       return;
     }
@@ -158,6 +168,14 @@ export default function BeforeScreen(props: BeforeScreenProps) {
     }
   };
 
+  const handleModalConfirm = () => {
+    setModalConfig(prev => ({ ...prev, show: false }));
+
+    if (modalConfig.action === "login") {
+      router.push("/login");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center w-screen h-[70vh]">
@@ -185,7 +203,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               </div>
 
               <button
-                onClick={() => setModalConfig(prev => ({ ...prev, show: false }))}
+                onClick={handleModalConfirm}
                 className="w-full mt-8 py-3 px-6 bg-[#ffb247] hover:bg-[#d98b1e] text-[#1a140b] font-bold rounded-xl transition-all active:scale-[0.98]"
               >
                 확인 및 닫기
