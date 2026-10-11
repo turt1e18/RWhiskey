@@ -55,6 +55,50 @@ export interface RecommendationSaveRequest {
   bartenderWord?: string;
 }
 
+/** W-03 candidate lookup contract. The current recommendation screen still uses v1. */
+export interface WhiskeyCandidateRequest {
+  requirements?: {
+    category?: string;
+    country?: string;
+    minAbv?: number;
+    maxAbv?: number;
+    excludedBottlingIds?: number[];
+  };
+  context?: {
+    weather?: string;
+    mood?: string;
+    preferredFlavor?: string;
+    additionalContext?: string;
+  };
+  limit?: number;
+}
+
+export type WhiskeyCandidateState =
+  | "CANDIDATES_AVAILABLE"
+  | "CATALOG_NOT_READY"
+  | "NO_MATCH"
+  | "NEEDS_CLARIFICATION"
+  | "DATA_SOURCE_UNAVAILABLE";
+
+export interface WhiskeyCandidateResponse {
+  state: WhiskeyCandidateState;
+  code: string | null;
+  retryable: boolean;
+  candidates: Array<{
+    productId: number;
+    bottlingId: number;
+    displayName: string;
+    category: string | null;
+    country: string | null;
+    region: string | null;
+    edition: string | null;
+    abv: number | null;
+    volumeMl: number | null;
+    ageStatementType: "NUMBERED" | "NAS" | "UNKNOWN";
+    ageYears: number | null;
+  }>;
+}
+
 /**
  * Tags
  */
