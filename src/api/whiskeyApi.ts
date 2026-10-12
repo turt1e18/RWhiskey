@@ -13,6 +13,11 @@ import {
   CocktailSaveRequest,
   WhiskeyCandidateRequest,
   WhiskeyVerifiedRecommendationResponse,
+  WhiskeyProfile,
+  WhiskeyFeedback,
+  WhiskeyFeedbackStage,
+  WhiskeyFeedbackSentiment,
+  WhiskeyFeedbackReason,
 } from '../type/ApiInterface';
 
 /**
@@ -105,6 +110,16 @@ export const recommendationApi = {
       body: JSON.stringify(request),
     });
   },
+  getWhiskeyProfile: () => apiClient<WhiskeyProfile>('/api/recommendations/v2/profile', { method: 'GET' }),
+  updateWhiskeyProfile: (profile: WhiskeyProfile) => apiClient<WhiskeyProfile>('/api/recommendations/v2/profile', {
+    method: 'PUT', body: JSON.stringify(profile),
+  }),
+  resetWhiskeyProfile: () => apiClient<WhiskeyProfile>('/api/recommendations/v2/profile', { method: 'DELETE' }),
+  submitWhiskeyFeedback: (recommendationId: number, feedback: {
+    stage: WhiskeyFeedbackStage; sentiment: WhiskeyFeedbackSentiment; reason: WhiskeyFeedbackReason;
+  }) => apiClient<WhiskeyFeedback>(`/api/recommendations/v2/${recommendationId}/feedback`, {
+    method: 'PUT', body: JSON.stringify(feedback),
+  }),
   /**
    * 다음 주문 번호 조회
    * UI 표시용 예상 주문 ID (Max ID + 1)를 반환합니다.

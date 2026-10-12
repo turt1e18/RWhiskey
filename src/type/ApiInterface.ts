@@ -75,6 +75,32 @@ export interface WhiskeyCandidateRequest {
     targetAbv?: number;
   };
   limit?: number;
+  experienceLevel?: WhiskeyExperienceLevel;
+  smokePreference?: WhiskeySmokePreference;
+  preferredFlavor?: WhiskeyFlavorPreference;
+  includeIndependentBottlings?: boolean;
+  includeOldBottles?: boolean;
+}
+
+export type WhiskeyExperienceLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+export type WhiskeySmokePreference = "UNKNOWN" | "ALLOW" | "AVOID";
+export type WhiskeyFlavorPreference = "UNKNOWN" | "SWEET" | "FRUITY";
+export type WhiskeyFeedbackStage = "EXPECTED" | "CONSUMED";
+export type WhiskeyFeedbackSentiment = "LIKE" | "NEUTRAL" | "DISLIKE";
+export type WhiskeyFeedbackReason = "TASTE" | "PRICE" | "AVAILABILITY" | "OTHER" | "NONE";
+
+export interface WhiskeyProfile {
+  experienceLevel: WhiskeyExperienceLevel;
+  smokePreference: WhiskeySmokePreference;
+  preferredFlavor: WhiskeyFlavorPreference;
+}
+
+export interface WhiskeyFeedback {
+  recommendationId: number;
+  stage: WhiskeyFeedbackStage;
+  sentiment: WhiskeyFeedbackSentiment;
+  reason: WhiskeyFeedbackReason;
+  updatedAt: string;
 }
 
 export type WhiskeyCandidateState =
@@ -100,6 +126,22 @@ export interface WhiskeyCandidateResponse {
     volumeMl: number | null;
     ageStatementType: "NUMBERED" | "NAS" | "UNKNOWN";
     ageYears: number | null;
+    details?: {
+      smokeLevel: number | null;
+      sweetnessLevel: number | null;
+      fruitLevel: number | null;
+      spiceLevel: number | null;
+      releaseType: "UNKNOWN" | "CORE" | "LIMITED";
+      independentBottling: boolean | null;
+      oldBottle: boolean | null;
+      bottlerName: string | null;
+      bottledYear: number | null;
+      characteristicsEvidenceUrl: string | null;
+      availabilityStatus: "UNKNOWN" | "AVAILABLE" | "SOLD_OUT" | "DISCONTINUED";
+      availabilitySeller: string | null;
+      availabilityRegion: string | null;
+      availabilityCheckedAt: string | null;
+    } | null;
   }>;
 }
 
@@ -119,6 +161,8 @@ export interface WhiskeyVerifiedRecommendationResponse {
   selected: WhiskeyCandidateResponse["candidates"][number] | null;
   reasonCodes: string[];
   evidenceUrl: string | null;
+  appliedLevel?: WhiskeyExperienceLevel | null;
+  recommendationId?: number | null;
 }
 
 /**
