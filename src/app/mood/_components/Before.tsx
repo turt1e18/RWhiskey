@@ -9,6 +9,7 @@ import { getWhiskyRecommendation } from "@/api/recommendationService";
 import { useRecommendationStore } from "@/store/recommendationStore";
 import { recommendationApi } from "@/api/whiskeyApi";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 /**
  * Mood 추천 입력 화면 (Order Sheet 스타일)
@@ -154,6 +155,11 @@ export default function BeforeScreen(props: any) {
       <main className="mx-auto flex-1 flex max-w-6xl items-center justify-center px-6 py-4">
         <section className="grid w-full max-w-5xl gap-12 md:grid-cols-[1fr_1fr] items-center">
           <div className="flex flex-col justify-center space-y-4">
+            {process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true" && (
+              <Link href="/mood/verified" className="w-fit rounded-full border border-amber-300/50 px-4 py-2 text-xs text-amber-200 hover:bg-amber-300/10">
+                검수 기반 추천 미리보기
+              </Link>
+            )}
             <div>
               <p className="mb-2 text-sm uppercase tracking-[0.25em] text-amber-300/80 font-medium">Whiskey Recommendation</p>
               <h1 className="text-2xl font-bold leading-tight md:text-4xl text-white font-serif">

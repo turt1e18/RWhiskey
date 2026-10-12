@@ -18,6 +18,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
  */
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
+export class ApiResponseError extends Error {
+  constructor(public readonly status: number, public readonly data: unknown, message: string) {
+    super(message);
+    this.name = 'ApiResponseError';
+  }
+}
+
 /**
  * Native Fetch API를 사용한 공통 HTTP 요청 함수 (운영 보안 스펙 준수)
  * @param endpoint - API 엔드포인트 경로
@@ -59,7 +66,7 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
   };
 
   if (IS_DEV) {
-    console.log(`[API Request] ${method} ${url}`, options.body ? `Body: ${options.body}` : '');
+    console.log(`[API Request] ${method} ${url}`);
   }
 
   try {
@@ -80,15 +87,15 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
       const errorMessage = errorData.message || `API Error: ${response.status}`;
       
       if (IS_DEV) {
-        console.error(`[API Error] ${response.status} ${url}`, errorData);
+        console.error(`[API Error] ${response.status} ${url}`);
       }
-      throw new Error(errorMessage);
+      throw new ApiResponseError(response.status, errorData, errorMessage);
     }
 
     return await response.json();
   } catch (error) {
-    if (IS_DEV && !(error instanceof Error && error.message.includes('API Error'))) {
-      console.error(`[Network Error] ${url}`, error);
+    if (IS_DEV && !(error instanceof ApiResponseError)) {
+      console.error(`[Network Error] ${url}`);
     }
     throw error;
   }
