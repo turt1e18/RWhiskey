@@ -55,7 +55,7 @@ export interface RecommendationSaveRequest {
   bartenderWord?: string;
 }
 
-/** W-03 candidate lookup contract. The current recommendation screen still uses v1. */
+/** W-03 candidate lookup contract, also used by the W-06 verified preview. */
 export interface WhiskeyCandidateRequest {
   requirements?: {
     category?: string;
@@ -101,6 +101,24 @@ export interface WhiskeyCandidateResponse {
     ageStatementType: "NUMBERED" | "NAS" | "UNKNOWN";
     ageYears: number | null;
   }>;
+}
+
+export type WhiskeyVerifiedState =
+  | "SUCCESS"
+  | "DEGRADED"
+  | "CATALOG_NOT_READY"
+  | "NO_MATCH"
+  | "NEEDS_CLARIFICATION"
+  | "NEEDS_REVIEW"
+  | "UNAVAILABLE";
+
+export interface WhiskeyVerifiedRecommendationResponse {
+  state: WhiskeyVerifiedState;
+  code: string | null;
+  retryable: boolean;
+  selected: WhiskeyCandidateResponse["candidates"][number] | null;
+  reasonCodes: string[];
+  evidenceUrl: string | null;
 }
 
 /**
