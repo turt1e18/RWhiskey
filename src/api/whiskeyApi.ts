@@ -11,6 +11,7 @@ import {
   NoteReviewRequest,
   TokenStatusResponse,
   CocktailSaveRequest,
+  WhiskeyCatalogFacetsResponse,
   WhiskeyCandidateRequest,
   WhiskeyVerifiedRecommendationResponse,
   WhiskeyProfile,
@@ -103,6 +104,7 @@ export const whiskeyTagsApi = {
  * 위스키 추천(Recommendation) 관련 API 서비스
  */
 export const recommendationApi = {
+  getWhiskeyCatalogFacets: () => apiClient<WhiskeyCatalogFacetsResponse>('/api/recommendations/v2/facets', { method: 'GET' }),
   /** 검수 기반 W-06 미리보기. 결과 저장과 토큰 차감은 W-07 이후 계약에서 다룬다. */
   getVerifiedPreview: (request: WhiskeyCandidateRequest) => {
     return apiClient<WhiskeyVerifiedRecommendationResponse>('/api/recommendations/v2/verified', {

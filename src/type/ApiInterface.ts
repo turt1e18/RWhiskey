@@ -55,6 +55,19 @@ export interface RecommendationSaveRequest {
   bartenderWord?: string;
 }
 
+export interface WhiskeyCatalogFacet {
+  value: string;
+  bottlingCount: number;
+  label: string;
+  country: string | null;
+}
+
+export interface WhiskeyCatalogFacetsResponse {
+  categories: WhiskeyCatalogFacet[];
+  countries: WhiskeyCatalogFacet[];
+  regions: WhiskeyCatalogFacet[];
+  code: string | null;
+}
 /** W-03 candidate lookup contract, also used by the W-06 verified preview. */
 export interface WhiskeyCandidateRequest {
   requirements?: {
