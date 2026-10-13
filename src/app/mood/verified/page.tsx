@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { recommendationApi } from "@/api/whiskeyApi";
 import { ApiResponseError } from "@/api/apiClient";
@@ -58,6 +58,16 @@ const defaultProfile: WhiskeyProfile = {
 const levelLabels: Record<WhiskeyExperienceLevel, string> = {
   BEGINNER: "초심자", INTERMEDIATE: "중급", ADVANCED: "상급",
 };
+const smokeOptions: { value: WhiskeySmokePreference; label: string }[] = [
+  { value: "UNKNOWN", label: "잘 모르겠어요" },
+  { value: "ALLOW", label: "괜찮아요" },
+  { value: "AVOID", label: "피하고 싶어요" },
+];
+const flavorOptions: { value: WhiskeyFlavorPreference; label: string }[] = [
+  { value: "UNKNOWN", label: "잘 모르겠어요" },
+  { value: "SWEET", label: "달콤함" },
+  { value: "FRUITY", label: "과일 향" },
+];
 
 function isVerifiedResponse(value: unknown): value is WhiskeyVerifiedRecommendationResponse {
   if (typeof value !== "object" || value === null || !("state" in value)) return false;
@@ -91,6 +101,10 @@ export default function VerifiedWhiskeyPreviewPage() {
   const isInitialized = useAuthStore((state) => state.isInitialized);
   const fetchUser = useAuthStore((state) => state.fetchUser);
   const enabled = process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true";
+  const todayStr = useMemo(() => {
+    const date = new Date();
+    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+  }, []);
 
   useEffect(() => {
     if (enabled && !isInitialized) void fetchUser();
@@ -143,7 +157,9 @@ export default function VerifiedWhiskeyPreviewPage() {
     setInputs((current) => ({ ...current, [key]: value }));
   }
 
-  const activeDetailedInputCount = Object.values(inputs).filter((value) => value.trim() !== "").length;
+  const hasDetailedConditions = profile.experienceLevel !== "BEGINNER";
+  const activeDetailedInputCount = hasDetailedConditions
+    ? Object.values(inputs).filter((value) => value.trim() !== "").length : 0;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -157,30 +173,30 @@ export default function VerifiedWhiskeyPreviewPage() {
       return;
     }
 
-    const minAbv = optionalNumber(inputs.minAbv);
-    const maxAbv = optionalNumber(inputs.maxAbv);
-    const targetAbv = optionalNumber(inputs.targetAbv);
-    if ([minAbv, maxAbv, targetAbv].some((value) => value !== undefined &&
+    const minAbv = hasDetailedConditions ? optionalNumber(inputs.minAbv) : undefined;
+    const maxAbv = hasDetailedConditions ? optionalNumber(inputs.maxAbv) : undefined;
+    const targetAbv = hasDetailedConditions ? optionalNumber(inputs.targetAbv) : undefined;
+    if (hasDetailedConditions && ([minAbv, maxAbv, targetAbv].some((value) => value !== undefined &&
       (!Number.isFinite(value) || value < 0 || value > 100)) ||
-      (minAbv !== undefined && maxAbv !== undefined && minAbv > maxAbv)) {
+      (minAbv !== undefined && maxAbv !== undefined && minAbv > maxAbv))) {
       if (detailedConditionsRef.current) detailedConditionsRef.current.open = true;
       setError("도수는 0~100 사이로 입력하고 최솟값이 최댓값보다 크지 않게 해주세요.");
       return;
     }
 
     const request: WhiskeyCandidateRequest = {
-      requirements: {
+      requirements: hasDetailedConditions ? {
         ...(inputs.category.trim() && { category: inputs.category.trim() }),
         ...(inputs.country.trim() && { country: inputs.country.trim() }),
         ...(minAbv !== undefined && { minAbv }),
         ...(maxAbv !== undefined && { maxAbv }),
-      },
-      context: {
+      } : {},
+      context: hasDetailedConditions ? {
         ...(inputs.preferredCategory.trim() && { preferredCategory: inputs.preferredCategory.trim() }),
         ...(inputs.preferredCountry.trim() && { preferredCountry: inputs.preferredCountry.trim() }),
         ...(inputs.preferredRegion.trim() && { preferredRegion: inputs.preferredRegion.trim() }),
         ...(targetAbv !== undefined && { targetAbv }),
-      },
+      } : {},
       limit: 3,
       experienceLevel: profile.experienceLevel,
       smokePreference: profile.smokePreference,
@@ -209,6 +225,12 @@ export default function VerifiedWhiskeyPreviewPage() {
         setError("요청 인증에 실패했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.");
       } else if (caught instanceof ApiResponseError && isVerifiedResponse(caught.data)) {
         setResult(caught.data);
+      } else if (caught instanceof ApiResponseError && caught.status === 503) {
+        setError("공식 검색이나 최종 검수를 지금 완료할 수 없습니다. 잠시 뒤 다시 시도해 주세요.");
+      } else if (caught instanceof ApiResponseError && caught.status >= 500) {
+        setError("추천 처리 중 서버 오류가 발생했습니다. 잠시 뒤 다시 시도해 주세요.");
+      } else if (caught instanceof ApiResponseError) {
+        setError("요청을 처리하지 못했습니다. 선택한 조건을 확인해 주세요.");
       } else {
         setError("연결에 실패했습니다. 잠시 뒤 다시 시도해 주세요.");
       }
@@ -240,30 +262,50 @@ export default function VerifiedWhiskeyPreviewPage() {
   const availabilityContext = availability?.availabilitySeller && availability.availabilityRegion &&
     availability.availabilityCheckedAt ?
     `${availability.availabilitySeller} · ${availability.availabilityRegion} · ${new Date(availability.availabilityCheckedAt).toLocaleDateString("ko-KR")} 기준` : null;
+  const fieldChoiceClass = (active: boolean) => `cursor-pointer rounded-full border px-3 py-1.5 text-[13px] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4a3728] ${
+    active ? "border-[#2d2017] bg-[#4a3728]/10 font-bold text-[#2d2017]" :
+      "border-[#4a3728]/30 bg-white/20 text-stone-700 hover:border-[#4a3728]/60"
+  }`;
 
   return (
-    <main className="min-h-screen bg-[#1a120d] px-5 py-8 text-stone-100 md:px-10">
-      <div className="mx-auto max-w-5xl">
-        <Link href="/mood" className="text-sm text-amber-200 hover:underline">← 기존 추천으로 돌아가기</Link>
-        <header className="mt-10 max-w-2xl">
-          <p className="text-xs font-semibold tracking-[0.25em] text-amber-300">VERIFIED WHISKEY PREVIEW</p>
-          <h1 className="mt-3 font-serif text-3xl font-bold md:text-4xl">검수 기반 위스키 추천</h1>
-          <p className="mt-4 text-sm leading-6 text-stone-300">필수 조건으로 후보를 찾고, 선호 조건으로 순서를 정한 뒤 공식 근거와 모델 판정을 확인합니다.</p>
-          <p className="mt-2 text-xs leading-5 text-stone-400">검수된 추천 이력과 간단한 평가를 기록하는 로컬 미리보기입니다. 기존 시음 노트와는 아직 연결되지 않습니다.</p>
-        </header>
-
-        {!enabled ? (
-          <p className="mt-10 rounded-lg border border-stone-700 bg-stone-900 p-5 text-sm">현재 검수 기반 추천 미리보기가 꺼져 있습니다.</p>
+    <main className="min-h-screen bg-[#1a120d] text-stone-100 selection:bg-amber-200/30">
+      <nav className={`mx-auto flex w-full items-center px-6 py-4 ${selected ? "max-w-2xl" : "max-w-5xl"}`}>
+        {selected ? (
+          <button type="button" onClick={() => setResult(null)} className="flex items-center gap-2 text-sm font-light text-stone-500 transition-colors hover:text-white">
+            <span aria-hidden="true" className="text-xl leading-none">‹</span> 뒤로가기
+          </button>
         ) : (
-          <div className={selected ? "mx-auto mt-8 max-w-2xl" : "mt-8 grid gap-6 lg:grid-cols-[1fr_1fr]"}>
-            {!selected && <form onSubmit={submit} noValidate className="rounded-lg border border-amber-900/50 bg-[#e9dcc1] p-5 text-stone-900 shadow-xl md:p-7">
-              <h2 className="font-serif text-xl font-bold">추천 조건</h2>
-              <p className="mt-2 text-xs text-stone-600">레벨에 따라 먼저 보여 주는 질문과 결과 설명이 달라집니다. 상세 조건은 언제든 사용할 수 있습니다.</p>
+          <Link href="/mood" className="flex items-center gap-2 text-sm font-light text-stone-500 transition-colors hover:text-white">
+            <span aria-hidden="true" className="text-xl leading-none">‹</span> 뒤로가기
+          </Link>
+        )}
+      </nav>
+
+      {!enabled ? (
+        <p className="mx-auto mt-10 max-w-2xl rounded border border-stone-700 bg-[#241b16] p-5 text-sm">현재 검수 기반 추천을 사용할 수 없습니다.</p>
+      ) : !selected ? (
+        <div className="mx-auto grid w-full max-w-5xl items-center gap-10 px-6 pb-12 pt-4 md:min-h-[calc(100vh-72px)] md:grid-cols-2 md:gap-12">
+          <header className="flex flex-col justify-center space-y-4">
+            <p className="text-sm font-medium uppercase tracking-[0.25em] text-amber-300/80">Whiskey Recommendation</p>
+            <h1 className="font-serif text-2xl font-bold leading-tight text-white md:text-4xl">오늘의 취향에 맞는<br />위스키를 찾아보세요</h1>
+            <p className="max-w-md text-sm leading-6 text-stone-400 md:text-base">위스키 경험과 선호하는 향을 고르면 확인된 병입 중에서 오늘의 한 잔을 추천해드립니다.</p>
+            {profile.experienceLevel !== "BEGINNER" && <p className="max-w-md text-sm leading-6 text-stone-500">익숙한 취향이 있다면 주문서에서 조건을 더 구체적으로 선택할 수 있습니다.</p>}
+          </header>
+          <form onSubmit={submit} noValidate className="relative mx-auto w-full max-w-[550px] overflow-hidden rounded-sm border border-[#4a3728] bg-[#efe2c9] p-6 text-stone-900 shadow-[0_20px_50px_rgba(0,0,0,0.4)] md:max-h-[90vh] md:overflow-y-auto md:p-8">
+            <div className="pointer-events-none absolute inset-2 border border-[#4a3728]/20" />
+            <div className="relative mb-5 flex items-center justify-between text-[12px] font-bold tracking-[0.2em] text-stone-700">
+              <span>R-WHISKEY</span>
+              <span>{todayStr}</span>
+            </div>
+            <div className="relative mb-6 text-center">
+              <h2 className="inline-block border border-[#4a3728] bg-white/10 px-3 py-1 text-[13px] font-bold tracking-widest text-[#2d2017]">오늘의 주문</h2>
+            </div>
+            <div className="relative">
               <fieldset className="mt-5">
                 <legend className="text-sm font-bold">위스키 경험 단계</legend>
-                <div className="mt-2 grid grid-cols-3 gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {(["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const).map((level) => (
-                    <label key={level} className={`cursor-pointer rounded border px-2 py-3 text-center text-sm ${profile.experienceLevel === level ? "border-amber-900 bg-amber-100 font-bold" : "border-stone-400 bg-white/50"}`}>
+                    <label key={level} className={fieldChoiceClass(profile.experienceLevel === level)}>
                       <input type="radio" name="experienceLevel" checked={profile.experienceLevel === level}
                         onChange={() => setProfile((current) => ({ ...current, experienceLevel: level }))} className="sr-only" />
                       {levelLabels[level]}
@@ -273,29 +315,37 @@ export default function VerifiedWhiskeyPreviewPage() {
               </fieldset>
               <p className="mt-4 text-sm text-stone-700">
                 {profile.experienceLevel === "BEGINNER" ? "처음이라면 아래 두 가지만 골라도 됩니다. 잘 모르겠다면 그대로 추천받으세요." :
-                  profile.experienceLevel === "INTERMEDIATE" ? "끌리는 풍미를 고르고, 아래 선호 조건으로 취향을 더 구체화할 수 있습니다." :
-                    "병입 유형까지 살펴보며 추천합니다. 독립 병입과 올드바틀도 기본 후보에 포함됩니다."}
+                  profile.experienceLevel === "INTERMEDIATE" ? "알고 있는 취향만 고르고, 필요하면 아래 조건으로 더 구체화하세요. 모르는 항목은 비워두어도 됩니다." :
+                    "병입 유형과 검수된 세부 정보를 함께 살펴봅니다. 모르는 취향은 비워두어도 됩니다."}
               </p>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <label className="text-sm font-semibold">연기 향
-                  <select value={profile.smokePreference} onChange={(event) => setProfile((current) => ({
-                    ...current, smokePreference: event.target.value as WhiskeySmokePreference,
-                  }))} className="mt-2 block w-full rounded border border-stone-500 bg-white/70 px-3 py-2 font-normal">
-                    <option value="UNKNOWN">잘 모르겠어요</option><option value="ALLOW">괜찮아요</option><option value="AVOID">피하고 싶어요</option>
-                  </select>
-                </label>
-                <label className="text-sm font-semibold">끌리는 풍미
-                  <select value={profile.preferredFlavor} onChange={(event) => setProfile((current) => ({
-                    ...current, preferredFlavor: event.target.value as WhiskeyFlavorPreference,
-                  }))} className="mt-2 block w-full rounded border border-stone-500 bg-white/70 px-3 py-2 font-normal">
-                    <option value="UNKNOWN">잘 모르겠어요</option><option value="SWEET">달콤함</option><option value="FRUITY">과일 향</option>
-                  </select>
-                </label>
-              </div>
+              <fieldset className="mt-5">
+                <legend className="text-sm font-semibold">{profile.experienceLevel === "BEGINNER" ? "연기 향이 나도 괜찮나요?" :
+                  profile.experienceLevel === "INTERMEDIATE" ? "연기 향 선호" : "피트·연기 향 허용"}
+                </legend>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {smokeOptions.map((option) => <label key={option.value} className={fieldChoiceClass(profile.smokePreference === option.value)}>
+                    <input type="radio" name="smokePreference" value={option.value} checked={profile.smokePreference === option.value}
+                      onChange={() => setProfile((current) => ({ ...current, smokePreference: option.value }))} className="sr-only" />
+                    {option.label}
+                  </label>)}
+                </div>
+              </fieldset>
+              <fieldset className="mt-5">
+                <legend className="text-sm font-semibold">{profile.experienceLevel === "BEGINNER" ? "어떤 향이 끌리나요?" :
+                  profile.experienceLevel === "INTERMEDIATE" ? "주요 풍미 선호" : "우선 살필 풍미"}
+                </legend>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {flavorOptions.map((option) => <label key={option.value} className={fieldChoiceClass(profile.preferredFlavor === option.value)}>
+                    <input type="radio" name="preferredFlavor" value={option.value} checked={profile.preferredFlavor === option.value}
+                      onChange={() => setProfile((current) => ({ ...current, preferredFlavor: option.value }))} className="sr-only" />
+                    {option.label}
+                  </label>)}
+                </div>
+              </fieldset>
               <button type="button" onClick={() => void saveProfile()} disabled={!isAuthenticated}
-                className="mt-3 text-sm font-semibold text-amber-950 underline disabled:opacity-50">이 선택을 기본 취향으로 저장</button>
+                className="mt-4 text-sm font-semibold text-[#4a3728] underline disabled:opacity-50">이 선택을 기본 취향으로 저장</button>
               {profileStatus && <p role="status" className="mt-2 text-xs text-stone-700">{profileStatus}</p>}
-              {profile.experienceLevel === "INTERMEDIATE" && <fieldset className="mt-6 rounded border border-stone-400/70 bg-white/40 p-4">
+              {profile.experienceLevel === "INTERMEDIATE" && <fieldset className="mt-6 border-t border-[#4a3728]/25 pt-4">
                 <legend className="px-1 text-sm font-bold">병입 유형 넓히기</legend>
                 <p className="mb-3 text-xs text-stone-600">선택하면 공식 근거로 검수된 특수 병입도 후보에 포함합니다. 구매 가능 여부는 별도로 확인해야 합니다.</p>
                 <div className="flex flex-wrap gap-4 text-sm">
@@ -305,13 +355,13 @@ export default function VerifiedWhiskeyPreviewPage() {
                     onChange={(event) => setIncludeOldBottles(event.target.checked)} />올드바틀 포함</label>
                 </div>
               </fieldset>}
-              {profile.experienceLevel === "ADVANCED" && <div className="mt-6 rounded border border-amber-800/40 bg-amber-100/70 p-4 text-sm">
+              {profile.experienceLevel === "ADVANCED" && <div className="mt-6 border-t border-[#4a3728]/25 pt-4 text-sm">
                 <p className="font-bold">독립 병입 · 올드바틀 기본 포함</p>
                 <p className="mt-1 text-xs leading-5 text-stone-700">검수된 병입만 후보에 포함합니다. 단종이나 재고는 확인되지 않으면 결과에 미확인으로 표시합니다.</p>
               </div>}
-              <details key={profile.experienceLevel} ref={detailedConditionsRef}
-                open={profile.experienceLevel !== "BEGINNER" || activeDetailedInputCount > 0} className="mt-8">
-              <summary className="cursor-pointer font-serif text-xl font-bold">{profile.experienceLevel === "BEGINNER" ? "상세 조건 선택" : "취향과 상세 조건"}
+              {hasDetailedConditions && <details key={profile.experienceLevel} ref={detailedConditionsRef}
+                open className="mt-8 border-t border-[#4a3728]/25 pt-4">
+              <summary className="cursor-pointer font-serif text-xl font-bold">취향과 상세 조건
                 {activeDetailedInputCount > 0 && <span className="ml-2 text-sm font-normal">적용 중 {activeDetailedInputCount}개</span>}
               </summary>
               <h3 className="mt-6 text-sm font-bold">필수 조건</h3>
@@ -330,47 +380,44 @@ export default function VerifiedWhiskeyPreviewPage() {
                 <Field label="선호 지역" value={inputs.preferredRegion} onChange={(value) => update("preferredRegion", value)} placeholder="예: Speyside" />
                 <Field label="선호 도수 (%)" value={inputs.targetAbv} onChange={(value) => update("targetAbv", value)} type="number" />
               </div>
-              </details>
+              </details>}
               {error && <p role="alert" className="mt-5 rounded border border-red-700/30 bg-red-100 p-3 text-sm text-red-900">{error}</p>}
+              {result && <p role="status" className="mt-5 rounded border border-[#4a3728]/25 bg-white/30 p-3 text-sm leading-6 text-stone-800">{result.code ? codeMessages[result.code] ?? stateMessages[result.state] : stateMessages[result.state]}</p>}
               {!isAuthenticated && isInitialized && <Link href="/login" className="mt-4 block text-sm font-semibold underline">로그인하러 가기</Link>}
               <button type="submit" disabled={loading || !isAuthenticated || !isInitialized}
-                className="mt-7 w-full rounded bg-[#2b1b10] px-5 py-3 font-semibold text-white hover:bg-[#50311d] disabled:cursor-not-allowed disabled:opacity-60">
-                {loading ? "공식 근거와 병입 정보를 확인하는 중…" : "검수 기반 추천 받기"}
+                className="mt-7 w-full bg-[#111] px-5 py-3 text-sm font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#2d2017] disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? "병입 정보를 확인하는 중…" : "위스키 추천 받기"}
               </button>
-            </form>}
+              </div>
+            </form>
+        </div>
+      ) : (
+        <section aria-live="polite" className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 pb-12 pt-4">
+          <h2 ref={resultHeadingRef} tabIndex={-1} className="sr-only">오늘의 추천 결과</h2>
+          {result && <p role="status" className="mb-5 text-center text-sm leading-6 text-stone-400">{result.code ? codeMessages[result.code] ?? stateMessages[result.state] : stateMessages[result.state]}</p>}
 
-            <section aria-live="polite" className={selected ? "mx-auto w-full" : "rounded-lg border border-stone-700 bg-[#241b16] p-5 shadow-xl md:p-7"}>
-              {selected && <button type="button" onClick={() => setResult(null)}
-                className="mb-6 text-sm text-amber-200 hover:underline">← 조건 다시 고르기</button>}
-              <h2 ref={resultHeadingRef} tabIndex={-1} className={selected ? "mb-5 text-center font-serif text-2xl font-bold" : "font-serif text-xl font-bold"}>
-                {selected ? "오늘의 검수 추천" : "추천 결과"}
-              </h2>
-              {!result && !loading && <p className="mt-5 text-sm text-stone-400">조건을 입력하고 추천을 요청하면 이곳에 결과가 표시됩니다.</p>}
-              {loading && <p className="mt-5 text-sm text-amber-200">검수된 후보를 확인하고 있습니다. 중복 요청은 보내지 않습니다.</p>}
-              {result && <p role="status" className="mt-5 text-sm leading-6 text-stone-200">{result.code ? codeMessages[result.code] ?? stateMessages[result.state] : stateMessages[result.state]}</p>}
-              {selected && result && (
-                <article className="relative mx-auto mt-6 w-full max-w-md rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 pt-12 text-stone-900 shadow-[0_10px_30px_rgba(0,0,0,0.5)] md:p-10 md:pt-14">
+          {result && <article className="relative flex w-full max-w-md flex-col items-center rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 pt-12 text-stone-900 shadow-[0_10px_30px_rgba(0,0,0,0.5)] md:p-10 md:pt-14">
                   <div className="absolute inset-x-7 top-5 flex justify-between text-[10px] font-bold tracking-widest text-stone-600 md:inset-x-10">
-                    <span>No. {String(result.recommendationId ?? selected.bottlingId).padStart(3, "0")}</span>
-                    <span>{new Date().toLocaleDateString("ko-KR")}</span>
+                    <span>No. {String(result.recommendationId).padStart(3, "0")}</span>
+                    <span>{todayStr}</span>
                   </div>
-                  <p className="mx-auto mb-5 w-fit border border-[#4a3728] px-3 py-1 text-[10px] font-bold tracking-[0.2em]">R-WHISKEY SELECTION</p>
-                  <p className="text-xs font-semibold tracking-widest text-stone-600">{result.state === "DEGRADED" ? "대체 제공자 확인" : "공식 근거 확인"}</p>
-                  <h3 className="mt-3 font-serif text-2xl font-bold">{selected.displayName}</h3>
-                  {result.appliedLevel && <p className="mt-2 text-sm">{levelLabels[result.appliedLevel]} 추천</p>}
+                  <p className="mb-4 border border-[#4a3728] px-3 py-1 text-[10px] font-bold tracking-[0.2em]">오늘의 추천</p>
+                  <p className="text-center text-[11px] font-semibold tracking-widest text-stone-600">{selected.category || "위스키"} · {levelLabels[result.appliedLevel ?? profile.experienceLevel]}</p>
+                  <h3 className="mt-6 text-center font-serif text-2xl font-bold leading-tight">{selected.displayName}</h3>
+                  <p className="mt-3 text-center text-xs text-stone-600">{result.state === "DEGRADED" ? "대체 제공자로 확인" : "공식 근거로 확인"}</p>
                   {(selected.details?.independentBottling === true || selected.details?.oldBottle === true) && (
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
-                      {selected.details.independentBottling === true && <span className="rounded bg-amber-900 px-2 py-1 text-white">독립 병입</span>}
-                      {selected.details.oldBottle === true && <span className="rounded bg-amber-900 px-2 py-1 text-white">올드바틀</span>}
+                    <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs font-bold">
+                      {selected.details.independentBottling === true && <span className="rounded-full border border-[#4a3728]/30 px-3 py-1 text-[#4a3728]">독립 병입</span>}
+                      {selected.details.oldBottle === true && <span className="rounded-full border border-[#4a3728]/30 px-3 py-1 text-[#4a3728]">올드바틀</span>}
                     </div>
                   )}
-                  {appliedLevel === "BEGINNER" && <p className="mt-5 text-sm leading-6">{beginnerFlavorNotice}</p>}
-                  {appliedLevel === "INTERMEDIATE" && <p className="mt-5 text-sm leading-6">
+                  {appliedLevel === "BEGINNER" && <p className="mt-7 w-full border-t border-[#4a3728]/25 pt-4 text-sm leading-6">{beginnerFlavorNotice}</p>}
+                  {appliedLevel === "INTERMEDIATE" && <p className="mt-7 w-full border-t border-[#4a3728]/25 pt-4 text-sm leading-6">
                     {result.reasonCodes.some((code) => code === "TASTE_FEEDBACK_MATCH" || code === "TASTE_FEEDBACK_AVOIDED")
                       ? "실제로 마신 뒤 남긴 맛 평가를 이번 순위에 반영했습니다."
                       : "이번에 선택한 조건과 확인된 병입 정보를 기준으로 추천했습니다."}
                   </p>}
-                  <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                  <dl className="mt-6 grid w-full grid-cols-2 gap-4 border-t border-[#4a3728]/25 pt-4 text-sm">
                     <Fact label="분류" value={selected.category} />
                     <Fact label="국가" value={selected.country} />
                     <Fact label="지역" value={selected.region} />
@@ -380,29 +427,37 @@ export default function VerifiedWhiskeyPreviewPage() {
                     <Fact label="연산" value={selected.ageStatementType === "NUMBERED" && selected.ageYears !== null ? `${selected.ageYears}년` : selected.ageStatementType === "NAS" ? "NAS" : null} />
                     {appliedLevel === "ADVANCED" && selected.details?.bottlerName && <Fact label="병입사" value={selected.details.bottlerName} />}
                     {appliedLevel === "ADVANCED" && selected.details?.bottledYear && <Fact label="병입 연도" value={`${selected.details.bottledYear}년`} />}
+                    {appliedLevel === "ADVANCED" && <Fact label="독립 병입" value={selected.details?.independentBottling == null ? null :
+                      selected.details.independentBottling ? "해당" : "아님"} />}
+                    {appliedLevel === "ADVANCED" && <Fact label="올드바틀" value={selected.details?.oldBottle == null ? null :
+                      selected.details.oldBottle ? "해당" : "아님"} />}
                   </dl>
                   {appliedLevel !== "ADVANCED" && (selected.details?.bottlerName || selected.details?.bottledYear) && (
-                    <details className="mt-3 text-sm"><summary className="cursor-pointer font-semibold">병입 세부 정보 보기</summary>
+                    <details className="mt-4 w-full text-sm"><summary className="cursor-pointer font-semibold">병입 세부 정보 보기</summary>
                       <p className="mt-2">{[selected.details.bottlerName, selected.details.bottledYear ? `${selected.details.bottledYear}년 병입` : null]
                         .filter(Boolean).join(" · ")}</p>
                     </details>
                   )}
-                  <p className="mt-4 text-xs text-stone-700">구매 가능 여부: {availabilityLabel}{availabilityContext ? ` (${availabilityContext})` : ""}</p>
-                  <div className="mt-5 border-t border-stone-400/40 pt-4">
-                    <p className="text-xs font-bold">선정 근거</p>
+                  <p className="mt-5 w-full text-xs text-stone-700">구매 가능 여부: {availabilityLabel}{availabilityContext ? ` (${availabilityContext})` : ""}</p>
+                  <div className="mt-6 w-full border-t border-[#4a3728]/25 pt-4">
+                    <p className="text-[11px] font-bold tracking-widest text-stone-800">추천 이유</p>
                     <ul className="mt-2 list-inside list-disc text-sm leading-6">
                       {(appliedLevel === "BEGINNER" ? beginnerReasons : displayedReasons).map((message) => <li key={message}>{message}</li>)}
                     </ul>
                   </div>
-                  {evidenceUrl && <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-block text-sm font-semibold text-amber-900 underline">확인된 공식 근거 보기 ↗</a>}
-                  {selected.details?.characteristicsEvidenceUrl?.startsWith("https://") &&
-                    selected.details.characteristicsEvidenceUrl !== evidenceUrl &&
-                    <a href={selected.details.characteristicsEvidenceUrl} target="_blank" rel="noopener noreferrer"
-                      className="ml-4 mt-5 inline-block text-sm font-semibold text-amber-900 underline">풍미·병입 근거 보기 ↗</a>}
-                </article>
-              )}
-              {selected && result?.recommendationId && (
-                <div className="mt-5 rounded border border-stone-600 p-4">
+                  <div className="mt-5 flex w-full flex-wrap gap-x-4 gap-y-2 border-t border-[#4a3728]/25 pt-4">
+                    {evidenceUrl && <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[#4a3728] underline">확인된 공식 근거 보기 ↗</a>}
+                    {selected.details?.characteristicsEvidenceUrl?.startsWith("https://") &&
+                      selected.details.characteristicsEvidenceUrl !== evidenceUrl &&
+                      <a href={selected.details.characteristicsEvidenceUrl} target="_blank" rel="noopener noreferrer"
+                        className="text-sm font-semibold text-[#4a3728] underline">풍미·병입 근거 보기 ↗</a>}
+                  </div>
+                  <div className="mt-7 w-full border-t border-[#4a3728]/25 pt-4 text-center">
+                    <span className="text-[9px] font-bold uppercase italic tracking-widest text-stone-600">R-Whiskey Selection</span>
+                  </div>
+                </article>}
+              {result?.recommendationId && (
+                <div className="mt-6 w-full max-w-md rounded-sm border border-[#4a3728] bg-[#241b16] p-5">
                   <h3 className="font-semibold">이 추천 평가하기</h3>
                   <p className="mt-1 text-xs text-stone-400">예상과 실제 음용 평가는 따로 저장됩니다. 실제 맛 평가만 다음 풍미 추천에 반영됩니다.</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -413,14 +468,12 @@ export default function VerifiedWhiskeyPreviewPage() {
                     <label className="text-xs">이유<select value={feedbackReason} onChange={(event) => setFeedbackReason(event.target.value as WhiskeyFeedbackReason)}
                       className="mt-1 w-full rounded bg-white px-2 py-2 text-sm text-stone-900"><option value="NONE">선택 안 함</option><option value="TASTE">맛·향</option><option value="PRICE">가격</option><option value="AVAILABILITY">구매 어려움</option><option value="OTHER">기타</option></select></label>
                   </div>
-                  <button type="button" onClick={() => void sendFeedback()} disabled={feedbackLoading} className="mt-3 rounded bg-amber-200 px-4 py-2 text-sm font-bold text-stone-950 disabled:cursor-not-allowed disabled:opacity-50">{feedbackLoading ? "저장 중…" : "평가 저장"}</button>
+                  <button type="button" onClick={() => void sendFeedback()} disabled={feedbackLoading} className="mt-4 w-full bg-[#111] px-4 py-3 text-sm font-bold tracking-wider text-white hover:bg-[#4a3728] disabled:cursor-not-allowed disabled:opacity-50">{feedbackLoading ? "저장 중…" : "평가 저장"}</button>
                   {feedbackStatus && <p role="status" className="mt-2 text-sm">{feedbackStatus}</p>}
                 </div>
               )}
-            </section>
-          </div>
-        )}
-      </div>
+        </section>
+      )}
     </main>
   );
 }
