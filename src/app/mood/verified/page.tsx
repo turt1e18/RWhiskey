@@ -6,6 +6,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { PaperAbvInput, PaperDisclosure, PaperReveal, PaperSelect } from "@/components/recommendations/PaperControls";
 import ExpectationFeedback from "@/components/recommendations/ExpectationFeedback";
+import WhiskeyTasteFields from "@/components/recommendations/WhiskeyTasteFields";
+import WhiskeyBottleImage from "@/components/recommendations/WhiskeyBottleImage";
 import { bilingualLabel, countryForCategory, recommendationReasons, whiskeyLabel as facetLabel } from "@/components/recommendations/whiskeyPresentation";
 import { recommendationApi } from "@/api/whiskeyApi";
 import { ApiResponseError } from "@/api/apiClient";
@@ -17,12 +19,14 @@ import type {
 } from "@/type/ApiInterface";
 
 type InputKey = "category" | "country" | "minAbv" | "maxAbv" |
-  "preferredCategory" | "preferredCountry" | "preferredRegion" | "targetAbv";
+  "preferredCategory" | "preferredCountry" | "preferredRegion" | "targetAbv" |
+  "region" | "maturationCask" | "finishCask" | "preferredMaturationCask" | "preferredFinishCask";
 type Inputs = Record<InputKey, string>;
 
 const initialInputs: Inputs = {
   category: "", country: "", minAbv: "", maxAbv: "",
   preferredCategory: "", preferredCountry: "", preferredRegion: "", targetAbv: "",
+  region: "", maturationCask: "", finishCask: "", preferredMaturationCask: "", preferredFinishCask: "",
 };
 
 const stateMessages: Record<WhiskeyVerifiedRecommendationResponse["state"], string> = {
@@ -36,6 +40,14 @@ const stateMessages: Record<WhiskeyVerifiedRecommendationResponse["state"], stri
 };
 
 const codeMessages: Record<string, string> = {
+  CATEGORY_COUNTRY_CONFLICT: "고른 위스키 종류와 생산 국가가 달라요. 둘 중 한 선택을 바꿔 주세요.",
+  REGION_COUNTRY_CONFLICT: "세부 산지와 생산 국가가 달라요. 산지나 국가를 다시 골라 주세요.",
+  PREFERRED_COUNTRY_CONFLICT: "선호하는 국가가 꼭 맞아야 할 국가와 달라요.",
+  PREFERRED_CATEGORY_CONFLICT: "선호하는 종류가 국가 조건과 달라요.",
+  PREFERRED_REGION_CONFLICT: "선호하는 산지가 생산 국가와 달라요.",
+  UNKNOWN_REGION: "세부 산지를 목록에서 다시 골라 주세요.",
+  UNKNOWN_CASK: "숙성 통이나 피니시 통을 목록에서 다시 골라 주세요.",
+  INVALID_AROMA_PREFERENCES: "경험 단계에 맞춰 향을 다시 골라 주세요.",
   PREVIEW_DISABLED: "서버의 검수 기반 추천 미리보기가 아직 활성화되지 않았습니다.",
   DATA_SOURCE_UNAVAILABLE: "추천 데이터를 지금 확인할 수 없습니다. 잠시 뒤 다시 시도해 주세요.",
   UNKNOWN_CATEGORY: "위스키 종류를 목록에서 다시 골라 주세요.",
@@ -69,6 +81,7 @@ function isCatalogFacets(value: unknown): value is WhiskeyCatalogFacetsResponse 
 }
 const defaultProfile: WhiskeyProfile = {
   experienceLevel: "BEGINNER", smokePreference: "UNKNOWN", preferredFlavor: "UNKNOWN",
+  aromaPreferences: [], tastePreference: "UNKNOWN", bodyPreference: "UNKNOWN",
 };
 const levelLabels: Record<WhiskeyExperienceLevel, string> = {
   BEGINNER: "초심자", INTERMEDIATE: "중급", ADVANCED: "상급",
@@ -76,12 +89,9 @@ const levelLabels: Record<WhiskeyExperienceLevel, string> = {
 const smokeOptions: { value: WhiskeySmokePreference; label: string }[] = [
   { value: "UNKNOWN", label: "잘 모르겠어요" },
   { value: "ALLOW", label: "괜찮아요" },
+  { value: "MILD", label: "은은한 정도만 좋아요" },
+  { value: "BOLD", label: "진한 향도 좋아요" },
   { value: "AVOID", label: "피하고 싶어요" },
-];
-const flavorOptions: { value: WhiskeyFlavorPreference; label: string }[] = [
-  { value: "UNKNOWN", label: "잘 모르겠어요" },
-  { value: "SWEET", label: "달콤함" },
-  { value: "FRUITY", label: "과일 향" },
 ];
 
 function isVerifiedResponse(value: unknown): value is WhiskeyVerifiedRecommendationResponse {
@@ -117,6 +127,9 @@ export default function VerifiedWhiskeyPreviewPage() {
   const [conditionStatus, setConditionStatus] = useState<string | null>(null);
   const [feedbackSentiment, setFeedbackSentiment] = useState<WhiskeyFeedbackSentiment>("NEUTRAL");
   const [savedFeedbackSentiment, setSavedFeedbackSentiment] = useState<WhiskeyFeedbackSentiment | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [abvUnit, setAbvUnit] = useState<"ABV" | "PROOF">("ABV");
+  const [levelStatus, setLevelStatus] = useState<string | null>(null);
   const [feedbackReason, setFeedbackReason] = useState<WhiskeyFeedbackReason>("NONE");
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const [feedbackAuthExpired, setFeedbackAuthExpired] = useState(false);
@@ -142,7 +155,7 @@ export default function VerifiedWhiskeyPreviewPage() {
     if (!enabled || !isInitialized || !isAuthenticated) return;
     let active = true;
     void recommendationApi.getWhiskeyProfile()
-      .then((saved) => { if (active) setProfile(saved); })
+      .then((saved) => { if (active) setProfile({ ...defaultProfile, ...saved }); })
       .catch(() => { if (active) setProfileStatus("저장된 취향을 불러오지 못했습니다. 현재 선택으로 추천할 수 있습니다."); });
     return () => { active = false; };
   }, [enabled, isInitialized, isAuthenticated]);
@@ -159,13 +172,13 @@ export default function VerifiedWhiskeyPreviewPage() {
         if (!active) return;
         if (isCatalogFacets(response)) setFacets(response);
         else {
-          setInputs((current) => ({ ...current, category: "", country: "", preferredCategory: "", preferredCountry: "", preferredRegion: "" }));
+          setInputs((current) => ({ ...current, category: "", country: "", preferredCategory: "", preferredCountry: "", preferredRegion: "", region: "", maturationCask: "", finishCask: "", preferredMaturationCask: "", preferredFinishCask: "" }));
           setFacetStatus("선택지를 확인하지 못했습니다. 종류·생산 국가·세부 산지를 제외하고 추천받을 수 있습니다.");
         }
       })
       .catch((caught) => { if (active) {
         setFacetAuthExpired(caught instanceof ApiResponseError && caught.status === 401);
-        setInputs((current) => ({ ...current, category: "", country: "", preferredCategory: "", preferredCountry: "", preferredRegion: "" }));
+        setInputs((current) => ({ ...current, category: "", country: "", preferredCategory: "", preferredCountry: "", preferredRegion: "", region: "", maturationCask: "", finishCask: "", preferredMaturationCask: "", preferredFinishCask: "" }));
         setFacetStatus(caught instanceof ApiResponseError && caught.status === 401
           ? "로그인 상태가 만료됐습니다. 로그인 페이지에서 다시 로그인해 주세요."
           : "선택지를 불러오지 못했습니다. 종류·생산 국가·세부 산지를 제외하고 추천받을 수 있습니다.");
@@ -205,6 +218,7 @@ export default function VerifiedWhiskeyPreviewPage() {
     try {
       await recommendationApi.submitWhiskeyFeedback(id, {
         stage: "EXPECTED", sentiment: feedbackSentiment, reason: feedbackSentiment === "NEUTRAL" ? "NONE" : feedbackReason,
+        comment: feedbackSentiment !== "NEUTRAL" && feedbackReason === "OTHER" ? feedbackComment.trim() || null : null,
       });
       setSavedFeedbackSentiment(feedbackSentiment);
       setFeedbackStatus("마시기 전 감상을 저장했습니다. 선택을 바꾸고 다시 저장할 수 있어요.");
@@ -228,7 +242,7 @@ export default function VerifiedWhiskeyPreviewPage() {
       if (next[field]) { next[field] = ""; changes.push(`${label} 선택을 해제했어요.`); }
     };
     if (key === "category" || key === "preferredCategory") {
-      const country = countryForCategory(value);
+      const country = countryForCategory(value, facets);
       if (key === "preferredCategory" && country && next.country && country !== next.country) {
         setConditionStatus("꼭 맞아야 할 생산 국가와 다른 종류예요. 국가 조건을 바꾸거나 다른 종류를 골라주세요.");
         return;
@@ -239,15 +253,15 @@ export default function VerifiedWhiskeyPreviewPage() {
         changes.push(`선택한 종류에 맞춰 ${key === "category" ? "생산 국가" : "선호 국가"}를 설정했어요: ${facetLabel("country", country, facets)}.`);
       }
     }
-    if (key === "country" && value && countryForCategory(next.category) && countryForCategory(next.category) !== value) {
+    if (key === "country" && value && countryForCategory(next.category, facets) && countryForCategory(next.category, facets) !== value) {
       clear("category", "국가와 다른 위스키 종류");
     }
-    if (key === "preferredCountry" && value && countryForCategory(next.preferredCategory) && countryForCategory(next.preferredCategory) !== value) {
+    if (key === "preferredCountry" && value && countryForCategory(next.preferredCategory, facets) && countryForCategory(next.preferredCategory, facets) !== value) {
       clear("preferredCategory", "국가와 다른 선호 종류");
     }
     if (next.country) {
       if (next.preferredCountry && next.preferredCountry !== next.country) clear("preferredCountry", "꼭 맞아야 할 국가와 다른 선호 국가");
-      const preferredCategoryCountry = countryForCategory(next.preferredCategory);
+      const preferredCategoryCountry = countryForCategory(next.preferredCategory, facets);
       if (preferredCategoryCountry && preferredCategoryCountry !== next.country) clear("preferredCategory", "꼭 맞아야 할 국가와 다른 선호 종류");
     }
     const regionCountry = facets?.regions.find((region) => region.value === next.preferredRegion)?.country;
@@ -256,8 +270,11 @@ export default function VerifiedWhiskeyPreviewPage() {
     else if (key === "preferredRegion" && regionCountry && !effectiveCountry) {
       next.preferredCountry = regionCountry;
       changes.push(`산지에 맞춰 선호 국가를 설정했어요: ${facetLabel("country", regionCountry, facets)}.`);
-      if (countryForCategory(next.preferredCategory) && countryForCategory(next.preferredCategory) !== regionCountry) clear("preferredCategory", "산지와 다른 선호 종류");
+      if (countryForCategory(next.preferredCategory, facets) && countryForCategory(next.preferredCategory, facets) !== regionCountry) clear("preferredCategory", "산지와 다른 선호 종류");
     }
+    const hardRegionCountry = facets?.regions.find((region) => region.value === next.region)?.country;
+    if (hardRegionCountry && next.country && hardRegionCountry !== next.country) clear("region", "국가와 다른 세부 산지");
+    else if (key === "region" && hardRegionCountry && !next.country) { next.country = hardRegionCountry; changes.push("산지에 맞춰 생산 국가를 설정했어요."); }
     setInputs(next);
     setConditionStatus(changes.length ? changes.join(" ") : null);
     setError(null);
@@ -278,6 +295,7 @@ export default function VerifiedWhiskeyPreviewPage() {
     setFeedbackStatus(null);
     setFeedbackSentiment("NEUTRAL");
     setFeedbackReason("NONE");
+    setFeedbackComment("");
     setSavedFeedbackSentiment(null);
 
     if (!isAuthenticated) {
@@ -286,15 +304,16 @@ export default function VerifiedWhiskeyPreviewPage() {
     }
 
     if (hasDetailedConditions && !facets && [inputs.category, inputs.country,
-      inputs.preferredCategory, inputs.preferredCountry, inputs.preferredRegion].some(Boolean)) {
+      inputs.preferredCategory, inputs.preferredCountry, inputs.preferredRegion, inputs.region, inputs.maturationCask, inputs.finishCask, inputs.preferredMaturationCask, inputs.preferredFinishCask].some(Boolean)) {
       setDetailsOpen(true);
       setError("이전에 고른 분류·국가·지역을 확인 중입니다. 선택값을 다시 불러온 뒤 요청해 주세요.");
       return;
     }
 
-    const minAbv = profile.experienceLevel === "ADVANCED" ? optionalNumber(inputs.minAbv) : undefined;
-    const maxAbv = profile.experienceLevel === "ADVANCED" ? optionalNumber(inputs.maxAbv) : undefined;
-    const targetAbv = profile.experienceLevel === "ADVANCED" ? optionalNumber(inputs.targetAbv) : undefined;
+    const abv = (value: string) => { const number = optionalNumber(value); return number === undefined ? undefined : number / (abvUnit === "PROOF" ? 2 : 1); };
+    const minAbv = profile.experienceLevel === "ADVANCED" ? abv(inputs.minAbv) : undefined;
+    const maxAbv = profile.experienceLevel === "ADVANCED" ? abv(inputs.maxAbv) : undefined;
+    const targetAbv = profile.experienceLevel === "ADVANCED" ? abv(inputs.targetAbv) : undefined;
     if (hasDetailedConditions && ([minAbv, maxAbv, targetAbv].some((value) => value !== undefined &&
       (!Number.isFinite(value) || value < 0 || value > 100)) ||
       (minAbv !== undefined && maxAbv !== undefined && minAbv > maxAbv))) {
@@ -307,6 +326,9 @@ export default function VerifiedWhiskeyPreviewPage() {
       requirements: hasDetailedConditions ? {
         ...(inputs.category.trim() && { category: inputs.category.trim() }),
         ...(inputs.country.trim() && { country: inputs.country.trim() }),
+        ...(inputs.region && { region: inputs.region }),
+        ...(inputs.maturationCask && { maturationCask: inputs.maturationCask }),
+        ...(inputs.finishCask && { finishCask: inputs.finishCask }),
         ...(minAbv !== undefined && { minAbv }),
         ...(maxAbv !== undefined && { maxAbv }),
       } : {},
@@ -315,11 +337,16 @@ export default function VerifiedWhiskeyPreviewPage() {
         ...(inputs.preferredCountry.trim() && { preferredCountry: inputs.preferredCountry.trim() }),
         ...(inputs.preferredRegion.trim() && { preferredRegion: inputs.preferredRegion.trim() }),
         ...(targetAbv !== undefined && { targetAbv }),
+        ...(inputs.preferredMaturationCask && { preferredMaturationCask: inputs.preferredMaturationCask }),
+        ...(inputs.preferredFinishCask && { preferredFinishCask: inputs.preferredFinishCask }),
       } : {},
       limit: 3,
       experienceLevel: profile.experienceLevel,
       smokePreference: profile.smokePreference,
-      preferredFlavor: profile.preferredFlavor,
+      preferredFlavor: "UNKNOWN",
+      aromaPreferences: profile.aromaPreferences ?? [],
+      tastePreference: profile.tastePreference ?? "UNKNOWN",
+      bodyPreference: profile.bodyPreference ?? "UNKNOWN",
       includeIndependentBottlings: profile.experienceLevel === "INTERMEDIATE" && includeIndependentBottlings,
       includeOldBottles: profile.experienceLevel === "INTERMEDIATE" && includeOldBottles,
     };
@@ -371,6 +398,9 @@ export default function VerifiedWhiskeyPreviewPage() {
   const appliedLevel = result?.appliedLevel;
   const unmatchedPreferenceMessages = result?.reasonCodes.flatMap((code) => {
     if (!selected) return [];
+    if (code === "PREFERRED_MATURATION_CASK_NOT_MATCHED") return ["선호한 숙성 통과 다른 병이에요. 확인된 숙성 통은 아래 병 정보에서 살펴보세요."];
+    if (code === "PREFERRED_FINISH_CASK_NOT_MATCHED") return ["선호한 피니시 통은 이번 병에서 확인되지 않았어요. 다른 풍미와 조건을 참고해 골랐습니다."];
+    if (code.startsWith("AROMA_NOT_MATCHED_")) return ["선택한 향 중 일부는 이번 병의 설명에서 확인되지 않았어요. 바텐더의 한마디에서 맞는 향을 살펴보세요."];
     if (code === "PREFERRED_CATEGORY_NOT_MATCHED") return [
       `선호 종류 ${facetLabel("category", resultPreferences.category || "미확인", facets)} → 추천 종류 ${facetLabel("category", selected.category || "미확인", facets)}`];
     if (code === "PREFERRED_COUNTRY_NOT_MATCHED") return [
@@ -396,12 +426,15 @@ export default function VerifiedWhiskeyPreviewPage() {
       unmatchedPreferenceMessages.push(`선호한 ${flavor}: 확인된 풍미 정보에서는 두드러지지 않습니다.`);
     }
   }
-  const displayedReasons = result ? recommendationReasons(result, appliedLevel ?? profile.experienceLevel) : [];
+  const displayedReasons = result?.presentation?.summary?.length ? result.presentation.summary : result ? recommendationReasons(result, appliedLevel ?? profile.experienceLevel) : [];
   const evidenceUrl = result?.evidenceUrl?.startsWith("https://") ? result.evidenceUrl : null;
   const regionCountryFilter = inputs.country || inputs.preferredCountry;
   const regionOptions = (facets?.regions ?? []).filter((region) => !regionCountryFilter || region.country === regionCountryFilter);
   const preferredCountries = (facets?.countries ?? []).filter((country) => !inputs.country || country.value === inputs.country);
-  const preferredCategories = (facets?.categories ?? []).filter((category) => !inputs.country || !countryForCategory(category.value) || countryForCategory(category.value) === inputs.country);
+  const categoryOptions = (facets?.categories ?? []).filter((category) => !inputs.country || !category.country || category.country === inputs.country);
+  const preferredCategories = (facets?.categories ?? []).filter((category) => !(inputs.country || inputs.preferredCountry) || !category.country || category.country === (inputs.country || inputs.preferredCountry));
+  const hardRegions = (facets?.regions ?? []).filter((region) => !inputs.country || region.country === inputs.country);
+  const caskLabel = (value: string) => facets?.casks?.find((item) => item.value === value)?.label ?? ({ BOURBON: "버번 통", SHERRY: "셰리 통", WINE: "와인 통", PORT: "포트 통", RUM: "럼 통", VIRGIN_OAK: "새 오크 통", OTHER: "기타 통" } as Record<string,string>)[value] ?? value;
   const fieldChoiceClass = (active: boolean) => `cursor-pointer rounded-full border px-3 py-1.5 text-[13px] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4a3728] ${
     active ? "border-[#2d2017] bg-[#4a3728]/10 font-bold text-[#2d2017]" :
       "border-[#4a3728]/30 bg-white/20 text-stone-700 hover:border-[#4a3728]/60"
@@ -448,7 +481,11 @@ export default function VerifiedWhiskeyPreviewPage() {
                   {(["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const).map((level) => (
                     <label key={level} className={fieldChoiceClass(profile.experienceLevel === level)}>
                       <input type="radio" name="experienceLevel" checked={profile.experienceLevel === level}
-                        onChange={() => setProfile((current) => ({ ...current, experienceLevel: level }))} className="sr-only" />
+                        onChange={() => {
+                          const max = level === "BEGINNER" ? 2 : 4;
+                          setLevelStatus((profile.aromaPreferences?.length ?? 0) > max ? "초심자는 먼저 고른 향 2개로 시작해요. 향을 다시 고를 수 있어요." : null);
+                          setProfile((current) => ({ ...current, experienceLevel: level, aromaPreferences: (current.aromaPreferences ?? []).slice(0, max) }));
+                        }} className="sr-only" />
                       {levelLabels[level]}
                     </label>
                   ))}
@@ -460,6 +497,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                   profile.experienceLevel === "INTERMEDIATE" ? "알고 있는 취향만 고르고, 필요하면 아래 조건으로 더 구체화하세요. 모르는 항목은 비워두어도 됩니다." :
                     "병입 유형과 검수된 세부 정보를 함께 살펴봅니다. 모르는 취향은 비워두어도 됩니다."}
               </motion.p>
+              {levelStatus && <p role="status" className="mt-2 text-xs text-amber-900">{levelStatus}</p>}
               <fieldset className="mt-5">
                 <legend className="text-sm font-semibold">{profile.experienceLevel === "BEGINNER" ? "연기 향이 나도 괜찮나요?" :
                   profile.experienceLevel === "INTERMEDIATE" ? "연기 향 선호" : "피트·연기 향 허용"}
@@ -473,18 +511,9 @@ export default function VerifiedWhiskeyPreviewPage() {
                   </label>)}
                 </div>
               </fieldset>
-              <fieldset className="mt-5">
-                <legend className="text-sm font-semibold">{profile.experienceLevel === "BEGINNER" ? "어떤 향이 끌리나요?" :
-                  profile.experienceLevel === "INTERMEDIATE" ? "주요 풍미 선호" : "우선 살필 풍미"}
-                </legend>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {flavorOptions.map((option) => <label key={option.value} className={fieldChoiceClass(profile.preferredFlavor === option.value)}>
-                    <input type="radio" name="preferredFlavor" value={option.value} checked={profile.preferredFlavor === option.value}
-                      onChange={() => setProfile((current) => ({ ...current, preferredFlavor: option.value }))} className="sr-only" />
-                    {option.label}
-                  </label>)}
-                </div>
-              </fieldset>
+              {profile.smokePreference === "MILD" && <p className="mt-2 text-xs leading-5 text-stone-600">연기 향이 없거나 은은하다고 확인된 병만 찾아요. 향 정보가 없는 병은 제외됩니다.</p>}
+              {profile.smokePreference === "BOLD" && <p className="mt-2 text-xs leading-5 text-stone-600">진한 연기 향을 우선 살펴보지만, 다른 병을 추천할 수도 있어요.</p>}
+              <WhiskeyTasteFields profile={profile} onChange={setProfile} />
               <div hidden>
               <button type="button" onClick={() => void saveProfile()} disabled={!isAuthenticated}
                 className="mt-4 text-sm font-semibold text-[#4a3728] underline disabled:opacity-50">이 선택을 기본 취향으로 저장</button>
@@ -515,21 +544,39 @@ export default function VerifiedWhiskeyPreviewPage() {
               </div>}
               <p className="mt-4 text-xs leading-5 text-stone-600">종류와 생산 국가는 지금 추천 가능한 병이 없어도 고를 수 있어요.<br />조건에 맞는 병이 없다면 알려드릴게요.</p>
               {conditionStatus && <p role="status" className="mt-3 text-xs leading-5 text-amber-900">{conditionStatus}</p>}
+              {profile.experienceLevel === "ADVANCED" && <div className="mt-4">
+                <p className="mb-2 text-xs">도수 입력 단위</p><div className="flex gap-2">{(["ABV", "PROOF"] as const).map((unit) => <button key={unit} type="button"
+                  aria-pressed={abvUnit === unit} className={fieldChoiceClass(abvUnit === unit)}
+                  onClick={() => { if (unit === abvUnit) return; const factor = unit === "PROOF" ? 2 : 0.5;
+                    setInputs((current) => ({ ...current, minAbv: current.minAbv ? String(Number((Number(current.minAbv)*factor).toFixed(3))) : "",
+                      maxAbv: current.maxAbv ? String(Number((Number(current.maxAbv)*factor).toFixed(3))) : "", targetAbv: current.targetAbv ? String(Number((Number(current.targetAbv)*factor).toFixed(3))) : "" })); setAbvUnit(unit); }}>{unit === "ABV" ? "ABV %" : "US Proof"}</button>)}</div>
+                <p className="mt-2 text-xs text-stone-600">미국식 Proof는 ABV의 2배예요. 단위를 바꿔도 같은 도수가 유지됩니다.</p>
+              </div>}
               <h3 className="mt-6 text-sm font-bold">꼭 맞아야 할 조건 (선택)</h3>
               <p className="mt-2 text-xs leading-5 text-stone-600">선택한 조건에 맞는 병입만 추천합니다.<br />고르지 않아도 됩니다.</p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <FacetField label="위스키 종류" value={inputs.category} options={facets?.categories ?? []} strength="hard" onChange={(value) => update("category", value)} disabled={!facets} />
                 <FacetField label="생산 국가" value={inputs.country} options={facets?.countries ?? []} strength="hard" onChange={(value) => update("country", value)} disabled={!facets} />
-                {profile.experienceLevel === "ADVANCED" && <PaperAbvInput label="최소 도수 (ABV %)" value={inputs.minAbv} onChange={(value) => update("minAbv", value)} />}
-                {profile.experienceLevel === "ADVANCED" && <PaperAbvInput label="최대 도수 (ABV %)" value={inputs.maxAbv} onChange={(value) => update("maxAbv", value)} />}
+                <FacetField label="위스키 종류" value={inputs.category} options={categoryOptions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("category", value)} disabled={!facets} />
+                {profile.experienceLevel === "ADVANCED" && <PaperAbvInput unit={abvUnit} label={abvUnit === "ABV" ? "최소 도수 (ABV %)" : "최소 도수 (US Proof)"} value={inputs.minAbv} onChange={(value) => update("minAbv", value)} />}
+                {profile.experienceLevel === "ADVANCED" && <PaperAbvInput unit={abvUnit} label={abvUnit === "ABV" ? "최대 도수 (ABV %)" : "최대 도수 (US Proof)"} value={inputs.maxAbv} onChange={(value) => update("maxAbv", value)} />}
               </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <FacetField label="세부 산지" value={inputs.region} options={hardRegions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("region", value)} disabled={!facets} />
+                <FacetField label="숙성에 사용한 통" value={inputs.maturationCask} options={facets?.casks ?? []} strength="hard" onChange={(value) => update("maturationCask", value)} disabled={!facets?.casks} />
+                <FacetField label="피니시에 사용한 통" value={inputs.finishCask} options={facets?.casks ?? []} strength="hard" onChange={(value) => update("finishCask", value)} disabled={!facets?.casks} />
+              </div>
+              <p className="mt-2 text-xs leading-5 text-stone-600">숙성 통은 위스키를 숙성한 통이에요.<br />피니시는 마지막에 다른 통에서 더 숙성하는 방식이에요. 확인된 통 정보가 있는 병만 조건에 맞춰요.</p>
               <h3 className="mt-8 text-sm font-bold">가능하면 맞춰줄 취향</h3>
               <p className="mt-2 text-xs leading-5 text-stone-600">선호가 맞지 않아도 다른 위스키를 추천할 수 있습니다.<br />결과에서 차이를 알려드립니다.</p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <FacetField label="선호하는 위스키 종류" value={inputs.preferredCategory} options={preferredCategories} strength="soft" onChange={(value) => update("preferredCategory", value)} disabled={!facets} />
                 <FacetField label="선호하는 생산 국가" value={inputs.preferredCountry} options={preferredCountries} strength="soft" onChange={(value) => update("preferredCountry", value)} disabled={!facets} />
+                <FacetField label="선호하는 위스키 종류" value={inputs.preferredCategory} options={preferredCategories} countries={facets?.countries ?? []} strength="soft" onChange={(value) => update("preferredCategory", value)} disabled={!facets} />
                 <FacetField label="선호하는 세부 산지" value={inputs.preferredRegion} options={regionOptions} countries={facets?.countries ?? []} strength="soft" onChange={(value) => update("preferredRegion", value)} disabled={!facets} />
-                {profile.experienceLevel === "ADVANCED" && <PaperAbvInput label="선호 도수 (ABV %)" value={inputs.targetAbv} onChange={(value) => update("targetAbv", value)} />}
+                {profile.experienceLevel === "ADVANCED" && <PaperAbvInput unit={abvUnit} label={abvUnit === "ABV" ? "선호 도수 (ABV %)" : "선호 도수 (US Proof)"} value={inputs.targetAbv} onChange={(value) => update("targetAbv", value)} />}
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <FacetField label="선호하는 숙성 통" value={inputs.preferredMaturationCask} options={facets?.casks ?? []} strength="soft" onChange={(value) => update("preferredMaturationCask", value)} disabled={!facets?.casks} />
+                <FacetField label="선호하는 피니시 통" value={inputs.preferredFinishCask} options={facets?.casks ?? []} strength="soft" onChange={(value) => update("preferredFinishCask", value)} disabled={!facets?.casks} />
               </div>
               {inputs.country && <p className="mt-3 text-xs leading-5 text-stone-600">꼭 맞아야 할 생산 국가 안에서 취향을 고를 수 있어요.</p>}
               </PaperDisclosure>}
@@ -539,10 +586,10 @@ export default function VerifiedWhiskeyPreviewPage() {
               </div>}
               {result && <p role="status" className="mt-5 rounded border border-[#4a3728]/25 bg-white/30 p-3 text-sm leading-6 text-stone-800">{result.code ? codeMessages[result.code] ?? stateMessages[result.state] : stateMessages[result.state]}</p>}
               {result?.state === "NO_MATCH" && result.code === "NO_CANDIDATE_MATCHES_REQUIREMENTS" && hasDetailedConditions &&
-                (Boolean(inputs.category || inputs.country) ||
+                (Boolean(inputs.category || inputs.country || inputs.region || inputs.maturationCask || inputs.finishCask) ||
                   (profile.experienceLevel === "ADVANCED" && Boolean(inputs.minAbv || inputs.maxAbv))) &&
                 <button type="button" onClick={() => {
-                  setInputs((current) => ({ ...current, category: "", country: "", minAbv: "", maxAbv: "" }));
+                  setInputs((current) => ({ ...current, category: "", country: "", region: "", maturationCask: "", finishCask: "", minAbv: "", maxAbv: "" }));
                   setResult(null);
                 }} className="mt-3 text-sm font-semibold underline">꼭 맞아야 할 조건 지우기</button>}
               {!isAuthenticated && isInitialized && <Link href="/login" className="mt-4 block text-sm font-semibold underline">로그인하러 가기</Link>}
@@ -564,6 +611,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                     <span>{todayStr}</span>
                   </div>
                   <p className="mb-4 border border-[#4a3728] px-3 py-1 text-[10px] font-bold tracking-[0.2em]">오늘의 추천</p>
+                  <WhiskeyBottleImage key={selected.bottlingId} url={selected.details?.experience?.imageUrl} name={selected.displayName} />
                   <h3 className="mt-3 text-center font-serif text-2xl font-bold leading-tight">{selected.displayName}</h3>
                   <p className="mt-3 text-center text-xs leading-6 text-stone-700">
                     {bilingualLabel("category", selected.category, facets) ?? "위스키"}<br />
@@ -577,7 +625,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                   )}
                   {unmatchedPreferenceMessages.length > 0 && <div role="note" className="mt-5 w-full rounded border border-amber-800/30 bg-amber-100/60 p-3 text-xs leading-5 text-stone-800">
                     <p className="font-semibold">선호 조건 안내</p>
-                    <ul className="mt-1 list-inside list-disc">{unmatchedPreferenceMessages.map((message) => <li key={message}>{message}</li>)}</ul>
+                    <ul className="mt-1 list-inside list-disc">{[...new Set(unmatchedPreferenceMessages)].map((message) => <li key={message}>{message}</li>)}</ul>
                   </div>}
                   <div className="mt-6 w-full border-t border-[#4a3728]/25 pt-4">
                     <p className="text-sm font-bold text-stone-800">바텐더의 한마디</p>
@@ -590,6 +638,12 @@ export default function VerifiedWhiskeyPreviewPage() {
                     <dl className="mt-4 grid grid-cols-2 gap-4">
                     <Fact label="세부 산지" value={selected.region ? facetLabel("region", selected.region, facets) : null} />
                     <Fact label="병입 구분" value={selected.edition} />
+                    <Fact label="숙성 통" value={selected.details?.experience?.maturationCasks.map(caskLabel).join(" · ") || null} />
+                    <Fact label="피니시 통" value={selected.details?.experience?.finishCasks.map(caskLabel).join(" · ") || null} />
+                    <Fact label="캐스크 번호" value={selected.details?.experience?.caskNumber ?? null} />
+                    <Fact label="배치" value={selected.batchCode ?? null} />
+                    <Fact label="증류 연도" value={selected.vintageYear ? String(selected.vintageYear) : null} />
+                    <Fact label="출시 연도" value={selected.releaseYear ? String(selected.releaseYear) : null} />
                     <Fact label="도수" value={selected.abv === null ? null : `${selected.abv}%`} />
                     <Fact label="숙성 년수" value={selected.ageStatementType === "NUMBERED" && selected.ageYears !== null ? `${selected.ageYears}년` : selected.ageStatementType === "NAS" ? "숙성 년수 표기 없음 (NAS)" : null} />
                     {selected.details?.bottlerName && <Fact label="병입사" value={selected.details.bottlerName} />}
@@ -603,6 +657,13 @@ export default function VerifiedWhiskeyPreviewPage() {
                       <a href={selected.details.characteristicsEvidenceUrl} target="_blank" rel="noopener noreferrer"
                         className="text-xs text-[#4a3728] underline">풍미·병입 정보 출처 ↗</a>}
                   </div>
+                  {Boolean(result.presentation?.pairings.length) && <div className="mt-5 w-full border-t border-[#4a3728]/25 pt-4">
+                    <h4 className="text-sm font-bold">함께 즐겨볼 안주</h4>
+                    {result.presentation?.pairings.map((item) => <p key={item.food} className="mt-2 text-sm leading-6"><strong>{item.food}</strong> — {item.reason}</p>)}
+                    <p className="mt-2 text-xs text-stone-600">풍미를 참고한 제안이에요. 알레르기와 개인 취향을 확인해 주세요.</p>
+                  </div>}
+                  <Link href={`/notes/verified/${result.recommendationId}`} className="mt-6 min-h-11 w-full border border-[#4a3728] px-3 py-3 text-center text-sm font-semibold">마신 뒤 시음 기록 남기기</Link>
+                  <p className="mt-2 text-xs text-stone-600">나중에 내 시음 노트에서도 이 추천을 다시 찾을 수 있어요.</p>
                   <div className="mt-7 w-full border-t border-[#4a3728]/25 pt-4 text-center">
                     <span className="text-[9px] font-bold uppercase italic tracking-widest text-stone-600">R-Whiskey Selection</span>
                   </div>
@@ -610,8 +671,9 @@ export default function VerifiedWhiskeyPreviewPage() {
               {result?.recommendationId && (
                 <ExpectationFeedback sentiment={feedbackSentiment} reason={feedbackReason} savedSentiment={savedFeedbackSentiment}
                   loading={feedbackLoading} status={feedbackStatus} authExpired={feedbackAuthExpired}
-                  onSentiment={(value) => { setFeedbackSentiment(value); setFeedbackReason("NONE"); setFeedbackStatus(null); }}
-                  onReason={(value) => { setFeedbackReason(value); setFeedbackStatus(null); }} onSave={() => void sendFeedback()} />
+                  comment={feedbackComment} onComment={setFeedbackComment}
+                  onSentiment={(value) => { setFeedbackSentiment(value); setFeedbackReason("NONE"); setFeedbackComment(""); setFeedbackStatus(null); }}
+                  onReason={(value) => { setFeedbackReason(value); setFeedbackComment(""); setFeedbackStatus(null); }} onSave={() => void sendFeedback()} />
               )}
         </motion.section>
       )}
@@ -623,7 +685,8 @@ function FacetField({ label, value, options, countries = [], strength, onChange,
   label: string; value: string;
   options: WhiskeyCatalogFacet[]; countries?: WhiskeyCatalogFacet[]; strength: "hard" | "soft"; onChange: (value: string) => void; disabled: boolean;
 }) {
-  const unavailable = value && options.find((option) => option.value === value)?.bottlingCount === 0;
+  const matchedOption = options.find((option) => option.value === value);
+  const unavailable = value && matchedOption?.countKnown !== false && matchedOption?.bottlingCount === 0;
   return <PaperSelect label={label} value={value} onChange={onChange} disabled={disabled}
     options={options.map((option) => ({ value: option.value, label: option.label + (option.country ? " · " +
       (countries.find((country) => country.value === option.country)?.label ?? option.country) : "") }))}

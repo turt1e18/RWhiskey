@@ -16,6 +16,7 @@ import { LoungeBoard } from "./_components/LoungeBoard";
 import { initialWhiskies, loungeNotes, WhiskyEntry, LoungeNote } from "./_data/mockData";
 import { toast } from "sonner";
 import { notesApi } from "@/api/whiskeyApi";
+import VerifiedNotesList from "@/components/recommendations/VerifiedNotesList";
 import { NoteResponse, NoteReviewRequest } from "@/type/ApiInterface";
 import "./notes.css";
 
@@ -270,6 +271,7 @@ export default function MyNotesPage() {
                             transition={{ duration: 0.35 }}
                             className="h-full"
                           >
+                            {process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true" && <VerifiedNotesList />}
                             <PersonalListView
                               whiskies={whiskies}
                               onSelect={handleSelect}

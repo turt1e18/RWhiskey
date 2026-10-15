@@ -34,20 +34,20 @@ export function PaperSelect({ label, value, options, onChange, disabled = false,
 }
 
 /** Decimal ABV input without browser number steppers. Empty means no restriction. */
-export function PaperAbvInput({ label, value, onChange }: {
-  label: string; value: string; onChange: (value: string) => void;
+export function PaperAbvInput({ label, value, onChange, unit = "ABV" }: {
+  label: string; value: string; onChange: (value: string) => void; unit?: "ABV" | "PROOF";
 }) {
   const id = useId();
   return (
     <div className="block text-sm font-semibold">
       <label htmlFor={id}>{label}</label>
-      <input id={id} value={value} type="text" inputMode="decimal" maxLength={6}
-        aria-describedby={`${id}-hint`} placeholder="예: 46"
+      <input id={id} value={value} type="text" inputMode="decimal" maxLength={7}
+        aria-describedby={`${id}-hint`} placeholder={unit === "ABV" ? "예: 46" : "예: 92"}
         onChange={(event) => {
           const next = event.target.value;
-          if (/^\d{0,3}(\.\d{0,2})?$/.test(next) && (next === "" || next === "." || Number(next) <= 100)) onChange(next);
+          if (/^\d{0,3}(\.\d{0,3})?$/.test(next) && (next === "" || next === "." || Number(next) <= (unit === "ABV" ? 100 : 200))) onChange(next);
         }} className={`${inputStyle} mt-2 px-3`} />
-      <span id={`${id}-hint`} className="mt-1 block text-xs font-normal text-stone-600">0~100% · 비워두어도 됩니다</span>
+      <span id={`${id}-hint`} className="mt-1 block text-xs font-normal text-stone-600">{unit === "ABV" ? "0~100%" : "0~200 US Proof"} · 비워두어도 됩니다</span>
     </div>
   );
 }

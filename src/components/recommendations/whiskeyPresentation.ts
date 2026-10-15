@@ -21,8 +21,8 @@ const categoryCountries: Record<string, string> = {
 };
 
 /** Only named geographic styles constrain the country. Generic rye has no such mapping. */
-export function countryForCategory(value: string): string | undefined {
-  return categoryCountries[value];
+export function countryForCategory(value: string, facets?: WhiskeyCatalogFacetsResponse | null): string | undefined {
+  return facets?.categories.find((item) => item.value === value)?.country ?? categoryCountries[value];
 }
 
 export function whiskeyLabel(kind: "category" | "country" | "region", value: string, facets: WhiskeyCatalogFacetsResponse | null): string {

@@ -60,12 +60,14 @@ export interface WhiskeyCatalogFacet {
   bottlingCount: number;
   label: string;
   country: string | null;
+  countKnown?: boolean;
 }
 
 export interface WhiskeyCatalogFacetsResponse {
   categories: WhiskeyCatalogFacet[];
   countries: WhiskeyCatalogFacet[];
   regions: WhiskeyCatalogFacet[];
+  casks?: WhiskeyCatalogFacet[];
   code: string | null;
 }
 /** W-03 candidate lookup contract, also used by the W-06 verified preview. */
@@ -76,6 +78,9 @@ export interface WhiskeyCandidateRequest {
     minAbv?: number;
     maxAbv?: number;
     excludedBottlingIds?: number[];
+    region?: string;
+    maturationCask?: string;
+    finishCask?: string;
   };
   context?: {
     weather?: string;
@@ -86,6 +91,8 @@ export interface WhiskeyCandidateRequest {
     preferredCountry?: string;
     preferredRegion?: string;
     targetAbv?: number;
+    preferredMaturationCask?: string;
+    preferredFinishCask?: string;
   };
   limit?: number;
   experienceLevel?: WhiskeyExperienceLevel;
@@ -93,10 +100,16 @@ export interface WhiskeyCandidateRequest {
   preferredFlavor?: WhiskeyFlavorPreference;
   includeIndependentBottlings?: boolean;
   includeOldBottles?: boolean;
+  aromaPreferences?: WhiskeyAroma[];
+  tastePreference?: WhiskeyTastePreference;
+  bodyPreference?: WhiskeyBodyPreference;
 }
 
 export type WhiskeyExperienceLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-export type WhiskeySmokePreference = "UNKNOWN" | "ALLOW" | "AVOID";
+export type WhiskeySmokePreference = "UNKNOWN" | "ALLOW" | "AVOID" | "MILD" | "BOLD";
+export type WhiskeyAroma = "VANILLA_CARAMEL" | "FRESH_FRUIT" | "DRIED_FRUIT" | "FLORAL_HERBAL" | "CEREAL_NUTTY" | "ROASTED_COCOA" | "WOODY_SPICY";
+export type WhiskeyTastePreference = "UNKNOWN" | "SWEET" | "DRY" | "BITTER" | "SOUR" | "SALTY" | "UMAMI";
+export type WhiskeyBodyPreference = "UNKNOWN" | "LIGHT" | "FULL";
 export type WhiskeyFlavorPreference = "UNKNOWN" | "SWEET" | "FRUITY";
 export type WhiskeyFeedbackStage = "EXPECTED" | "CONSUMED";
 export type WhiskeyFeedbackSentiment = "LIKE" | "NEUTRAL" | "DISLIKE";
@@ -106,6 +119,9 @@ export interface WhiskeyProfile {
   experienceLevel: WhiskeyExperienceLevel;
   smokePreference: WhiskeySmokePreference;
   preferredFlavor: WhiskeyFlavorPreference;
+  aromaPreferences?: WhiskeyAroma[];
+  tastePreference?: WhiskeyTastePreference;
+  bodyPreference?: WhiskeyBodyPreference;
 }
 
 export interface WhiskeyFeedback {
@@ -113,6 +129,7 @@ export interface WhiskeyFeedback {
   stage: WhiskeyFeedbackStage;
   sentiment: WhiskeyFeedbackSentiment;
   reason: WhiskeyFeedbackReason;
+  comment?: string | null;
   updatedAt: string;
 }
 
@@ -139,6 +156,11 @@ export interface WhiskeyCandidateResponse {
     volumeMl: number | null;
     ageStatementType: "NUMBERED" | "NAS" | "UNKNOWN";
     ageYears: number | null;
+    batchCode?: string | null;
+    vintageYear?: number | null;
+    releaseYear?: number | null;
+    verificationBasis?: "PRIMARY" | "CORROBORATED";
+    verificationPolicy?: string;
     details?: {
       smokeLevel: number | null;
       sweetnessLevel: number | null;
@@ -154,6 +176,7 @@ export interface WhiskeyCandidateResponse {
       availabilitySeller: string | null;
       availabilityRegion: string | null;
       availabilityCheckedAt: string | null;
+      experience?: WhiskeyExperienceDetails | null;
     } | null;
   }>;
 }
@@ -176,6 +199,51 @@ export interface WhiskeyVerifiedRecommendationResponse {
   evidenceUrl: string | null;
   appliedLevel?: WhiskeyExperienceLevel | null;
   recommendationId?: number | null;
+  presentation?: WhiskeyPresentation | null;
+}
+
+export interface WhiskeyExperienceDetails {
+  aromaTags: WhiskeyAroma[];
+  tasteLevels: Record<string, number>;
+  bodyLevel: number | null;
+  maturationCasks: string[];
+  finishCasks: string[];
+  caskNumber: string | null;
+  imageUrl: string | null;
+  imageSourceUrl: string | null;
+  sourceUrls: string[];
+}
+export interface WhiskeyPresentation {
+  summary: string[];
+  pairings: { food: string; reason: string; sourceUrl: string }[];
+}
+export interface WhiskeySavedRecommendation {
+  id: number;
+  experienceLevel: WhiskeyExperienceLevel;
+  createdAt: string;
+  selected: WhiskeyCandidateResponse["candidates"][number] | null;
+  presentation: WhiskeyPresentation | null;
+  snapshotAvailable: boolean;
+}
+export interface WhiskeyTastingNoteRequest {
+  tastedOn?: string | null;
+  nose?: string | null;
+  palate?: string | null;
+  finish?: string | null;
+  memo?: string | null;
+  rating?: number | null;
+  sentiment?: WhiskeyFeedbackSentiment | null;
+}
+export interface WhiskeyTastingNoteResponse extends WhiskeyTastingNoteRequest {
+  recommendation: WhiskeySavedRecommendation;
+  updatedAt: string | null;
+}
+export interface WhiskeyTastingNoteSummary {
+  recommendationId: number;
+  displayName: string;
+  edition: string | null;
+  rating: number | null;
+  updatedAt: string;
 }
 
 /**

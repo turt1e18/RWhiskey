@@ -104,6 +104,11 @@ export const whiskeyTagsApi = {
  * 위스키 추천(Recommendation) 관련 API 서비스
  */
 export const recommendationApi = {
+  getVerifiedRecords: () => apiClient<import("@/type/ApiInterface").WhiskeySavedRecommendation[]>('/api/recommendations/v2/records', { method: 'GET' }),
+  getVerifiedTastingNotes: () => apiClient<import("@/type/ApiInterface").WhiskeyTastingNoteSummary[]>('/api/recommendations/v2/tasting-notes', { method: 'GET' }),
+  getVerifiedTastingNote: (id: number) => apiClient<import("@/type/ApiInterface").WhiskeyTastingNoteResponse>(`/api/recommendations/v2/${id}/tasting-note`, { method: 'GET' }),
+  putVerifiedTastingNote: (id: number, note: import("@/type/ApiInterface").WhiskeyTastingNoteRequest) =>
+    apiClient<import("@/type/ApiInterface").WhiskeyTastingNoteResponse>(`/api/recommendations/v2/${id}/tasting-note`, { method: 'PUT', body: JSON.stringify(note) }),
   getWhiskeyCatalogFacets: () => apiClient<WhiskeyCatalogFacetsResponse>('/api/recommendations/v2/facets', { method: 'GET' }),
   /** 검수 기반 W-06 미리보기. 결과 저장과 토큰 차감은 W-07 이후 계약에서 다룬다. */
   getVerifiedPreview: (request: WhiskeyCandidateRequest) => {
@@ -118,7 +123,7 @@ export const recommendationApi = {
   }),
   resetWhiskeyProfile: () => apiClient<WhiskeyProfile>('/api/recommendations/v2/profile', { method: 'DELETE' }),
   submitWhiskeyFeedback: (recommendationId: number, feedback: {
-    stage: WhiskeyFeedbackStage; sentiment: WhiskeyFeedbackSentiment; reason: WhiskeyFeedbackReason;
+    stage: WhiskeyFeedbackStage; sentiment: WhiskeyFeedbackSentiment; reason: WhiskeyFeedbackReason; comment?: string | null;
   }) => apiClient<WhiskeyFeedback>(`/api/recommendations/v2/${recommendationId}/feedback`, {
     method: 'PUT', body: JSON.stringify(feedback),
   }),

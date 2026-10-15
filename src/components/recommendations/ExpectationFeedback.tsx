@@ -5,13 +5,15 @@ import Link from "next/link";
 import type { WhiskeyFeedbackReason, WhiskeyFeedbackSentiment } from "@/type/ApiInterface";
 import { PaperReveal, PaperSelect } from "./PaperControls";
 
-export default function ExpectationFeedback({ sentiment, reason, savedSentiment, loading, status, authExpired, onSentiment, onReason, onSave }: {
+export default function ExpectationFeedback({ sentiment, reason, savedSentiment, loading, status, authExpired, onSentiment, onReason, onSave, comment, onComment }: {
   sentiment: WhiskeyFeedbackSentiment; reason: WhiskeyFeedbackReason;
   savedSentiment: WhiskeyFeedbackSentiment | null;
   loading: boolean; status: string | null; authExpired: boolean;
   onSentiment: (value: WhiskeyFeedbackSentiment) => void;
   onReason: (value: WhiskeyFeedbackReason) => void;
   onSave: () => void;
+  comment: string;
+  onComment: (value: string) => void;
 }) {
   const neutral = sentiment === "NEUTRAL";
   return (
@@ -35,6 +37,11 @@ export default function ExpectationFeedback({ sentiment, reason, savedSentiment,
           <PaperSelect label="이유 (선택)" value={reason === "NONE" ? "" : reason} onChange={(value) => onReason((value || "NONE") as WhiskeyFeedbackReason)} disabled={loading}
             options={[{ value: "TASTE", label: "설명된 맛·향" }, { value: "PRICE", label: "가격" },
               { value: "AVAILABILITY", label: "구매하기 어려움" }, { value: "OTHER", label: "기타" }]} />
+          {reason === "OTHER" && <label className="mt-4 block text-sm">더 들려주실 이야기 (선택)
+            <textarea value={comment} onChange={(event) => onComment(event.target.value)} maxLength={500} disabled={loading}
+              className="mt-2 min-h-24 w-full rounded border border-stone-500/60 bg-white/70 p-3 text-sm" />
+            <span className="mt-1 block text-right text-xs text-stone-600">{comment.length}/500</span>
+          </label>}
         </div>
       </PaperReveal>
       {neutral && savedSentiment !== null && savedSentiment !== "NEUTRAL" && <p role="status" className="mt-3 text-xs leading-5 text-stone-700">
