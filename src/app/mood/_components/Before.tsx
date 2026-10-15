@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { jsonRequestHeaders } from "@/api/apiClient";
+import { getRecommendationImage } from "@/api/recommendationImages";
 import { useState, useMemo, useEffect } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { useAuthStore } from "@/store/authStore";
@@ -93,17 +93,7 @@ export default function BeforeScreen(props: any) {
           mainTasteTag: selectedMainTag || undefined,
         });
 
-        // 2. 이미지 검색
-        const googleRes = await fetch("/api/google", {
-          method: "POST",
-          headers: jsonRequestHeaders(),
-          body: JSON.stringify({ data: aiResult.whiskyName, type: 3 })
-        });
-
-        let imageUrl = null;
-        if (googleRes.ok) {
-          imageUrl = await googleRes.json();
-        }
+        const imageUrl = await getRecommendationImage(aiResult.whiskyName);
 
         // 3. 성공 시 메인 태그 초기화
         resetMainTag();

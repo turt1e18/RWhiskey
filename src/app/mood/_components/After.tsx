@@ -5,7 +5,7 @@
 
 "use client";
 import { use, useState, useMemo } from "react";
-import Image from "next/image";
+import RecommendationSearchImage from "@/components/recommendations/RecommendationSearchImage";
 import { motion, AnimatePresence } from "framer-motion";
 import { MoodWhiskyDataInterface } from "@/type/MoodDataInterface";
 import { useRecommendationStore } from "@/store/recommendationStore";
@@ -35,8 +35,6 @@ export default function AfterScreen({
   const [pendingTag, setPendingTag] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
-  // 이미지가 로드되었는지 확인하는 상태
-  const [isImageLoad, setIsImageLoad] = useState<boolean>(false);
 
   // 오늘 날짜 표시
   const todayStr = useMemo(() => {
@@ -157,21 +155,7 @@ export default function AfterScreen({
           <div className="border border-[#4a3728] px-3 py-0.5 text-[10px] font-bold tracking-[0.2em] text-[#4a3728] uppercase mb-4 mt-2">오늘의 추천</div>
           <div className="text-[10px] text-stone-700 tracking-wider font-medium mb-6">{resultData?.classification}</div>
 
-          <div className="w-full h-64 flex items-center justify-center mb-6 relative overflow-hidden bg-white/10 rounded-sm">
-            {!isImageLoad && (
-              <div className="absolute inset-0 flex justify-center items-center">
-                <div className="w-10 h-10 border-2 border-[#4a3728]/20 border-t-[#4a3728] rounded-full animate-spin"></div>
-              </div>
-            )}
-            <Image
-              src={resultData?.image || "https://placehold.co/600x650"}
-              alt={resultData?.whiskyName}
-              fill={true}
-              className={`object-contain transition-opacity duration-700 ${isImageLoad ? "opacity-100" : "opacity-0"}`}
-              unoptimized
-              onLoad={() => setIsImageLoad(true)}
-            />
-          </div>
+          <RecommendationSearchImage key={resultData?.image || "empty"} src={resultData?.image} name={resultData?.whiskyName || "위스키"} />
 
           <div className="flex flex-col items-center mb-4 leading-tight">
             <h1 className="font-serif font-bold text-xl md:text-2xl text-center text-black">{resultData?.whiskyName}</h1>

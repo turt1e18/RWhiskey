@@ -64,7 +64,7 @@ export async function authorizeLegacyProvider(req: Request, purpose: "GEMINI" | 
     try { body = JSON.parse(new TextDecoder().decode(bytes)); } catch { throw new LegacyProviderFailure("INVALID_REQUEST_BODY", 400); }
     if (!body || typeof body !== "object" || Array.isArray(body)) throw new LegacyProviderFailure("INVALID_REQUEST_BODY", 400);
     const input = body as Record<string, unknown>;
-    if (input.type !== 0 && input.type !== 1) throw new LegacyProviderFailure("INVALID_REQUEST_BODY", 400);
+    if (input.type !== 0 && input.type !== 1 && !(purpose === "IMAGE" && input.type === 3)) throw new LegacyProviderFailure("INVALID_REQUEST_BODY", 400);
     if (purpose === "IMAGE" || input.type === 0) {
       if (typeof input.data !== "string" || input.data.length > 4000) throw new LegacyProviderFailure("INVALID_REQUEST_BODY", 400);
     } else if (!input.data || typeof input.data !== "object" || Array.isArray(input.data)) {

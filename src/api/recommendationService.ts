@@ -1,3 +1,4 @@
+import { getRecommendationImage } from "./recommendationImages";
 import { jsonRequestHeaders } from "@/api/apiClient";
 import { recommendationApi, cocktailApi, userTokenApi } from "./whiskeyApi";
 import {
@@ -140,22 +141,8 @@ export const getCocktailRecommendation = async (
 
     const aiResult: GeminiCocktailResponse = await geminiResponse.json();
 
-    // 3. 구글 이미지 검색 API 호출 (정확도를 위해 cocktail 접두사 추가)
-    let imageUrl = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop"; // 폴백 이미지
-    try {
-      const googleRes = await fetch("/api/google", {
-        method: "POST",
-        headers: jsonRequestHeaders(),
-        body: JSON.stringify({ data: `cocktail ${aiResult.cocktailName}`, type: 3 })
-      });
-
-      if (googleRes.ok) {
-        const fetchedUrl = await googleRes.json();
-        if (fetchedUrl) imageUrl = fetchedUrl;
-      }
-    } catch (imageError) {
-      console.warn("Google Image search failed, using fallback:", imageError);
-    }
+    const foundImage = await getRecommendationImage("cocktail " + aiResult.cocktailName);
+    const images = foundImage ? [foundImage] : [];
 
     // 4. 백엔드에 추천 결과 저장
     const saveRequest: CocktailSaveRequest = {
@@ -172,7 +159,7 @@ export const getCocktailRecommendation = async (
       foodName: aiResult.foodPairing,
       bartenderWord: aiResult.bartenderMessage,
       pairingNote: aiResult.tastingNote,
-      images: [imageUrl],
+      images,
       checkList: aiResult.checkList,
       method: aiResult.method
     };
@@ -185,7 +172,7 @@ export const getCocktailRecommendation = async (
     }
 
     return {
-      aiResult: { ...aiResult, images: [imageUrl] },
+      aiResult: { ...aiResult, images },
       savedOid
     };
   } catch (error) {
