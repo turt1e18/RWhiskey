@@ -10,7 +10,7 @@ import WhiskeyTasteFields from "@/components/recommendations/WhiskeyTasteFields"
 import WhiskeyBottleImage from "@/components/recommendations/WhiskeyBottleImage";
 import { bilingualLabel, countryForCategory, recommendationReasons, whiskeyLabel as facetLabel } from "@/components/recommendations/whiskeyPresentation";
 import { recommendationApi } from "@/api/whiskeyApi";
-import { ApiResponseError } from "@/api/apiClient";
+import { ApiResponseError, ApiRequestTimeout } from "@/api/apiClient";
 import { useAuthStore } from "@/store/authStore";
 import type {
   WhiskeyCandidateRequest, WhiskeyCatalogFacet, WhiskeyCatalogFacetsResponse, WhiskeyExperienceLevel, WhiskeyFeedbackReason,
@@ -40,6 +40,14 @@ const stateMessages: Record<WhiskeyVerifiedRecommendationResponse["state"], stri
 };
 
 const codeMessages: Record<string, string> = {
+  REQUEST_DEADLINE_EXCEEDED: "이번 주문을 시간 안에 확인하지 못했어요. 선택은 그대로예요. 잠시 뒤 다시 시도해 주세요.",
+  REQUEST_BUDGET_EXHAUSTED: "이번에는 추천 확인을 끝내지 못했어요. 선택은 그대로예요. 잠시 뒤 다시 시도해 주세요.",
+  RATE_LIMITED: "짧은 시간에 여러 번 요청했어요. 잠시 기다린 뒤 다시 요청해 주세요.",
+  DAILY_LIMITED: "오늘 이용 가능한 추천 요청을 모두 사용했어요. 내일 다시 찾아주세요.",
+  RECOMMENDATION_BUSY: "아직 살펴보는 주문이 있어요. 잠시 기다린 뒤 다시 확인해 주세요.",
+  REQUEST_IN_PROGRESS: "이전 주문을 아직 살펴보고 있어요. 잠시 기다린 뒤 이전 주문 결과를 확인해 주세요.",
+  IDEMPOTENCY_CONFLICT: "이전 주문과 선택한 조건이 달라요. 조건을 확인하고 새 주문으로 요청해 주세요.",
+  ADMISSION_UNAVAILABLE: "지금은 주문을 안전하게 접수할 수 없어요. 잠시 뒤 다시 시도해 주세요.",
   CATEGORY_COUNTRY_CONFLICT: "고른 위스키 종류와 생산 국가가 달라요. 둘 중 한 선택을 바꿔 주세요.",
   REGION_COUNTRY_CONFLICT: "세부 산지와 생산 국가가 달라요. 산지나 국가를 다시 골라 주세요.",
   PREFERRED_COUNTRY_CONFLICT: "선호하는 국가가 꼭 맞아야 할 국가와 달라요.",
@@ -97,7 +105,8 @@ const smokeOptions: { value: WhiskeySmokePreference; label: string }[] = [
 function isVerifiedResponse(value: unknown): value is WhiskeyVerifiedRecommendationResponse {
   if (typeof value !== "object" || value === null || !("state" in value)) return false;
   return typeof value.state === "string" && value.state in stateMessages &&
-    "reasonCodes" in value && Array.isArray(value.reasonCodes);
+    "code" in value && typeof value.code === "string" &&
+    "reasonCodes" in value && Array.isArray(value.reasonCodes) && value.reasonCodes.every((code) => typeof code === "string");
 }
 
 function optionalNumber(value: string): number | undefined {
@@ -138,6 +147,8 @@ export default function VerifiedWhiskeyPreviewPage() {
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const feedbackBusy = useRef(false);
   const busy = useRef(false);
+  const pendingRequest = useRef<{ payload: string; key: string } | null>(null);
+  const [recovering, setRecovering] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isInitialized = useAuthStore((state) => state.isInitialized);
   const fetchUser = useAuthStore((state) => state.fetchUser);
@@ -303,7 +314,7 @@ export default function VerifiedWhiskeyPreviewPage() {
       return;
     }
 
-    if (hasDetailedConditions && !facets && [inputs.category, inputs.country,
+    if (!recovering && hasDetailedConditions && !facets && [inputs.category, inputs.country,
       inputs.preferredCategory, inputs.preferredCountry, inputs.preferredRegion, inputs.region, inputs.maturationCask, inputs.finishCask, inputs.preferredMaturationCask, inputs.preferredFinishCask].some(Boolean)) {
       setDetailsOpen(true);
       setError("이전에 고른 분류·국가·지역을 확인 중입니다. 선택값을 다시 불러온 뒤 요청해 주세요.");
@@ -314,7 +325,7 @@ export default function VerifiedWhiskeyPreviewPage() {
     const minAbv = profile.experienceLevel === "ADVANCED" ? abv(inputs.minAbv) : undefined;
     const maxAbv = profile.experienceLevel === "ADVANCED" ? abv(inputs.maxAbv) : undefined;
     const targetAbv = profile.experienceLevel === "ADVANCED" ? abv(inputs.targetAbv) : undefined;
-    if (hasDetailedConditions && ([minAbv, maxAbv, targetAbv].some((value) => value !== undefined &&
+    if (!recovering && hasDetailedConditions && ([minAbv, maxAbv, targetAbv].some((value) => value !== undefined &&
       (!Number.isFinite(value) || value < 0 || value > 100)) ||
       (minAbv !== undefined && maxAbv !== undefined && minAbv > maxAbv))) {
       setDetailsOpen(true);
@@ -322,7 +333,8 @@ export default function VerifiedWhiskeyPreviewPage() {
       return;
     }
 
-    const request: WhiskeyCandidateRequest = {
+    const request: WhiskeyCandidateRequest = recovering && pendingRequest.current
+      ? JSON.parse(pendingRequest.current.payload) as WhiskeyCandidateRequest : {
       requirements: hasDetailedConditions ? {
         ...(inputs.category.trim() && { category: inputs.category.trim() }),
         ...(inputs.country.trim() && { country: inputs.country.trim() }),
@@ -361,14 +373,22 @@ export default function VerifiedWhiskeyPreviewPage() {
     busy.current = true;
     setLoading(true);
     try {
-      const response = await recommendationApi.getVerifiedPreview(request);
+      const payload = JSON.stringify(request);
+      if (!pendingRequest.current || pendingRequest.current.payload !== payload) {
+        pendingRequest.current = { payload, key: crypto.randomUUID() };
+        setRecovering(false);
+      }
+      const response = await recommendationApi.getVerifiedPreview(request, pendingRequest.current.key);
       if (!isVerifiedResponse(response) ||
         ((response.state === "SUCCESS" || response.state === "DEGRADED") &&
           (!response.selected || !response.evidenceUrl?.startsWith("https://") ||
             !Number.isSafeInteger(response.recommendationId) || (response.recommendationId ?? 0) <= 0))) {
-        setError("검수 결과 형식을 확인할 수 없습니다. 잠시 뒤 다시 시도해 주세요.");
+        setRecovering(true);
+        setError("주문 결과를 확인하지 못했어요. 잠시 뒤 이전 주문 결과를 확인해 주세요.");
         return;
       }
+      pendingRequest.current = null;
+      setRecovering(false);
       setResult(response);
 
     } catch (caught) {
@@ -378,15 +398,19 @@ export default function VerifiedWhiskeyPreviewPage() {
       } else if (caught instanceof ApiResponseError && caught.status === 403) {
         setError("요청 인증에 실패했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.");
       } else if (caught instanceof ApiResponseError && isVerifiedResponse(caught.data)) {
+        setRecovering(caught.data.code === "REQUEST_IN_PROGRESS");
+        if (caught.data.code !== "REQUEST_IN_PROGRESS") pendingRequest.current = null;
         setResult(caught.data);
-      } else if (caught instanceof ApiResponseError && caught.status === 503) {
-        setError("공식 검색이나 최종 검수를 지금 완료할 수 없습니다. 잠시 뒤 다시 시도해 주세요.");
       } else if (caught instanceof ApiResponseError && caught.status >= 500) {
-        setError("추천 처리 중 서버 오류가 발생했습니다. 잠시 뒤 다시 시도해 주세요.");
+        setRecovering(pendingRequest.current !== null);
+        setError("주문 처리 결과를 아직 확인하지 못했어요. 잠시 뒤 이전 주문 결과를 확인해 주세요.");
       } else if (caught instanceof ApiResponseError) {
+        pendingRequest.current = null;
+        setRecovering(false);
         setError("요청을 처리하지 못했습니다. 선택한 조건을 확인해 주세요.");
       } else {
-        setError("연결에 실패했습니다. 잠시 뒤 다시 시도해 주세요.");
+        setRecovering(pendingRequest.current !== null);
+        setError(caught instanceof ApiRequestTimeout ? "주문 결과를 아직 받지 못했어요. 선택은 그대로예요. 잠시 뒤 이전 주문 결과를 확인해 주세요." : "연결을 확인하지 못했어요. 잠시 뒤 이전 주문 결과를 확인해 주세요.");
       }
     } finally {
       busy.current = false;
@@ -594,9 +618,10 @@ export default function VerifiedWhiskeyPreviewPage() {
                 }} className="mt-3 text-sm font-semibold underline">꼭 맞아야 할 조건 지우기</button>}
               {!isAuthenticated && isInitialized && <Link href="/login" className="mt-4 block text-sm font-semibold underline">로그인하러 가기</Link>}
               <PaperReveal show={loading}><WhiskeyLoader messages={orderMessages} tone="paper" compact /></PaperReveal>
+              {recovering && <p role="status" className="mt-4 text-sm text-stone-700">이전 주문의 결과를 확인합니다. 바꾼 선택은 다음 주문에 적용돼요.</p>}
               <button type="submit" disabled={loading || !isAuthenticated || !isInitialized}
                 className="mt-7 w-full bg-[#111] px-5 py-3 text-sm font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#2d2017] disabled:cursor-not-allowed disabled:opacity-60">
-                {loading ? "주문을 살펴보고 있어요…" : "위스키 추천 받기"}
+                {loading ? "주문을 살펴보고 있어요…" : recovering ? "이전 주문 결과 확인" : "위스키 추천 받기"}
               </button>
               </fieldset>
             </form>

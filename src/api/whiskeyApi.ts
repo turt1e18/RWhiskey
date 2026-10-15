@@ -111,8 +111,10 @@ export const recommendationApi = {
     apiClient<import("@/type/ApiInterface").WhiskeyTastingNoteResponse>(`/api/recommendations/v2/${id}/tasting-note`, { method: 'PUT', body: JSON.stringify(note) }),
   getWhiskeyCatalogFacets: () => apiClient<WhiskeyCatalogFacetsResponse>('/api/recommendations/v2/facets', { method: 'GET' }),
   /** 검수 기반 W-06 미리보기. 결과 저장과 토큰 차감은 W-07 이후 계약에서 다룬다. */
-  getVerifiedPreview: (request: WhiskeyCandidateRequest) => {
+  getVerifiedPreview: (request: WhiskeyCandidateRequest, requestKey?: string) => {
     return apiClient<WhiskeyVerifiedRecommendationResponse>('/api/recommendations/v2/verified', {
+      timeoutMs: 25_000,
+      ...(requestKey && { headers: { "Idempotency-Key": requestKey } }),
       method: 'POST',
       body: JSON.stringify(request),
     });

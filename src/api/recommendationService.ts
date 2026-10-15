@@ -1,3 +1,4 @@
+import { jsonRequestHeaders } from "@/api/apiClient";
 import { recommendationApi, cocktailApi, userTokenApi } from "./whiskeyApi";
 import {
   GeminiWhiskyResponse,
@@ -38,7 +39,7 @@ export const getWhiskyRecommendation = async (
     // 2. Gemini AI API 호출
     const geminiResponse = await fetch("/api/gemini", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: jsonRequestHeaders(),
       body: JSON.stringify({
         data: `날씨: ${userInput.weatherValue}, 기분: ${userInput.moodValue}, 요구사항: ${userInput.additionalValue}${userInput.mainTasteTag ? `, 강조풍미: ${userInput.mainTasteTag}` : ""}`,
         type: 0,
@@ -125,7 +126,7 @@ export const getCocktailRecommendation = async (
     // 2. Gemini AI API 호출
     const geminiResponse = await fetch("/api/gemini", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: jsonRequestHeaders(),
       body: JSON.stringify({
         data: request,
         type: 1,
@@ -144,7 +145,7 @@ export const getCocktailRecommendation = async (
     try {
       const googleRes = await fetch("/api/google", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: jsonRequestHeaders(),
         body: JSON.stringify({ data: `cocktail ${aiResult.cocktailName}`, type: 3 })
       });
 

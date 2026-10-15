@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import { jsonRequestHeaders } from "@/api/apiClient";
 import { useState, useMemo, useEffect } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { useAuthStore } from "@/store/authStore";
@@ -95,7 +96,7 @@ export default function BeforeScreen(props: any) {
         // 2. 이미지 검색
         const googleRes = await fetch("/api/google", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: jsonRequestHeaders(),
           body: JSON.stringify({ data: aiResult.whiskyName, type: 3 })
         });
 

@@ -1,51 +1,32 @@
 import axios from "axios";
 import { NextResponse } from "next/server";
+import { authorizeLegacyProvider, legacyProviderError } from "@/server/legacyProviderGuard";
 
 const ACCESS_KEY = process.env.GOOGLESEARCH_ACCESS_KEY;
 const ACCESS_KEY2 = process.env.GOOGLESEARCHID_ACCESS_KEY;
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const data = body.data;
-  const type = body.type;
-
-  if (!ACCESS_KEY) {
-    console.error("Google Search API key is missing");
-  }
+  let permit: Awaited<ReturnType<typeof authorizeLegacyProvider>>;
+  try { permit = await authorizeLegacyProvider(req, "IMAGE"); } catch (error) { return legacyProviderError(error); }
   try {
-    const result = await axios
-      .get("https://customsearch.googleapis.com/customsearch/v1", {
-        params: {
-          q: data,
-          searchType: "image",
-          num: type === 1 ? 3 : 1,
-          key: ACCESS_KEY,
-          cx: ACCESS_KEY2
-        }
-      })
-      .then(async (res) => {
-        if (type === 1) {
-          const result = res.data.items
-            .map((item: any) => item.image?.thumbnailLink)
-            .filter(
-              (link: string | undefined) =>
-                typeof link === "string" && link.startsWith("http")
-            );
-          return NextResponse.json(result);
-        } else {
-          if (res.data.items && res.data.items.length > 0) {
-            return NextResponse.json(res.data.items[0].link); // JSON 리턴
-          } else {
-            console.warn("Could not find image for:", data);
-            return NextResponse.json(null);
-          }
-        }
-      })
-      .catch((err) => {
-        console.error("Google Search Request Failed:", err);
-      });
-    return result;
-  } catch (err) {
-    console.error("image is MIA", err);
+    const body = await req.json();
+    if (!ACCESS_KEY || !ACCESS_KEY2) return NextResponse.json({ code: "SEARCH_NOT_CONFIGURED" }, { status: 503 });
+    const response = await axios.get("https://customsearch.googleapis.com/customsearch/v1", {
+      params: { q: body.data, searchType: "image", num: body.type === 1 ? 3 : 1, key: ACCESS_KEY, cx: ACCESS_KEY2 },
+      signal: permit.signal, timeout: 5_000, maxRedirects: 0, maxContentLength: 131_072, maxBodyLength: 32_768,
+    });
+    const items: unknown = response.data.items;
+    const safe = (value: unknown): value is string => {
+      if (typeof value !== "string") return false;
+      try { return new URL(value).protocol === "https:"; } catch { return false; }
+    };
+    const results = Array.isArray(items) ? items.slice(0, 3) : [];
+    if (body.type === 1) return NextResponse.json(results.map((item) => item.image?.thumbnailLink).filter(safe));
+    const image: unknown = results[0]?.link;
+    return NextResponse.json(safe(image) ? image : null);
+  } catch (error) {
+    return legacyProviderError(error);
+  } finally {
+    await permit.release();
   }
 }
