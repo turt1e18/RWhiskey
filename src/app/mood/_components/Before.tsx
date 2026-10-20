@@ -11,6 +11,7 @@ import { useRecommendationStore } from "@/store/recommendationStore";
 import { recommendationApi } from "@/api/whiskeyApi";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import RecommendationBackLink from "@/components/recommendations/RecommendationBackLink";
 
 /**
  * Mood 추천 입력 화면 (Order Sheet 스타일)
@@ -132,15 +133,7 @@ export default function BeforeScreen(props: any) {
   return (
     <div className="min-h-full md:h-full text-stone-100 bg-[#1a120d] selection:bg-amber-200/30 flex flex-col">
       <nav className="flex items-center justify-start px-6 py-4 w-full max-w-5xl mx-auto">
-        <button
-          onClick={() => window.history.back()}
-          className="flex items-center space-x-2 text-stone-500 hover:text-white transition-colors"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></path>
-          </svg>
-          <span className="text-sm font-light">뒤로가기</span>
-        </button>
+        <RecommendationBackLink href="/home" />
       </nav>
 
       <main className="mx-auto flex-1 flex max-w-6xl items-center justify-center px-6 py-4">
