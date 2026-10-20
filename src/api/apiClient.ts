@@ -30,7 +30,7 @@ export class ApiResponseError extends Error {
  * @param endpoint - API 엔드포인트 경로
  * @param options - Fetch API 옵션
  */
-async function apiClient<T>(endpoint: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
+async function apiClient<T>(endpoint: string, options: RequestInit & { timeoutMs?: number; emptyBodyAsNull?: boolean } = {}): Promise<T> {
   const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
   
   const headers = new Headers(options.headers);
@@ -62,6 +62,7 @@ async function apiClient<T>(endpoint: string, options: RequestInit & { timeoutMs
   const timer = options.timeoutMs ? setTimeout(() => { timedOut = true; stop(); }, options.timeoutMs) : null;
   const fetchOptions = { ...options };
   delete fetchOptions.timeoutMs;
+  delete fetchOptions.emptyBodyAsNull;
   const config: RequestInit = {
     ...fetchOptions,
     ...(controller && { signal: controller.signal }),
@@ -101,6 +102,11 @@ async function apiClient<T>(endpoint: string, options: RequestInit & { timeoutMs
       throw new ApiResponseError(response.status, errorData, errorMessage);
     }
 
+    // Nullable read endpoints can return 200 without a body when no record exists.
+    if (options.emptyBodyAsNull) {
+      const text = await response.text();
+      return text.trim() === '' ? null as T : JSON.parse(text) as T;
+    }
     return await response.json();
   } catch (error) {
     if (IS_DEV && !(error instanceof ApiResponseError)) {

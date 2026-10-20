@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toV3Request, toVerifiedCard, isV3Response } from './v3Contract';
+import { toV3Request, toVerifiedCard, isV3Response, toAiSuggestion } from './v3Contract';
 import type { V3Response } from './v3Contract';
 
 for (const level of ['BEGINNER','INTERMEDIATE','ADVANCED'] as const) {
@@ -34,4 +34,20 @@ test('only saved currently verified success becomes a result card',()=>{
   assert.equal(toVerifiedCard({...fixture,state:'NEEDS_REVIEW'}),null);
   assert.equal(toVerifiedCard({...fixture,verification:{...fixture.verification!,current:'REVOKED'}}),null);
   assert.equal(toVerifiedCard({...fixture,recommendedAt:'invalid'}),null);
+});
+const aiId='bc63f274-c5a8-4d16-9c24-c0c4aa6ee551';
+const ai:V3Response={apiVersion:'V3',state:'SUCCESS',nextAction:'NONE',operationId:aiId,appliedLevel:'BEGINNER',
+  recommendedAt:'2026-10-19T01:00:00Z',verification:{atRecommendation:'AI_SUGGESTED',current:'UNVERIFIED',certificateId:null},
+  aiSuggestion:{id:aiId,identity:{brand:'Fixture',expression:'Only',abv:null},presentation:{summary:['Proposed flavor'],pairings:[]},notice:'Unverified AI suggestion'}};
+test('AI result remains separate from certified result and unknown ABV is preserved',()=>{
+  assert.equal(toAiSuggestion(ai)?.id,aiId);assert.equal(toAiSuggestion(ai)?.identity.abv,null);
+  assert.equal(toVerifiedCard(ai),null);assert.equal(toAiSuggestion(fixture),null);
+});
+test('AI guard rejects mixed IDs, certificate, wrong operation and malformed fields',()=>{
+  assert.equal(toAiSuggestion({...ai,recommendationId:1}),null);
+  assert.equal(toAiSuggestion({...ai,verification:{...ai.verification!,certificateId:'fake'}}),null);
+  assert.equal(toAiSuggestion({...ai,operationId:'other'}),null);
+  assert.equal(toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,identity:{brand:'Fixture',expression:'Only',abv:101}}}),null);
+  assert.equal(toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,identity:{brand:'Fixture',expression:''}}}),null);
+  assert.equal(toAiSuggestion({...ai,recommendedAt:'invalid'}),null);
 });
