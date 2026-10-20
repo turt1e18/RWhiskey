@@ -10,6 +10,7 @@ import ExpectationFeedback from './ExpectationFeedback';
 import { bilingualLabel } from './whiskeyPresentation';
 import { aiKoreanName } from '@/lib/recommendations/aiPresentation';
 import WhiskeySearchPhoto from './WhiskeySearchPhoto';
+import WhiskeyCatalogFactsPanel from './WhiskeyCatalogFactsPanel';
 
 export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}) {
   const a=toAiSuggestion(response);
@@ -49,7 +50,7 @@ export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}
   }
   return <div className="mx-auto flex w-full max-w-md flex-col items-center px-4">
     <article className="w-full break-words rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 text-stone-900 shadow-xl md:p-10">
-      <p className="text-xs font-bold tracking-wide text-[#63431f]">상세정보 검증 전</p>
+      <p className="text-xs font-bold tracking-wide text-[#63431f]">{a.catalogFacts?.status==='CURRENT' && Date.parse(a.catalogFacts.validUntil)>Date.now()?'일부 병입 정보 확인':'상세정보 검증 전'}</p>
       <h2 className="mt-4 text-[22px] font-semibold leading-snug tracking-tight md:text-2xl">{p.brand} {p.expression}</h2>
       {koreanName && <p lang="ko" className="mt-2 text-[13px] leading-5 text-stone-700">{koreanName}</p>}
       {p.edition && <p className="mt-2 text-sm">{p.edition}</p>}
@@ -63,6 +64,7 @@ export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}
       {(p.independentBottling || p.oldBottle) && <p className="mt-4 text-sm font-semibold">{[p.independentBottling?'독립 병입 제안':null,p.oldBottle?'올드바틀 제안':null].filter(Boolean).join(' · ')}</p>}
       <h3 className="mt-6 border-t border-[#4a3728]/25 pt-4 font-bold">이 한 잔을 고른 이유</h3>
       <div className="mt-3 space-y-3 text-sm leading-7">{a.presentation.summary.map((text,i)=><p key={i}>{text}</p>)}</div>
+      <WhiskeyCatalogFactsPanel facts={a.catalogFacts}/>
       {a.servingSuggestion && <div className="mt-5 border-t border-[#4a3728]/25 pt-4 text-sm leading-7"><h3 className="font-semibold">한 잔을 즐기는 제안</h3><p className="mt-2">{a.servingSuggestion}</p></div>}
       {differences.length>0 && <div className="mt-5 border-t border-[#4a3728]/25 pt-4 text-sm leading-6"><h3 className="font-semibold">선택한 취향과 다른 점</h3>{differences.map(text=><p key={text} className="mt-2">{text}</p>)}</div>}
       <details className="mt-5 border-t border-[#4a3728]/25 pt-3 text-sm">

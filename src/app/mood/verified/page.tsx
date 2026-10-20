@@ -529,7 +529,7 @@ export default function VerifiedWhiskeyPreviewPage() {
           transition={{ duration: reduceMotion ? 0 : 0.2 }} className="mx-auto grid w-full max-w-5xl items-center gap-10 px-6 py-4 md:gap-12 lg:grid-cols-2">
           <header className="flex flex-col justify-center space-y-4">
             <p className="text-sm font-medium uppercase tracking-[0.25em] text-amber-300/80">Whiskey Recommendation</p>
-            <h1 className="font-serif text-2xl font-bold leading-tight text-white md:text-3xl lg:text-4xl">오늘의 취향에 맞는<br />위스키를 찾아보세요</h1>
+            <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl lg:text-4xl">오늘의 취향에 맞는<br />위스키를 찾아보세요</h1>
             <p className="max-w-md text-sm leading-6 text-stone-400 md:text-base">{aiEnabled ? "위스키 경험과 선호하는 향을 고르면 AI가 찾은 후보 중에서 오늘의 한 잔을 골라드려요. 제품 정보는 외부 교차검증 전인 제안이에요." : "위스키 경험과 선호하는 향을 고르면 확인된 병입 중에서 오늘의 한 잔을 추천해드립니다."}</p>
             {profile.experienceLevel !== "BEGINNER" && <p className="max-w-md text-sm leading-6 text-stone-500">익숙한 취향이 있다면 주문서에서 조건을 더 구체적으로 선택할 수 있습니다.</p>}
           </header>
@@ -680,7 +680,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                   </div>
                   <p className="mb-4 border border-[#4a3728] px-3 py-1 text-[10px] font-bold tracking-[0.2em]">{v3Mode && v3.message ? "이전 추천" : "오늘의 추천"}</p>
                   <WhiskeyBottleImage key={selected.bottlingId} url={selected.details?.experience?.imageUrl} name={selected.displayName} />
-                  <h3 className="mt-3 text-center font-serif text-2xl font-bold leading-tight">{selected.displayName}</h3>
+                  <h3 className="mt-3 text-center text-2xl font-bold leading-tight">{selected.displayName}</h3>
                   <p className="mt-3 text-center text-xs leading-6 text-stone-700">
                     {bilingualLabel("category", selected.category, facets) ?? "위스키"}<br />
                     {bilingualLabel("country", selected.country, facets)}

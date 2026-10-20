@@ -39,13 +39,42 @@ export interface AiSuggestionCard {
     category?:string|null;country?:string|null;region?:string|null;abv?:number|null;
     ageStatement?:'UNKNOWN'|'NAS'|'NUMBERED';ageYears?:number|null;vintageYear?:number|null;
     caskNumber?:string|null;maturationCask?:string|null;finishCask?:string|null;
-    independentBottling?:boolean|null;oldBottle?:boolean|null};
+    independentBottling?:boolean|null;oldBottle?:boolean|null;volumeMl?:number|null;releaseYear?:number|null};
   presentation:{summary:string[];pairings:{food:string;reason:string}[]};
   notice:string;
   reasons?:string[];
   localizedName?:string|null;
   servingSuggestion?:string|null;
   presentationSource?:{kind:'RULE'|'MODEL';provider?:string|null;model?:string|null;promptVersion?:string|null;status:string}|null;
+  catalogFacts?:CatalogFacts|null;
+}
+export interface CatalogFacts {
+  status:'CURRENT'|'EXPIRED'|'CHANGED'|'UNAVAILABLE'|'NOT_RECHECKED';
+  bottlingId:number;factsDigest:string;policyVersion:string;checkedAt:string;validUntil:string;
+  fields:{field:string;value:string;unit?:string|null;sources:{url:string;observedAt:string}[]}[];
+}
+const factNames=new Set(['brand','expression','edition','batch','bottler','category','country','region','abv','volumeMl',
+  'ageStatement','ageYears','vintageYear','releaseYear','caskNumber','maturationCask','finishCask','independentBottling',
+  'oldBottle','market','bottledYear','aromaTags','tastingNote','smokeLevel','sweetnessLevel','fruitLevel','bodyLevel',
+  'tasteSweetness','tasteAcidity','tasteBitterness','tasteSalinity','tasteUmami']);
+function validFacts(value:unknown):value is CatalogFacts {
+  if(!value || typeof value!=='object')return false;
+  const f=value as CatalogFacts;
+  const date=(v:unknown)=>typeof v==='string' && Number.isFinite(Date.parse(v));
+  const url=(v:unknown)=>{try {if(typeof v!=='string' || v.length>2048)return false;const u=new URL(v);
+    return u.protocol==='https:' && !u.username && !u.password && !u.hash && (u.port==='' || u.port==='443') &&
+      Array.from(u.searchParams.keys()).every(k=>['edition','batch','market','release','vintage','year','lang','locale','product','id','sku'].includes(k.toLowerCase())) &&
+      /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(u.hostname) && !/^\d+$/.test(u.hostname.split('.').pop()??'') &&
+      !['.local','.internal','.localhost'].some(s=>u.hostname.endsWith(s));
+  }catch{return false;}};
+  return ['CURRENT','EXPIRED','CHANGED','UNAVAILABLE','NOT_RECHECKED'].includes(f.status) &&
+    Number.isSafeInteger(f.bottlingId) && f.bottlingId>0 && /^[0-9a-f]{64}$/.test(f.factsDigest) &&
+    f.policyVersion==='S4_EVIDENCE_V1' && date(f.checkedAt) && date(f.validUntil) &&
+    Date.parse(f.checkedAt)<Date.parse(f.validUntil) && Array.isArray(f.fields) && f.fields.length>0 && f.fields.length<=32 &&
+    new Set(f.fields.map(x=>x?.field)).size===f.fields.length && f.fields.every(x=>x && factNames.has(x.field) &&
+      typeof x.value==='string' && x.value.length>0 && x.value.length<=2000 &&
+      (x.unit==null || ['%','ml','years'].includes(x.unit)) && Array.isArray(x.sources) && x.sources.length>0 && x.sources.length<=4 &&
+      x.sources.every(s=>s && url(s.url) && date(s.observedAt) && Date.parse(s.observedAt)<=Date.parse(f.checkedAt)));
 }
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** AI output is deliberately incompatible with the certified card guard below. */
@@ -75,8 +104,11 @@ export function toAiSuggestion(v:V3Response):AiSuggestionCard|null {
     p.abv!=null && (typeof p.abv!=='number' || !Number.isFinite(p.abv) || p.abv<=0 || p.abv>100) ||
     p.ageYears!=null && (!Number.isInteger(p.ageYears) || p.ageYears<1 || p.ageYears>100) ||
     p.vintageYear!=null && (!Number.isInteger(p.vintageYear) || p.vintageYear<1700 || p.vintageYear>new Date().getFullYear()) ||
+    p.volumeMl!=null && (!Number.isInteger(p.volumeMl) || p.volumeMl<1 || p.volumeMl>100000) ||
+    p.releaseYear!=null && (!Number.isInteger(p.releaseYear) || p.releaseYear<1700 || p.releaseYear>new Date().getFullYear()) ||
     [p.independentBottling,p.oldBottle].some(x=>x!=null && typeof x!=='boolean'))return null;
-  return a;
+  // An invalid optional enhancement must not hide an otherwise usable saved AI recommendation.
+  return a.catalogFacts==null || validFacts(a.catalogFacts)?a:{...a,catalogFacts:null};
 }
 
 /** No silently dropped hard constraints or free text from an older contract. */

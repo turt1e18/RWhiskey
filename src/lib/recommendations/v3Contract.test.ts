@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { toV3Request, toVerifiedCard, isV3Response, toAiSuggestion } from './v3Contract';
-import type { V3Response } from './v3Contract';
+import type { V3Response, CatalogFacts } from './v3Contract';
 
 for (const level of ['BEGINNER','INTERMEDIATE','ADVANCED'] as const) {
   test(`${level}: explicit preferences and hard values preserved`,()=>{
@@ -50,4 +50,24 @@ test('AI guard rejects mixed IDs, certificate, wrong operation and malformed fie
   assert.equal(toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,identity:{brand:'Fixture',expression:'Only',abv:101}}}),null);
   assert.equal(toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,identity:{brand:'Fixture',expression:''}}}),null);
   assert.equal(toAiSuggestion({...ai,recommendedAt:'invalid'}),null);
+});
+const facts:CatalogFacts={status:'CURRENT',bottlingId:1,factsDigest:'a'.repeat(64),policyVersion:'S4_EVIDENCE_V1',
+  checkedAt:'2026-10-20T00:00:00Z',validUntil:'2099-01-01T00:00:00Z',
+  fields:[{field:'abv',value:'43',unit:'%',sources:[{url:'https://producer.example/products/one?batch=B1',observedAt:'2026-10-19T00:00:00Z'}]}]};
+test('catalog facts remain optional separate facts and never certify the AI card',()=>{
+  const response={...ai,aiSuggestion:{...ai.aiSuggestion!,catalogFacts:facts}};
+  assert.deepEqual(toAiSuggestion(response)?.catalogFacts,facts);assert.equal(toVerifiedCard(response),null);
+  assert.equal(toAiSuggestion(ai)?.catalogFacts,undefined);
+});
+test('unsafe malformed or oversized fact sidecars are discarded without losing the AI card',()=>{
+  const bad=[{...facts,factsDigest:'invalid'},{...facts,status:'VERIFIED'},{...facts,fields:[]},
+    {...facts,fields:Array(33).fill(facts.fields[0])}, {...facts,fields:[null]},
+    ...['javascript:alert(1)','https://localhost/a','https://127.0.0.1/a','https://producer.example/a?api_key=secret'].map(url=>
+      ({...facts,fields:[{...facts.fields[0],sources:[{url,observedAt:'2026-10-19T00:00:00Z'}]}]}))];
+  for(const invalid of bad){const response={...ai,aiSuggestion:{...ai.aiSuggestion!,catalogFacts:invalid}} as V3Response;
+    assert.equal(toAiSuggestion(response)?.id,aiId);assert.equal(toAiSuggestion(response)?.catalogFacts,null);}
+});
+test('changed expired and unavailable historical fact statuses preserve the saved recommendation',()=>{
+  for(const status of ['EXPIRED','CHANGED','UNAVAILABLE','NOT_RECHECKED'] as const)
+    assert.equal(toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,catalogFacts:{...facts,status}}})?.catalogFacts?.status,status);
 });
