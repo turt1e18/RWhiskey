@@ -47,6 +47,32 @@ export interface AiSuggestionCard {
   servingSuggestion?:string|null;
   presentationSource?:{kind:'RULE'|'MODEL';provider?:string|null;model?:string|null;promptVersion?:string|null;status:string}|null;
   catalogFacts?:CatalogFacts|null;
+  productSourceObservations?:ProductSourceObservations|null;
+}
+export interface ProductSourceObservations {
+  scope:'PRODUCT_PAGE';status:'CURRENT';bottlingIdentityConfirmed:false;
+  observedAt:string;validUntil:string;sourceUrl:string;publisher:string;
+  fields:{field:string;value:string;unit?:string|null}[];
+}
+export function validProductSourceObservations(value:unknown):value is ProductSourceObservations {
+  if(!value || typeof value!=='object')return false;
+  const o=value as ProductSourceObservations;
+  const allowed=['abv','maturationCask','finishCask','ageStatement','ageYears','volumeMl','region','country'];
+  let safeUrl=false;
+  try {const u=new URL(o.sourceUrl);safeUrl=u.protocol==='https:' && !u.username && !u.password && !u.hash &&
+    (u.port==='' || u.port==='443') && /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(u.hostname) &&
+    !/^\d+$/.test(u.hostname.split('.').pop()??'') && !['.local','.internal','.localhost'].some(x=>u.hostname.endsWith(x)) &&
+    Array.from(u.searchParams.keys()).every(k=>['edition','batch','market','release','vintage','year','lang','locale','product','id','sku'].includes(k.toLowerCase()));
+  }catch{return false;}
+  return safeUrl && o.scope==='PRODUCT_PAGE' && o.status==='CURRENT' && o.bottlingIdentityConfirmed===false &&
+    typeof o.publisher==='string' && o.publisher.length>0 && o.publisher.length<=120 &&
+    typeof o.observedAt==='string' && Number.isFinite(Date.parse(o.observedAt)) &&
+    typeof o.validUntil==='string' && Date.parse(o.validUntil)>Date.parse(o.observedAt) &&
+    Array.isArray(o.fields) && o.fields.length>0 && o.fields.length<=8 &&
+    new Set(o.fields.map(x=>x?.field)).size===o.fields.length && o.fields.every(x=>x && allowed.includes(x.field) &&
+      typeof x.value==='string' && x.value.length>0 && x.value.length<=200 && !/[\u0000-\u001f\u007f]/.test(x.value) &&
+      (x.unit==null || ['%','ml','years'].includes(x.unit)) &&
+      (x.field!=='abv' || /^\d+(?:\.\d{1,2})?$/.test(x.value) && Number(x.value)>0 && Number(x.value)<=100));
 }
 export interface CatalogFacts {
   status:'CURRENT'|'EXPIRED'|'CHANGED'|'UNAVAILABLE'|'NOT_RECHECKED';
@@ -108,7 +134,9 @@ export function toAiSuggestion(v:V3Response):AiSuggestionCard|null {
     p.releaseYear!=null && (!Number.isInteger(p.releaseYear) || p.releaseYear<1700 || p.releaseYear>new Date().getFullYear()) ||
     [p.independentBottling,p.oldBottle].some(x=>x!=null && typeof x!=='boolean'))return null;
   // An invalid optional enhancement must not hide an otherwise usable saved AI recommendation.
-  return a.catalogFacts==null || validFacts(a.catalogFacts)?a:{...a,catalogFacts:null};
+  const clean=a.catalogFacts==null || validFacts(a.catalogFacts)?a:{...a,catalogFacts:null};
+  return clean.productSourceObservations==null || validProductSourceObservations(clean.productSourceObservations)?clean:
+    {...clean,productSourceObservations:null};
 }
 
 /** No silently dropped hard constraints or free text from an older contract. */

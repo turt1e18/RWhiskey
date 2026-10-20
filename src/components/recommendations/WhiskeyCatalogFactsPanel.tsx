@@ -8,7 +8,7 @@ const labels:Record<string,string>={brand:'브랜드',expression:'제품명',edi
   aromaTags:'향미',smokeLevel:'연기 향',sweetnessLevel:'단맛',fruitLevel:'과일 향',bodyLevel:'질감',
   market:'판매 지역',bottledYear:'병입 연도',tastingNote:'테이스팅 설명',
   tasteSweetness:'단맛',tasteAcidity:'산미',tasteBitterness:'쓴맛',tasteSalinity:'짠맛',tasteUmami:'감칠맛'};
-const states={EXPIRED:'확인 기간이 지난 정보예요.',CHANGED:'현재 근거가 달라져 다시 확인이 필요해요.',
+const states={EXPIRED:'확인 기간이 지난 정보예요.',CHANGED:'저장된 병입 정보의 근거가 현재와 달라 다시 확인이 필요해요.',
   UNAVAILABLE:'현재 근거 상태를 확인하지 못했어요.',NOT_RECHECKED:'추천 당시의 정보예요. 현재 상태는 다시 확인 전이에요.'};
 const aromas:Record<string,string>={VANILLA_CARAMEL:'바닐라·캐러멜',FRESH_FRUIT:'과일·감귤',DRIED_FRUIT:'건포도·말린 과일',
   FLORAL_HERBAL:'꽃·허브',CEREAL_NUTTY:'곡물·견과',ROASTED_COCOA:'커피·초콜릿',WOODY_SPICY:'나무·향신료'};
@@ -27,8 +27,8 @@ export default function WhiskeyCatalogFactsPanel({facts}:{facts?:CatalogFacts|nu
   const current=facts.status==='CURRENT' && Date.parse(facts.validUntil)>Date.now();
   const state=facts.status==='CURRENT'?'EXPIRED':facts.status;
   return <section aria-label="병입 정보 근거" className="mt-5 border-t border-[#4a3728]/25 pt-4 text-sm leading-6">
-    <h3 className="font-semibold">{current?'확인된 병입 정보':'추천 당시 확인한 병입 정보'}</h3>
-    <p className="mt-2 text-xs leading-5 text-stone-600">{current?'아래 항목에만 확인된 근거가 있어요. AI 설명 전체를 검증한 것은 아니에요.':states[state]}</p>
+    <h3 className="font-semibold">{current?'현재 확인된 병입 정보':'이전에 확인한 병입 정보'}</h3>
+    <p className="mt-2 text-xs leading-5 text-stone-600">{current?'아래 항목은 현재 근거를 확인한 정보이며, 추천을 저장한 뒤 추가될 수 있어요. 추천 당시의 AI 제안과 AI 설명 전체가 검증된 것은 아니에요.':states[state]}</p>
     <details className="mt-2"><summary className="min-h-11 cursor-pointer py-3 font-semibold">정보와 출처 보기</summary>
       <dl className="space-y-4">{facts.fields.map(f=><div key={f.field}><dt className="text-xs text-stone-600">{labels[f.field]??f.field}</dt>
         <dd className="mt-1 break-words">{display(f)}<div className="flex flex-wrap gap-x-4">{f.sources.map((s,i)=><a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-xs underline" aria-label={`${labels[f.field]??f.field} 출처 ${i+1} (새 창)`}>{new URL(s.url).hostname} · 출처 {i+1}</a>)}</div></dd></div>)}</dl>

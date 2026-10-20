@@ -11,9 +11,13 @@ import { bilingualLabel } from './whiskeyPresentation';
 import { aiKoreanName } from '@/lib/recommendations/aiPresentation';
 import WhiskeySearchPhoto from './WhiskeySearchPhoto';
 import WhiskeyCatalogFactsPanel from './WhiskeyCatalogFactsPanel';
+import WhiskeyProductSourcePanel from './WhiskeyProductSourcePanel';
 
 export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}) {
-  const a=toAiSuggestion(response);
+  const [currentResponse,setCurrentResponse]=useState(response);
+  const [sourceBusy,setSourceBusy]=useState(false);
+  const [sourceStatus,setSourceStatus]=useState<string|null>(null);
+  const a=toAiSuggestion(currentResponse);
   const [sentiment,setSentiment]=useState<WhiskeyFeedbackSentiment>('NEUTRAL');
   const [saved,setSaved]=useState<WhiskeyFeedbackSentiment|null>(null);
   const [reason,setReason]=useState<WhiskeyFeedbackReason>('NONE');const [comment,setComment]=useState('');
@@ -50,7 +54,7 @@ export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}
   }
   return <div className="mx-auto flex w-full max-w-md flex-col items-center px-4">
     <article className="w-full break-words rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 text-stone-900 shadow-xl md:p-10">
-      <p className="text-xs font-bold tracking-wide text-[#63431f]">{a.catalogFacts?.status==='CURRENT' && Date.parse(a.catalogFacts.validUntil)>Date.now()?'일부 병입 정보 확인':'상세정보 검증 전'}</p>
+      <p className="text-xs font-bold tracking-wide text-[#63431f]">{a.catalogFacts?.status==='CURRENT' && Date.parse(a.catalogFacts.validUntil)>Date.now()?'현재 일부 병입 정보 확인':'상세정보 검증 전'}</p>
       <h2 className="mt-4 text-[22px] font-semibold leading-snug tracking-tight md:text-2xl">{p.brand} {p.expression}</h2>
       {koreanName && <p lang="ko" className="mt-2 text-[13px] leading-5 text-stone-700">{koreanName}</p>}
       {p.edition && <p className="mt-2 text-sm">{p.edition}</p>}
@@ -65,6 +69,15 @@ export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}
       <h3 className="mt-6 border-t border-[#4a3728]/25 pt-4 font-bold">이 한 잔을 고른 이유</h3>
       <div className="mt-3 space-y-3 text-sm leading-7">{a.presentation.summary.map((text,i)=><p key={i}>{text}</p>)}</div>
       <WhiskeyCatalogFactsPanel facts={a.catalogFacts}/>
+      <WhiskeyProductSourcePanel information={a.productSourceObservations}/>
+      <button type="button" disabled={sourceBusy} className="mt-3 min-h-11 py-2 text-left text-xs font-semibold underline disabled:opacity-60"
+        onClick={async()=>{if(!id || sourceBusy)return;setSourceBusy(true);setSourceStatus(null);
+          try {const next=await whiskeyV3Api.byId(id);const card=toAiSuggestion(next);
+            if(!card || card.id!==id)throw new Error('INVALID_SAVED_RESPONSE');setCurrentResponse(next);
+            setSourceStatus(card.productSourceObservations?'제품 출처 정보를 확인했어요.':'현재 추가로 확인된 제품 출처 정보가 없어요.');
+          }catch{setSourceStatus('제품 출처 정보를 불러오지 못했어요. 추천 결과는 그대로 확인할 수 있어요.');}
+          finally{setSourceBusy(false);}}}>{sourceBusy?'저장 정보 확인 중…':'저장된 출처 정보 다시 확인'}</button>
+      {sourceStatus && <p role="status" className="text-xs leading-5 text-stone-600">{sourceStatus}</p>}
       {a.servingSuggestion && <div className="mt-5 border-t border-[#4a3728]/25 pt-4 text-sm leading-7"><h3 className="font-semibold">한 잔을 즐기는 제안</h3><p className="mt-2">{a.servingSuggestion}</p></div>}
       {differences.length>0 && <div className="mt-5 border-t border-[#4a3728]/25 pt-4 text-sm leading-6"><h3 className="font-semibold">선택한 취향과 다른 점</h3>{differences.map(text=><p key={text} className="mt-2">{text}</p>)}</div>}
       <details className="mt-5 border-t border-[#4a3728]/25 pt-3 text-sm">

@@ -7,8 +7,9 @@ import type { AiFeedbackInput } from '@/api/whiskeyV3Api';
 import { useAuthStore } from '@/store/authStore';
 import { toAiSuggestion } from '@/lib/recommendations/v3Contract';
 import { ApiResponseError } from '@/api/apiClient';
-import type { CatalogFacts } from '@/lib/recommendations/v3Contract';
+import type { CatalogFacts, ProductSourceObservations } from '@/lib/recommendations/v3Contract';
 import WhiskeyCatalogFactsPanel from '@/components/recommendations/WhiskeyCatalogFactsPanel';
+import WhiskeyProductSourcePanel from '@/components/recommendations/WhiskeyProductSourcePanel';
 
 export default function AiTastingNotePage(){
   const params=useParams<{operationId:string}>();const id=params.operationId;
@@ -16,18 +17,19 @@ export default function AiTastingNotePage(){
   const owner=useRef({uid,id});owner.current={uid,id};const generation=useRef(0);
   const [name,setName]=useState('');const [note,setNote]=useState<AiFeedbackInput>({});
   const [facts,setFacts]=useState<CatalogFacts|null>(null);
+  const [productSource,setProductSource]=useState<ProductSourceObservations|null>(null);
   const [busy,setBusy]=useState(true);const [status,setStatus]=useState<string|null>(null);const [auth,setAuth]=useState(false);
   const [reload,setReload]=useState(0);const [loadError,setLoadError]=useState(false);
   useEffect(()=>{if(!initialized)void fetchUser();},[initialized,fetchUser]);
   useEffect(()=>{
     generation.current++;
-    let active=true;setName('');setFacts(null);setNote({});setBusy(true);setStatus(null);setAuth(false);setLoadError(false);
+    let active=true;setName('');setFacts(null);setProductSource(null);setNote({});setBusy(true);setStatus(null);setAuth(false);setLoadError(false);
     if(!initialized)return;
     if(!uid){setBusy(false);setAuth(true);setStatus('로그인한 뒤 본인의 시음 기록을 확인해 주세요.');return;}
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)){setBusy(false);setStatus('올바르지 않은 추천 주소예요.');return;}
     void Promise.all([whiskeyV3Api.byId(id),whiskeyV3Api.aiFeedback(id,'CONSUMED')]).then(([response,saved])=>{
       const card=toAiSuggestion(response);if(!card)throw new Error('INVALID_AI_RECORD');
-      if(active){setName(`${card.identity.brand} ${card.identity.expression}`);setFacts(card.catalogFacts??null);setNote(saved?.feedback??{});}
+      if(active){setName(`${card.identity.brand} ${card.identity.expression}`);setFacts(card.catalogFacts??null);setProductSource(card.productSourceObservations??null);setNote(saved?.feedback??{});}
     }).catch(e=>{if(active){setLoadError(true);setStatus(e instanceof ApiResponseError && e.status===404 ? '이 계정에서 해당 AI 추천 기록을 찾지 못했어요. 주소와 계정을 확인해 주세요.' : '시음 기록을 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.');setAuth(e instanceof ApiResponseError && e.status===401);}})
       .finally(()=>{if(active)setBusy(false);});
     return ()=>{active=false;};
@@ -46,6 +48,7 @@ export default function AiTastingNotePage(){
     <p className="mt-3 break-words font-semibold">{name}</p>
     <p className="mt-3 text-xs leading-6">AI 추천 · 외부 교차검증 전<br/>이 기록은 직접 느낀 감상이에요. 제품 정보의 사실 인증으로 사용하지 않아요.</p>
     <WhiskeyCatalogFactsPanel facts={facts}/>
+    <WhiskeyProductSourcePanel information={productSource}/>
     {status && <p role="status" className="mt-4 text-sm leading-6">{status}</p>}
     {auth && <Link href="/login" className="my-3 inline-flex min-h-11 items-center underline">로그인하기</Link>}
     {loadError && !auth && <button disabled={busy} onClick={()=>setReload(n=>n+1)} className="mt-3 min-h-11 underline">기록 다시 불러오기</button>}
