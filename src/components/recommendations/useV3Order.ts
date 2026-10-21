@@ -16,6 +16,8 @@ const messages: Record<string,string> = {
   INTERRUPTED_REQUEST:'이 주문은 완료되지 않았어요. 조건을 확인하고 새 주문을 넣어주세요.',
   DAILY_LIMITED:'오늘 이용할 수 있는 추천을 모두 사용했어요.',
   RATE_LIMITED:'잠시 기다린 뒤 다시 요청해 주세요.',
+  AI_RESULT_SAVE_FAILED:'이번 추천을 저장하지 못했어요. 추천 횟수는 사용하지 않았어요. 조건을 확인하고 새 주문을 넣어주세요.',
+  RESULT_SAVE_UNCONFIRMED:'추천 저장과 횟수 처리를 확인하고 있어요. 새 주문 대신 이전 주문 결과를 확인해 주세요.',
   HISTORICAL_EVIDENCE_NOT_CURRENT:'이전 추천의 제품 정보를 다시 확인해야 해요. 당시 기록은 시음 노트에서 볼 수 있어요.',
 };
 export function useV3Order(uid: number | undefined, enabled: boolean,

@@ -37,7 +37,7 @@ export interface AiSuggestionCard {
   id:string;
   identity:{brand:string;expression:string;edition?:string|null;batch?:string|null;bottler?:string|null;
     category?:string|null;country?:string|null;region?:string|null;abv?:number|null;
-    ageStatement?:'UNKNOWN'|'NAS'|'NUMBERED';ageYears?:number|null;vintageYear?:number|null;
+    ageStatement?:'UNKNOWN'|'NAS'|'NUMBERED';ageYears?:number|null;vintageYear?:number|null;bottledYear?:number|null;
     caskNumber?:string|null;maturationCask?:string|null;finishCask?:string|null;
     independentBottling?:boolean|null;oldBottle?:boolean|null;volumeMl?:number|null;releaseYear?:number|null};
   presentation:{summary:string[];pairings:{food:string;reason:string}[]};
@@ -132,6 +132,7 @@ export function toAiSuggestion(v:V3Response):AiSuggestionCard|null {
     p.vintageYear!=null && (!Number.isInteger(p.vintageYear) || p.vintageYear<1700 || p.vintageYear>new Date().getFullYear()) ||
     p.volumeMl!=null && (!Number.isInteger(p.volumeMl) || p.volumeMl<1 || p.volumeMl>100000) ||
     p.releaseYear!=null && (!Number.isInteger(p.releaseYear) || p.releaseYear<1700 || p.releaseYear>new Date().getFullYear()) ||
+    p.bottledYear!=null && (!Number.isInteger(p.bottledYear) || p.bottledYear<1700 || p.bottledYear>new Date().getFullYear()) ||
     [p.independentBottling,p.oldBottle].some(x=>x!=null && typeof x!=='boolean'))return null;
   // An invalid optional enhancement must not hide an otherwise usable saved AI recommendation.
   const clean=a.catalogFacts==null || validFacts(a.catalogFacts)?a:{...a,catalogFacts:null};

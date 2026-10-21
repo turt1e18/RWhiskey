@@ -15,7 +15,7 @@ export default function WhiskeySearchPhoto({identity}:{identity:AiSuggestionCard
     return()=>{active=false;};
   },[query,retry]);
   return <div className="mt-5">
-    {ready ? <RecommendationSearchImage key={photo?.url??query} src={photo?.url} name={`${identity.brand} ${identity.expression}`}
+    {ready ? <RecommendationSearchImage key={photo?.url??query} src={photo?.url} fallbackSrc={photo?.fallbackUrl} name={`${identity.brand} ${identity.expression}`}
       sourceUrl={photo?.sourceUrl} sourceTitle={photo?.sourceTitle}/> :
       <div role="status" className="mb-6 flex h-52 items-center justify-center text-sm text-stone-600">사진을 찾고 있어요…</div>}
     {ready && !photo && <button type="button" className="mb-3 inline-flex min-h-11 items-center text-xs text-stone-700 underline"

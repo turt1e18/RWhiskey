@@ -94,7 +94,7 @@ export async function searchLegacyImages(
   if(request.includeSource){
     const hit=hits[0];
     // Stay on the same search result; HTTPS thumbnail fallback is not another search or identity approval.
-    return parseWhiskeyPhoto(hit && {url:hit.url,sourceUrl:hit.sourceUrl,sourceTitle:hit.sourceTitle}) ??
+    return parseWhiskeyPhoto(hit && {url:hit.url,sourceUrl:hit.sourceUrl,sourceTitle:hit.sourceTitle,fallbackUrl:hit.thumbnailUrl}) ??
       parseWhiskeyPhoto(hit && {url:hit.thumbnailUrl,sourceUrl:hit.sourceUrl,sourceTitle:hit.sourceTitle});
   }
   return hits[0]?.url ?? null;

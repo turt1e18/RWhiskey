@@ -20,10 +20,17 @@ test('Google reference photo preserves source while existing string and thumbnai
     calls++;assert.equal(options.params.searchType,'image');assert.equal(options.params.num,1);assert.equal(options.timeout,5000);
     return {data:{items:[{link:photo.url,title:photo.sourceTitle,image:{contextLink:photo.sourceUrl,thumbnailLink:'https://images.example.org/thumb.jpg'}}]}};
   }};
-  assert.deepEqual(await searchLegacyImages({data:'Example Twelve',type:3,includeSource:true},signal,settings),photo);
+  assert.deepEqual(await searchLegacyImages({data:'Example Twelve',type:3,includeSource:true},signal,settings),{...photo,fallbackUrl:'https://images.example.org/thumb.jpg'});
   assert.equal(calls,1);
   assert.equal(await searchLegacyImages({data:'Example Twelve',type:3},signal,settings),photo.url);
   assert.equal(await searchLegacyImages({data:'Example Twelve',type:0},signal,settings),photo.url);
+});
+
+test('optional fallback is backward compatible and unsafe or repeated URLs are stripped',()=>{
+  assert.deepEqual(parseWhiskeyPhoto(photo),photo);
+  for(const fallbackUrl of ['http://images.example.org/x','https://127.0.0.1/x',photo.url])
+    assert.deepEqual(parseWhiskeyPhoto({...photo,fallbackUrl}),photo);
+  assert.equal(parseWhiskeyPhoto({...photo,fallbackUrl:'https://images.example.org/thumb.jpg'})?.fallbackUrl,'https://images.example.org/thumb.jpg');
 });
 test('a missing or unsafe source cannot silently become an attributed photo and no second hit is substituted',async()=>{
   let calls=0;

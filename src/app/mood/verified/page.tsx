@@ -48,7 +48,7 @@ const codeMessages: Record<string, string> = {
   REQUEST_DEADLINE_EXCEEDED: "이번 주문을 시간 안에 확인하지 못했어요. 선택은 그대로예요. 잠시 뒤 다시 시도해 주세요.",
   REQUEST_BUDGET_EXHAUSTED: "이번에는 추천 확인을 끝내지 못했어요. 선택은 그대로예요. 잠시 뒤 다시 시도해 주세요.",
   RATE_LIMITED: "짧은 시간에 여러 번 요청했어요. 잠시 기다린 뒤 다시 요청해 주세요.",
-  DAILY_LIMITED: "오늘 이용 가능한 추천 요청을 모두 사용했어요. 내일 다시 찾아주세요.",
+  DAILY_LIMITED: "오늘 이용 가능한 추천 횟수를 모두 사용했어요. 내일 다시 찾아주세요.",
   RECOMMENDATION_BUSY: "아직 살펴보는 주문이 있어요. 잠시 기다린 뒤 다시 확인해 주세요.",
   REQUEST_IN_PROGRESS: "이전 주문을 아직 살펴보고 있어요. 잠시 기다린 뒤 이전 주문 결과를 확인해 주세요.",
   IDEMPOTENCY_CONFLICT: "이전 주문과 선택한 조건이 달라요. 조건을 확인하고 새 주문으로 요청해 주세요.",
@@ -623,28 +623,28 @@ export default function VerifiedWhiskeyPreviewPage() {
               <h3 className="mt-6 text-sm font-bold">꼭 맞아야 할 조건 (선택)</h3>
               <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "모델이 제안한 제품 정보가 선택한 조건에 맞는 후보만 골라요. 실제 제품 사실을 확인한 것은 아니에요." : "선택한 조건에 맞는 병입만 추천합니다."}<br />고르지 않아도 됩니다.</p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <FacetField label="생산 국가" value={inputs.country} options={facets?.countries ?? []} strength="hard" onChange={(value) => update("country", value)} disabled={!facets} />
-                <FacetField label="위스키 종류" value={inputs.category} options={categoryOptions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("category", value)} disabled={!facets} />
+                <FacetField showAvailability={!aiEnabled} label="생산 국가" value={inputs.country} options={facets?.countries ?? []} strength="hard" onChange={(value) => update("country", value)} disabled={!facets} />
+                <FacetField showAvailability={!aiEnabled} label="위스키 종류" value={inputs.category} options={categoryOptions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("category", value)} disabled={!facets} />
                 {profile.experienceLevel === "ADVANCED" && <PaperAbvInput unit={abvUnit} label={abvUnit === "ABV" ? "최소 도수 (ABV %)" : "최소 도수 (US Proof)"} value={inputs.minAbv} onChange={(value) => update("minAbv", value)} />}
                 {profile.experienceLevel === "ADVANCED" && <PaperAbvInput unit={abvUnit} label={abvUnit === "ABV" ? "최대 도수 (ABV %)" : "최대 도수 (US Proof)"} value={inputs.maxAbv} onChange={(value) => update("maxAbv", value)} />}
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <FacetField label="세부 산지" value={inputs.region} options={hardRegions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("region", value)} disabled={!facets} />
-                <FacetField label="숙성에 사용한 통" value={inputs.maturationCask} options={facets?.casks ?? []} strength="hard" onChange={(value) => update("maturationCask", value)} disabled={!facets?.casks} />
-                <FacetField label="피니시에 사용한 통" value={inputs.finishCask} options={facets?.casks ?? []} strength="hard" onChange={(value) => update("finishCask", value)} disabled={!facets?.casks} />
+                <FacetField showAvailability={!aiEnabled} label="세부 산지" value={inputs.region} options={hardRegions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("region", value)} disabled={!facets} />
+                <FacetField showAvailability={!aiEnabled} label="숙성에 사용한 통" value={inputs.maturationCask} options={facets?.casks ?? []} strength="hard" onChange={(value) => update("maturationCask", value)} disabled={!facets?.casks} />
+                <FacetField showAvailability={!aiEnabled} label="피니시에 사용한 통" value={inputs.finishCask} options={facets?.casks ?? []} strength="hard" onChange={(value) => update("finishCask", value)} disabled={!facets?.casks} />
               </div>
               <p className="mt-2 text-xs leading-5 text-stone-600">숙성 통은 위스키를 숙성한 통이에요.<br />피니시는 마지막에 다른 통에서 더 숙성하는 방식이에요. {aiEnabled ? "통 정보가 미확인인 후보는 이 조건을 충족한 것으로 보지 않아요. 제안된 정보는 교차검증 전이에요." : "확인된 통 정보가 있는 병만 조건에 맞춰요."}</p>
               <h3 className="mt-8 text-sm font-bold">가능하면 맞춰줄 취향</h3>
               <p className="mt-2 text-xs leading-5 text-stone-600">선호가 맞지 않아도 다른 위스키를 추천할 수 있습니다.<br />결과에서 차이를 알려드립니다.</p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <FacetField label="선호하는 생산 국가" value={inputs.preferredCountry} options={preferredCountries} strength="soft" onChange={(value) => update("preferredCountry", value)} disabled={!facets} />
-                <FacetField label="선호하는 위스키 종류" value={inputs.preferredCategory} options={preferredCategories} countries={facets?.countries ?? []} strength="soft" onChange={(value) => update("preferredCategory", value)} disabled={!facets} />
-                <FacetField label="선호하는 세부 산지" value={inputs.preferredRegion} options={regionOptions} countries={facets?.countries ?? []} strength="soft" onChange={(value) => update("preferredRegion", value)} disabled={!facets} />
+                <FacetField showAvailability={!aiEnabled} label="선호하는 생산 국가" value={inputs.preferredCountry} options={preferredCountries} strength="soft" onChange={(value) => update("preferredCountry", value)} disabled={!facets} />
+                <FacetField showAvailability={!aiEnabled} label="선호하는 위스키 종류" value={inputs.preferredCategory} options={preferredCategories} countries={facets?.countries ?? []} strength="soft" onChange={(value) => update("preferredCategory", value)} disabled={!facets} />
+                <FacetField showAvailability={!aiEnabled} label="선호하는 세부 산지" value={inputs.preferredRegion} options={regionOptions} countries={facets?.countries ?? []} strength="soft" onChange={(value) => update("preferredRegion", value)} disabled={!facets} />
                 {profile.experienceLevel === "ADVANCED" && <PaperAbvInput unit={abvUnit} label={abvUnit === "ABV" ? "선호 도수 (ABV %)" : "선호 도수 (US Proof)"} value={inputs.targetAbv} onChange={(value) => update("targetAbv", value)} />}
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <FacetField label="선호하는 숙성 통" value={inputs.preferredMaturationCask} options={facets?.casks ?? []} strength="soft" onChange={(value) => update("preferredMaturationCask", value)} disabled={!facets?.casks} />
-                <FacetField label="선호하는 피니시 통" value={inputs.preferredFinishCask} options={facets?.casks ?? []} strength="soft" onChange={(value) => update("preferredFinishCask", value)} disabled={!facets?.casks} />
+                <FacetField showAvailability={!aiEnabled} label="선호하는 숙성 통" value={inputs.preferredMaturationCask} options={facets?.casks ?? []} strength="soft" onChange={(value) => update("preferredMaturationCask", value)} disabled={!facets?.casks} />
+                <FacetField showAvailability={!aiEnabled} label="선호하는 피니시 통" value={inputs.preferredFinishCask} options={facets?.casks ?? []} strength="soft" onChange={(value) => update("preferredFinishCask", value)} disabled={!facets?.casks} />
               </div>
               {inputs.country && <p className="mt-3 text-xs leading-5 text-stone-600">꼭 맞아야 할 생산 국가 안에서 취향을 고를 수 있어요.</p>}
               </PaperDisclosure>}
@@ -666,6 +666,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                 className="mt-7 w-full bg-[#111] px-5 py-3 text-sm font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#2d2017] disabled:cursor-not-allowed disabled:opacity-60">
                 {loading || v3.busy ? "주문을 살펴보고 있어요…" : recovering || v3.pending ? "이전 주문 결과 확인" : v3Mode && !v3Enabled ? "새 주문 접수 닫힘" : "위스키 추천 받기"}
               </button>
+              {v3Mode && <p className="mt-3 text-xs leading-5 text-stone-600">추천 결과가 저장되면 추천 횟수 1회를 사용해요.<br />실패한 주문과 사진 조회는 추천 횟수를 사용하지 않아요.</p>}
               </fieldset>
             </form>
         </motion.div>
@@ -751,12 +752,13 @@ export default function VerifiedWhiskeyPreviewPage() {
   );
 }
 
-function FacetField({ label, value, options, countries = [], strength, onChange, disabled }: {
-  label: string; value: string;
+function FacetField({ label, value, options, countries = [], strength, onChange, disabled, showAvailability = true }: {
+  label: string; value: string; showAvailability?: boolean;
   options: WhiskeyCatalogFacet[]; countries?: WhiskeyCatalogFacet[]; strength: "hard" | "soft"; onChange: (value: string) => void; disabled: boolean;
 }) {
   const matchedOption = options.find((option) => option.value === value);
-  const unavailable = value && matchedOption?.countKnown !== false && matchedOption?.bottlingCount === 0;
+  // A catalog count cannot establish whether an LLM can discover a new product.
+  const unavailable = showAvailability && value && matchedOption?.countKnown !== false && matchedOption?.bottlingCount === 0;
   return <PaperSelect label={label} value={value} onChange={onChange} disabled={disabled}
     options={options.map((option) => ({ value: option.value, label: option.label + (option.country ? " · " +
       (countries.find((country) => country.value === option.country)?.label ?? option.country) : "") }))}

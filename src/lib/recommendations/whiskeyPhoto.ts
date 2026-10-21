@@ -1,6 +1,6 @@
 import type { AiSuggestionCard } from './v3Contract';
 
-export interface WhiskeyReferencePhoto { url:string; sourceUrl:string; sourceTitle:string }
+export interface WhiskeyReferencePhoto { url:string; sourceUrl:string; sourceTitle:string; fallbackUrl?:string }
 
 /** Only public product identity goes to image search; never preferences, notes or account data. */
 export function whiskeyPhotoQuery(p:AiSuggestionCard['identity']):string {
@@ -22,5 +22,6 @@ export function parseWhiskeyPhoto(value:unknown):WhiskeyReferencePhoto|null {
   const p=value as Record<string,unknown>;
   return publicHttps(p.url) && publicHttps(p.sourceUrl) && typeof p.sourceTitle==='string' &&
     p.sourceTitle.trim().length>0 && p.sourceTitle.length<=300 && !/[\u0000-\u001f\u007f]/.test(p.sourceTitle)
-    ? {url:p.url,sourceUrl:p.sourceUrl,sourceTitle:p.sourceTitle} : null;
+    ? {url:p.url,sourceUrl:p.sourceUrl,sourceTitle:p.sourceTitle,
+      ...(publicHttps(p.fallbackUrl) && p.fallbackUrl!==p.url?{fallbackUrl:p.fallbackUrl}:{})} : null;
 }

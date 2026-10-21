@@ -43,6 +43,13 @@ test('AI result remains separate from certified result and unknown ABV is preser
   assert.equal(toAiSuggestion(ai)?.id,aiId);assert.equal(toAiSuggestion(ai)?.identity.abv,null);
   assert.equal(toVerifiedCard(ai),null);assert.equal(toAiSuggestion(fixture),null);
 });
+test('optional bottling and release years remain separate and reject invalid values',()=>{
+  const valid={...ai,aiSuggestion:{...ai.aiSuggestion!,identity:{...ai.aiSuggestion!.identity,bottledYear:2020,releaseYear:2021}}};
+  assert.equal(toAiSuggestion(valid)?.identity.bottledYear,2020);
+  assert.equal(toAiSuggestion(valid)?.identity.releaseYear,2021);
+  for(const bottledYear of [1699,new Date().getFullYear()+1,2020.5,NaN])
+    assert.equal(toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,identity:{...ai.aiSuggestion!.identity,bottledYear}}}),null);
+});
 test('AI guard rejects mixed IDs, certificate, wrong operation and malformed fields',()=>{
   assert.equal(toAiSuggestion({...ai,recommendationId:1}),null);
   assert.equal(toAiSuggestion({...ai,verification:{...ai.verification!,certificateId:'fake'}}),null);

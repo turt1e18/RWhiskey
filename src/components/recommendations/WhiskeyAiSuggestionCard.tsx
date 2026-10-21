@@ -12,6 +12,8 @@ import { aiKoreanName } from '@/lib/recommendations/aiPresentation';
 import WhiskeySearchPhoto from './WhiskeySearchPhoto';
 import WhiskeyCatalogFactsPanel from './WhiskeyCatalogFactsPanel';
 import WhiskeyProductSourcePanel from './WhiskeyProductSourcePanel';
+import {sameProposedCaskPreference} from '@/lib/recommendations/caskPreference';
+import {bottlingInformationNotes} from '@/lib/recommendations/bottlingInformation';
 
 export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}) {
   const [currentResponse,setCurrentResponse]=useState(response);
@@ -43,8 +45,8 @@ export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}
     pref?.country && !a.reasons?.includes('PROPOSED_COUNTRY_MATCH')?`선호 국가 ${pref.country} → 제안된 국가 ${p.country||'정보 미확인'}`:null,
     pref?.region && !a.reasons?.includes('PROPOSED_REGION_MATCH')?`선호 산지 ${pref.region} → 제안된 산지 ${p.region||'정보 미확인'}`:null,
     pref?.targetAbv!=null && !a.reasons?.includes('PROPOSED_ABV_MATCH')?`선호 도수 ${pref.targetAbv}% → 제안된 도수 ${p.abv==null?'정보 미확인':p.abv+'%'}`:null,
-    pref?.maturationCask && !a.reasons?.includes('PROPOSED_MATURATION_MATCH')?`선호 숙성 통 ${pref.maturationCask} → 제안된 통 ${p.maturationCask||'정보 미확인'}`:null,
-    pref?.finishCask && !a.reasons?.includes('PROPOSED_FINISH_MATCH')?`선호 피니시 통 ${pref.finishCask} → 제안된 통 ${p.finishCask||'정보 미확인'}`:null,
+    pref?.maturationCask && !a.reasons?.includes('PROPOSED_MATURATION_MATCH') && !sameProposedCaskPreference(pref.maturationCask,p.maturationCask)?`선호 숙성 통 ${pref.maturationCask} → 제안된 통 ${p.maturationCask||'정보 미확인'}`:null,
+    pref?.finishCask && !a.reasons?.includes('PROPOSED_FINISH_MATCH') && !sameProposedCaskPreference(pref.finishCask,p.finishCask)?`선호 피니시 통 ${pref.finishCask} → 제안된 통 ${p.finishCask||'정보 미확인'}`:null,
   ].filter(Boolean);
   async function save(){if(!id || busy || !loaded)return;setBusy(true);setStatus(null);setAuth(false);
     try {const row=await whiskeyV3Api.saveAiFeedback(id,'EXPECTED',{sentiment,reason:sentiment==='NEUTRAL'?'NONE':reason,
@@ -83,11 +85,16 @@ export default function WhiskeyAiSuggestionCard({response}:{response:V3Response}
       <details className="mt-5 border-t border-[#4a3728]/25 pt-3 text-sm">
         <summary className="min-h-11 cursor-pointer py-3 font-semibold">제안된 병입 정보 더 보기</summary>
         <p className="mb-3 text-xs leading-5">아래 정보도 모델의 제안이며, 정확한 병입판은 확인 전이에요.</p>
+        <div className="mb-4 space-y-1 text-xs leading-5 text-stone-600">
+          {bottlingInformationNotes(p).map(note=><p key={note}>{note}</p>)}
+        </div>
         <dl className="grid grid-cols-2 gap-4">
           <Fact label="세부 산지" value={p.region}/><Fact label="병입사" value={p.bottler}/>
           <Fact label="배치" value={p.batch}/><Fact label="캐스크 번호" value={p.caskNumber}/>
           <Fact label="숙성 통" value={p.maturationCask}/><Fact label="피니시 통" value={p.finishCask}/>
           <Fact label="증류 연도" value={p.vintageYear==null?null:String(p.vintageYear)}/>
+          {p.bottledYear!=null && <Fact label="병입 연도" value={String(p.bottledYear)+'년'}/>}
+          {p.releaseYear!=null && <Fact label="출시 연도" value={String(p.releaseYear)+'년'}/>}
         </dl>
       </details>
       <Link href={`/notes/ai/${a.id}`} className="mt-6 block min-h-11 border border-[#4a3728] px-3 py-3 text-center text-sm font-semibold">마신 뒤 시음 기록 남기기</Link>
