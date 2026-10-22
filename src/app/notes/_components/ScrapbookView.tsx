@@ -2,11 +2,11 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useId, useMemo, useState } from "react";
-import { LoungeNote } from "../_data/mockData";
+import type { LoungeNoteInterface } from "@/type/TastingNoteInterface";
 import { Wine } from "lucide-react";
 
 interface Props {
-  notes: LoungeNote[];
+  notes: LoungeNoteInterface[];
 }
 
 /* 정확하게 절반만 채워지는 별 (clip-path 사용, 원형 깨짐 버그 수정) */

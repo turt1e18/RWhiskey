@@ -1,15 +1,14 @@
-import { WhiskyEntry } from "../_data/mockData";
+import type { TastingNoteEntryInterface } from "@/type/TastingNoteInterface";
 import {
   Cloud,
   Heart,
-  Info,
   Thermometer,
   MessageSquare,
   Utensils,
   Quote
 } from "lucide-react";
 
-export const MemoCard = ({ whisky }: { whisky: WhiskyEntry }) => {
+export const MemoCard = ({ whisky }: { whisky: TastingNoteEntryInterface }) => {
   return (
     <div className="relative h-full flex items-center justify-center p-4">
       {/* 종이 카드 */}

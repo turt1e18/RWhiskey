@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { WhiskyEntry } from "../_data/mockData";
+import type { TastingNoteEntryInterface } from "@/type/TastingNoteInterface";
 import { StarRating } from "./StarRating";
 import { ArrowLeft, Check } from "lucide-react";
 import {
@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/dialog";
 
 interface Props {
-  whisky: WhiskyEntry;
+  whisky: TastingNoteEntryInterface;
   onBack: () => void;
-  onSubmit: (data: { flow: "A" | "B"; payload: Partial<WhiskyEntry> }) => void;
+  onSubmit: (data: { flow: "A" | "B"; payload: Partial<TastingNoteEntryInterface> }) => void;
 }
 
 type Mode = "basic" | "free";
@@ -38,7 +38,7 @@ export const ReviewView = ({ whisky, onBack, onSubmit }: Props) => {
   };
 
   const handleConfirm = () => {
-    const payload: Partial<WhiskyEntry> = {
+    const payload: Partial<TastingNoteEntryInterface> = {
       status: "평가완료",
       formType: mode,
       rating,
@@ -52,7 +52,6 @@ export const ReviewView = ({ whisky, onBack, onSubmit }: Props) => {
   };
 
   const displayName = whisky.whiskyName || (whisky as any).whiskeyName || (whisky as any).drinkName || (whisky as any).nameKo || whisky.cocktailName || "Unknown Item";
-  const displayEnName = whisky.whiskyNameEn || (whisky as any).whiskeyNameEn || (whisky as any).drinkNameEn || (whisky as any).nameEn || (whisky.category === "cocktail" ? "Cocktail Recipe" : "");
 
   return (
     <div className="relative h-full flex flex-col text-[#3e2616]">

@@ -2,6 +2,7 @@
 import { useState, useMemo, Dispatch, SetStateAction } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { CocktailRecommendationRequest, ExperienceLevel } from "@/type/CocktailInterface";
+import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 
@@ -17,7 +18,7 @@ interface BeforeScreenProps {
   setRequest: Dispatch<SetStateAction<CocktailRecommendationRequest>>;
   imRich: boolean;
   setImRich: Dispatch<SetStateAction<boolean>>;
-  setDataPromise: Dispatch<SetStateAction<Promise<any> | null>>;
+  setDataPromise: Dispatch<SetStateAction<Promise<CocktailDataInterface> | null>>;
   setSwitchState: Dispatch<SetStateAction<number>>;
 }
 

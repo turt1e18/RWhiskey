@@ -37,7 +37,7 @@ export default function LoginForm({ onSignup, onReset }: LoginFormProps) {
       } else {
         setError("회원 명부에서 찾을 수 없는 이메일 또는 비밀번호입니다.");
       }
-    } catch (err: any) {
+    } catch {
       setError("회원 명부에서 찾을 수 없는 이메일 또는 비밀번호입니다.");
     } finally {
       setIsLoading(false);

@@ -1,11 +1,11 @@
 "use client";
 
-import { WhiskyEntry } from "../_data/mockData";
+import type { TastingNoteEntryInterface } from "@/type/TastingNoteInterface";
 import { Share2, Lock, ChevronRight } from "lucide-react";
 
 interface Props {
-  whiskies: WhiskyEntry[];
-  onSelect: (w: WhiskyEntry) => void;
+  whiskies: TastingNoteEntryInterface[];
+  onSelect: (w: TastingNoteEntryInterface) => void;
 }
 
 export const PersonalListView = ({ whiskies, onSelect }: Props) => {

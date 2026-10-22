@@ -13,7 +13,7 @@ import { MemoCard } from "./_components/MemoCard";
 import { HelpGuide } from "./_components/HelpGuide";
 import { TopNav } from "./_components/TopNav";
 import { LoungeBoard } from "./_components/LoungeBoard";
-import { initialWhiskies, loungeNotes, WhiskyEntry, LoungeNote } from "./_data/mockData";
+import type { TastingNoteEntryInterface, LoungeNoteInterface } from "@/type/TastingNoteInterface";
 import { toast } from "sonner";
 import { notesApi } from "@/api/whiskeyApi";
 import VerifiedNotesList from "@/components/recommendations/VerifiedNotesList";
@@ -30,17 +30,16 @@ export default function MyNotesPage() {
 
   const [view, setView] = useState<View>("notes");
   const [mode, setMode] = useState<NoteMode>("list");
-  const [whiskies, setWhiskies] = useState<WhiskyEntry[]>([]);
-  const [loungeNotesData, setLoungeNotesData] = useState<LoungeNote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<WhiskyEntry | null>(null);
+  const [whiskies, setWhiskies] = useState<TastingNoteEntryInterface[]>([]);
+  const [loungeNotesData, setLoungeNotesData] = useState<LoungeNoteInterface[]>([]);
+  const [selected, setSelected] = useState<TastingNoteEntryInterface | null>(null);
 
   // 스크랩된 라운지 노트 ID 관리
   const [scrappedIds, setScrappedIds] = useState<string[]>([]);
   const scrappedNotes = loungeNotesData.filter((n) => scrappedIds.includes(n.id));
 
   // API 응답을 UI 모델로 매핑 (개인 노트)
-  const mapNoteResponseToEntry = useCallback((note: NoteResponse): WhiskyEntry => {
+  const mapNoteResponseToEntry = useCallback((note: NoteResponse): TastingNoteEntryInterface => {
     return {
       id: String(note.id),
       oid: note.oid,
@@ -72,7 +71,7 @@ export default function MyNotesPage() {
   }, []);
 
   // API 응답을 UI 모델로 매핑 (라운지 노트)
-  const mapNoteResponseToLounge = useCallback((note: NoteResponse, index: number): LoungeNote => {
+  const mapNoteResponseToLounge = useCallback((note: NoteResponse, index: number): LoungeNoteInterface => {
     const pinColors = ["#c0392b", "#27496d", "#7d3c98", "#1f618d", "#2e4053"];
     return {
       id: String(note.id),
@@ -123,9 +122,7 @@ export default function MyNotesPage() {
   }, []);
 
   const loadAllData = useCallback(async () => {
-    setLoading(true);
     await Promise.all([fetchMyNotes(), fetchLoungeFeed(), fetchScraps()]);
-    setLoading(false);
   }, [fetchMyNotes, fetchLoungeFeed, fetchScraps]);
 
   useEffect(() => {
@@ -158,7 +155,7 @@ export default function MyNotesPage() {
     return null;
   }
 
-  const handleSelect = (w: WhiskyEntry) => {
+  const handleSelect = (w: TastingNoteEntryInterface) => {
     setSelected(w);
     setMode("review");
   };
@@ -173,7 +170,7 @@ export default function MyNotesPage() {
     payload
   }: {
     flow: "A" | "B";
-    payload: Partial<WhiskyEntry>;
+    payload: Partial<TastingNoteEntryInterface>;
   }) => {
     if (!selected) return;
 

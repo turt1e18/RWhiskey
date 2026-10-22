@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { LoungeNote } from "../_data/mockData";
+import type { LoungeNoteInterface } from "@/type/TastingNoteInterface";
 import { GlencairnButton } from "./GlencairnButton";
 
 interface LoungeNoteCardProps {
-  note: LoungeNote;
+  note: LoungeNoteInterface;
   isLiked: boolean;
   index: number;
   onToggleScrap: (id: string) => void;
