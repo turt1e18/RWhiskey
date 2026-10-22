@@ -1,9 +1,10 @@
 import "server-only";
 import axios, { type AxiosRequestConfig } from "axios";
 import { LegacyProviderFailure } from "./legacyProviderGuard";
+import { parseWhiskeyPhoto, type WhiskeyReferencePhoto } from "../lib/recommendations/whiskeyPhoto";
 
-export type LegacyImageRequest = { data: string; type: 0 | 1 | 3 };
-export type ImageSearchHit = { url: string | null; thumbnailUrl: string | null };
+export type LegacyImageRequest = { data: string; type: 0 | 1 | 3; includeSource?: boolean };
+export type ImageSearchHit = { url: string | null; thumbnailUrl: string | null; sourceUrl?:string|null; sourceTitle?:string };
 export interface ImageSearchProvider {
   search(query: string, limit: 1 | 3, signal: AbortSignal): Promise<ImageSearchHit[]>;
 }
@@ -55,7 +56,12 @@ export class GoogleCseImageSearchProvider implements ImageSearchProvider {
     return items.map((item: unknown) => {
       if (!record(item)) return { url: null, thumbnailUrl: null };
       const image = record(item.image) ? item.image : null;
-      return { url: safeImageUrl(item.link), thumbnailUrl: safeImageUrl(image?.thumbnailLink) };
+      const hit:ImageSearchHit={ url: safeImageUrl(item.link), thumbnailUrl: safeImageUrl(image?.thumbnailLink) };
+      if(image?.contextLink!=null){
+        hit.sourceUrl=safeImageUrl(image.contextLink);
+        hit.sourceTitle=typeof item.title==='string'?item.title.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,300):'';
+      }
+      return hit;
     });
   }
 }
@@ -72,16 +78,24 @@ export function createImageSearchProvider(settings: ImageSearchSettings = {}): I
 
 export function parseLegacyImageRequest(value: unknown): LegacyImageRequest {
   if (!record(value) || ![0, 1, 3].includes(value.type as number) || typeof value.data !== "string" ||
-      !value.data.trim() || value.data.length > 4000)
+      !value.data.trim() || value.data.length > 4000 ||
+      value.includeSource!=null && (typeof value.includeSource!=='boolean' || value.includeSource && value.type!==3))
     throw new LegacyProviderFailure("INVALID_REQUEST_BODY", 400);
-  return { data: value.data, type: value.type as LegacyImageRequest["type"] };
+  return { data: value.data, type: value.type as LegacyImageRequest["type"],
+    ...(value.includeSource===true && {includeSource:true}) };
 }
 
 export async function searchLegacyImages(
   value: unknown, signal: AbortSignal, settings: ImageSearchSettings = {},
-): Promise<string | null | string[]> {
+): Promise<string | null | string[] | WhiskeyReferencePhoto> {
   const request = parseLegacyImageRequest(value);
   const hits = await createImageSearchProvider(settings).search(request.data, request.type === 1 ? 3 : 1, signal);
   if (request.type === 1) return hits.map((hit) => hit.thumbnailUrl).filter((url): url is string => url !== null);
+  if(request.includeSource){
+    const hit=hits[0];
+    // Stay on the same search result; HTTPS thumbnail fallback is not another search or identity approval.
+    return parseWhiskeyPhoto(hit && {url:hit.url,sourceUrl:hit.sourceUrl,sourceTitle:hit.sourceTitle,fallbackUrl:hit.thumbnailUrl}) ??
+      parseWhiskeyPhoto(hit && {url:hit.thumbnailUrl,sourceUrl:hit.sourceUrl,sourceTitle:hit.sourceTitle});
+  }
   return hits[0]?.url ?? null;
 }

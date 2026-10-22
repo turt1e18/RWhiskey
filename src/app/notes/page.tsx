@@ -17,6 +17,7 @@ import { initialWhiskies, loungeNotes, WhiskyEntry, LoungeNote } from "./_data/m
 import { toast } from "sonner";
 import { notesApi } from "@/api/whiskeyApi";
 import VerifiedNotesList from "@/components/recommendations/VerifiedNotesList";
+import AiRecommendationsList from "@/components/recommendations/AiRecommendationsList";
 import { NoteResponse, NoteReviewRequest } from "@/type/ApiInterface";
 import "./notes.css";
 
@@ -272,6 +273,7 @@ export default function MyNotesPage() {
                             className="h-full"
                           >
                             {process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true" && <VerifiedNotesList />}
+                            <AiRecommendationsList />
                             <PersonalListView
                               whiskies={whiskies}
                               onSelect={handleSelect}
