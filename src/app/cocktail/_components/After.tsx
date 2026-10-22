@@ -5,7 +5,7 @@
 
 "use client";
 import { use, useState, useMemo } from "react";
-import Image from "next/image";
+import RecommendationSearchImage from "@/components/recommendations/RecommendationSearchImage";
 import { CocktailDataInterface } from "@/type/CocktailDataInterface";
 import { ExperienceLevel } from "@/type/CocktailInterface";
 import { notesApi } from "@/api/whiskeyApi";
@@ -22,7 +22,6 @@ export default function AfterScreen(props: AfterScreenProps) {
   const { setSwitchState, dataPromise, experienceLevel } = props;
   const resultData = use(dataPromise);
 
-  const [isImageLoad, setIsImageLoad] = useState<boolean>(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
 
@@ -109,21 +108,7 @@ export default function AfterScreen(props: AfterScreenProps) {
 
           <div className="border border-[#4a3728] px-3 py-0.5 text-[10px] font-bold tracking-[0.2em] text-[#4a3728] uppercase mb-10 mt-2">오늘의 추천</div>
 
-          <div className="w-full h-64 flex items-center justify-center mb-6 relative overflow-hidden bg-white/10 rounded-sm">
-            {!isImageLoad && (
-              <div className="absolute inset-0 flex justify-center items-center">
-                <div className="w-10 h-10 border-2 border-[#4a3728]/20 border-t-[#4a3728] rounded-full animate-spin"></div>
-              </div>
-            )}
-            <Image
-              src={resultData?.images?.[0] || "https://placehold.co/600x650"}
-              alt={resultData?.cocktailName}
-              fill={true}
-              className={`object-contain transition-opacity duration-700 ${isImageLoad ? "opacity-100" : "opacity-0"}`}
-              unoptimized
-              onLoad={() => setIsImageLoad(true)}
-            />
-          </div>
+          <RecommendationSearchImage key={resultData?.images?.[0] || "empty"} src={resultData?.images?.[0]} name={resultData?.cocktailName || "칵테일"} />
 
           <div className="flex flex-col items-center mb-6 leading-tight">
             <h1 className="font-serif font-bold text-xl md:text-2xl text-center text-black">🍸 {resultData?.cocktailName}</h1>

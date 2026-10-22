@@ -30,7 +30,7 @@ export class ApiResponseError extends Error {
  * @param endpoint - API 엔드포인트 경로
  * @param options - Fetch API 옵션
  */
-async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function apiClient<T>(endpoint: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
   const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
   
   const headers = new Headers(options.headers);
@@ -54,8 +54,17 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
     }
   }
 
+  const controller = options.timeoutMs ? new AbortController() : null;
+  let timedOut = false;
+  const stop = () => controller?.abort();
+  if (options.signal?.aborted) stop();
+  options.signal?.addEventListener("abort", stop, { once: true });
+  const timer = options.timeoutMs ? setTimeout(() => { timedOut = true; stop(); }, options.timeoutMs) : null;
+  const fetchOptions = { ...options };
+  delete fetchOptions.timeoutMs;
   const config: RequestInit = {
-    ...options,
+    ...fetchOptions,
+    ...(controller && { signal: controller.signal }),
     headers,
     /**
      * [인증 보안 핵심]
@@ -97,8 +106,21 @@ async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promis
     if (IS_DEV && !(error instanceof ApiResponseError)) {
       console.error(`[Network Error] ${url}`);
     }
+    if (timedOut) throw new ApiRequestTimeout();
     throw error;
+  } finally {
+    if (timer) clearTimeout(timer);
+    options.signal?.removeEventListener("abort", stop);
   }
+}
+
+export class ApiRequestTimeout extends Error {
+  constructor() { super("REQUEST_DEADLINE_EXCEEDED"); this.name = "ApiRequestTimeout"; }
+}
+
+export function jsonRequestHeaders(): Record<string, string> {
+  const token = getCookie("XSRF-TOKEN");
+  return { "Content-Type": "application/json", ...(token ? { "X-XSRF-TOKEN": token } : {}) };
 }
 
 export default apiClient;

@@ -1,3 +1,4 @@
+import { authorizeLegacyProvider, legacyProviderError } from "@/server/legacyProviderGuard";
 import { GoogleGenAI, Type } from "@google/genai";
 import { NextResponse } from "next/server";
 
@@ -204,13 +205,15 @@ const whiskySchema = {
  * @returns - 추천 결과 JSON (정규화된 데이터)
  */
 export async function POST(req: Request) {
+  let permit: Awaited<ReturnType<typeof authorizeLegacyProvider>>;
+  try { permit = await authorizeLegacyProvider(req, "GEMINI"); } catch (error) { return legacyProviderError(error); }
   const body = await req.json();
   const data = body.data;
   const type = body.type;
   const rich = body.rich;
 
   try {
-    const ai = new GoogleGenAI({ apiKey: ACCESS_KEY3! });
+    const ai = new GoogleGenAI({ apiKey: ACCESS_KEY3!, httpOptions: { timeout: 18_000, retryOptions: { attempts: 1 } } });
 
     let finalPrompt = "";
 
@@ -296,7 +299,8 @@ ${mainTasteTag ? `Priority Taste: ${mainTasteTag} (This is the most important fa
         responseMimeType: "application/json",
         responseJsonSchema: type == 1 ? cocktailSchema : whiskySchema,
         temperature: 0.6,
-        maxOutputTokens: 600
+        maxOutputTokens: 600,
+        abortSignal: permit.signal
       }
     });
 
@@ -307,11 +311,9 @@ ${mainTasteTag ? `Priority Taste: ${mainTasteTag} (This is the most important fa
     }
 
     return NextResponse.json(resultText);
-  } catch (err) {
-    console.error("Gemini Error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Unknown error" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return legacyProviderError(error);
+  } finally {
+    await permit.release();
   }
 }
