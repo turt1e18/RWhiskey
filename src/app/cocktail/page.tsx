@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
 import BeforeScreen from "./_components/Before";
 import AfterScreen from "./_components/After";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { CocktailRecommendationRequest } from "@/type/CocktailInterface";
+import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
 
 export default function CocktailScreen() {
   const [screenState, setScreenState] = useState(0);
@@ -23,9 +23,7 @@ export default function CocktailScreen() {
 
   const [imRich, setImRich] = useState(false);
   // 통합 데이터를 가져오는 Promise를 저장
-  const [dataPromise, setDataPromise] = useState<Promise<any> | null>(null);
-
-  const router = useRouter();
+  const [dataPromise, setDataPromise] = useState<Promise<CocktailDataInterface> | null>(null);
 
   const switchScreen = () => {
     switch (screenState) {

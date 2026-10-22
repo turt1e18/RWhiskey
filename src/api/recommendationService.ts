@@ -107,8 +107,7 @@ export const getWhiskyRecommendation = async (
  */
 export const getCocktailRecommendation = async (
   request: CocktailRecommendationRequest,
-  flexFlag: boolean,
-  imageUrl?: string // BeforeScreen에서 검색한 이미지 URL 전달 가능
+  flexFlag: boolean
 ) => {
   let isTokenDecremented = false;
 

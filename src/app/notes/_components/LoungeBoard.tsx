@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { LoungeNote } from "../_data/mockData";
+import type { LoungeNoteInterface } from "@/type/TastingNoteInterface";
 import { LoungeNoteCard } from "./LoungeNoteCard";
 
 interface Props {
-  notes: LoungeNote[];
+  notes: LoungeNoteInterface[];
   scrappedIds: string[];
   onToggleScrap: (id: string) => void;
 }
