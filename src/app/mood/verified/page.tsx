@@ -130,6 +130,13 @@ export default function VerifiedWhiskeyPreviewPage() {
   const [recommendationAuthExpired, setRecommendationAuthExpired] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<WhiskeyProfile>(defaultProfile);
+  const [formReady, setFormReady] = useState(false);
+  useEffect(() => { setFormReady(true); }, []);
+  const profileEditVersion = useRef(0);
+  function editProfile(update: React.SetStateAction<WhiskeyProfile>) {
+    profileEditVersion.current += 1;
+    setProfile(update);
+  }
   const [profileStatus, setProfileStatus] = useState<string | null>(null);
   const [facets, setFacets] = useState<WhiskeyCatalogFacetsResponse | null>(null);
   const [facetStatus, setFacetStatus] = useState<string | null>(null);
@@ -151,6 +158,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const reduceMotion = useReducedMotion();
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const orderMessageRef = useRef<HTMLParagraphElement>(null);
   const feedbackBusy = useRef(false);
   const busy = useRef(false);
   const pendingRequest = useRef<{ payload: string; key: string } | null>(null);
@@ -171,6 +179,11 @@ export default function VerifiedWhiskeyPreviewPage() {
     setResultPreferences({category:p?.category ?? "",country:p?.country ?? "",region:p?.region ?? "",targetAbv:p?.targetAbv ?? null,preferredFlavor:"UNKNOWN"});
   }, response=>{setAiResult(response);setResult(null);setShowForm(false);setSavedAt(response.recommendedAt??null);});
   const v3Mode = v3Enabled || Boolean(v3.pending) || result?.code === "V3_SAVED" || Boolean(aiResult);
+  useEffect(() => {
+    if (!v3.message) return;
+    orderMessageRef.current?.focus({ preventScroll: true });
+    orderMessageRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }, [v3.message, reduceMotion]);
   const enabled = v3Mode || process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true";
   const currentCard=useRef({uid,id:result?.recommendationId});currentCard.current={uid,id:result?.recommendationId};
   useEffect(() => { setAiResult(null);setResult(null);setShowForm(true);setSavedAt(null);setFeedbackStatus(null);setSavedFeedbackSentiment(null);setFeedbackComment(""); }, [uid]);
@@ -186,11 +199,12 @@ export default function VerifiedWhiskeyPreviewPage() {
   useEffect(() => {
     if (!enabled || !isInitialized || !isAuthenticated) return;
     let active = true;
+    const editVersion = profileEditVersion.current;
     void recommendationApi.getWhiskeyProfile()
-      .then((saved) => { if (active) setProfile({ ...defaultProfile, ...saved }); })
+      .then((saved) => { if (active && editVersion === 0 && profileEditVersion.current === 0) setProfile({ ...defaultProfile, ...saved }); })
       .catch(() => { if (active) setProfileStatus("저장된 취향을 불러오지 못했습니다. 현재 선택으로 추천할 수 있습니다."); });
     return () => { active = false; };
-  }, [enabled, isInitialized, isAuthenticated]);
+  }, [enabled, isInitialized, isAuthenticated, uid]);
 
   useEffect(() => {
     if (!enabled || !isInitialized || !isAuthenticated || profile.experienceLevel === "BEGINNER") return;
@@ -231,8 +245,10 @@ export default function VerifiedWhiskeyPreviewPage() {
   async function saveProfile() {
     if (busy.current || !isAuthenticated) return;
     setProfileStatus(null);
+    const editVersion = profileEditVersion.current;
     try {
-      setProfile(await recommendationApi.updateWhiskeyProfile(profile));
+      const saved = await recommendationApi.updateWhiskeyProfile(profile);
+      if (profileEditVersion.current === editVersion) setProfile(saved);
       setProfileStatus("기본 취향을 저장했습니다.");
     } catch {
       setProfileStatus("기본 취향을 저장하지 못했습니다. 다시 시도해 주세요.");
@@ -506,9 +522,10 @@ export default function VerifiedWhiskeyPreviewPage() {
 
       <div className="flex flex-1 flex-col justify-center py-6 md:py-10">
       {v3Mode && <section aria-live="polite" className="mx-auto w-full max-w-3xl px-6 pb-4 text-sm leading-6">
-        {v3.message && <p role="status" className="rounded border border-amber-200/30 bg-[#241b16] p-4"><strong className="mb-1 block">이번 주문 안내</strong>{v3.message}</p>}
-        {v3.message && (v3.authRequired || !isAuthenticated) && <Link href="/login" className="mt-3 inline-block underline">로그인하고 이전 주문 확인하기</Link>}
+        {v3.message && <p role="status" ref={orderMessageRef} tabIndex={-1} className="rounded border border-amber-200/30 bg-[#241b16] p-4"><strong className="mb-1 block">이번 주문 안내</strong>{v3.message}</p>}
+        {v3.message && (v3.authRequired || !isAuthenticated) && <Link href="/login" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center underline">새 탭에서 로그인하고 돌아오기</Link>}
         {v3.historicalId && <Link href={`/notes/verified/${v3.historicalId}`} className="mt-3 inline-block underline">당시 추천 기록 보기</Link>}
+        {v3.historicalAiId && <Link href={`/notes/ai/${v3.historicalAiId}`} className="mt-3 inline-flex min-h-11 items-center underline">저장한 같은 추천과 시음 기록 확인하기</Link>}
         {v3.missing && <div className="mt-3">
           <p>접수된 주문이 있으면 결과를 먼저 확인해요. 새 주문은 이 확인이 끝난 뒤 보낼 수 있어요.</p>
           <button type="button" disabled={v3.busy || feedbackLoading} onClick={()=>void v3.closeMissing()} className="mt-2 min-h-11 underline">접수 여부 확인 후 새 주문 준비</button>
@@ -542,7 +559,7 @@ export default function VerifiedWhiskeyPreviewPage() {
             <div className="relative mb-6 text-center">
               <h2 className="inline-block border border-[#4a3728] bg-white/10 px-3 py-1 text-[13px] font-bold tracking-widest text-[#2d2017]">오늘의 주문</h2>
             </div>
-            <fieldset disabled={loading || v3.busy} className="relative min-w-0">
+            <fieldset disabled={!formReady || loading || v3.busy} className="relative min-w-0">
               <fieldset className="mt-5">
                 <legend className="text-sm font-bold">위스키 경험 단계</legend>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -552,7 +569,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                         onChange={() => {
                           const max = level === "BEGINNER" ? 2 : 4;
                           setLevelStatus((profile.aromaPreferences?.length ?? 0) > max ? "초심자는 먼저 고른 향 2개로 시작해요. 향을 다시 고를 수 있어요." : null);
-                          setProfile((current) => ({ ...current, experienceLevel: level, aromaPreferences: (current.aromaPreferences ?? []).slice(0, max) }));
+                          editProfile((current) => ({ ...current, experienceLevel: level, aromaPreferences: (current.aromaPreferences ?? []).slice(0, max) }));
                         }} className="sr-only" />
                       {levelLabels[level]}
                     </label>
@@ -574,14 +591,14 @@ export default function VerifiedWhiskeyPreviewPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {smokeOptions.map((option) => <label key={option.value} className={fieldChoiceClass(profile.smokePreference === option.value)}>
                     <input type="radio" name="smokePreference" value={option.value} checked={profile.smokePreference === option.value}
-                      onChange={() => setProfile((current) => ({ ...current, smokePreference: option.value }))} className="sr-only" />
+                      onChange={() => editProfile((current) => ({ ...current, smokePreference: option.value }))} className="sr-only" />
                     {option.label}
                   </label>)}
                 </div>
               </fieldset>
               {profile.smokePreference === "MILD" && <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "모델이 연기 향이 없거나 은은하다고 제안한 후보만 골라요. 실제 향을 확인한 것은 아니에요." : "연기 향이 없거나 은은하다고 확인된 병만 찾아요."} 향 정보가 없는 병은 제외됩니다.</p>}
               {profile.smokePreference === "BOLD" && <p className="mt-2 text-xs leading-5 text-stone-600">진한 연기 향을 우선 살펴보지만, 다른 병을 추천할 수도 있어요.</p>}
-              <WhiskeyTasteFields profile={profile} onChange={setProfile} />
+              <WhiskeyTasteFields profile={profile} onChange={editProfile} />
               <div hidden>
               <button type="button" onClick={() => void saveProfile()} disabled={!isAuthenticated}
                 className="mt-4 text-sm font-semibold text-[#4a3728] underline disabled:opacity-50">이 선택을 기본 취향으로 저장</button>

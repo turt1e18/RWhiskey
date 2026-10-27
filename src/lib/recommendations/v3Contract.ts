@@ -1,4 +1,8 @@
 import type { WhiskeyCandidateRequest, WhiskeyVerifiedRecommendationResponse } from '../../type/ApiInterface';
+import {validCollectedBottlingInformation,cleanCollectedInformation} from './collectedBottlingInformation';
+import type {CollectedBottlingInformation} from './collectedBottlingInformation';
+import {validCandidateOrigin} from './collectedCandidate';
+import type {CollectedCandidateOrigin} from './collectedCandidate';
 
 export interface V3Request {
   experienceLevel: NonNullable<WhiskeyCandidateRequest['experienceLevel']>;
@@ -35,7 +39,7 @@ export interface V3Response {
 
 export interface AiSuggestionCard {
   id:string;
-  identity:{brand:string;expression:string;edition?:string|null;batch?:string|null;bottler?:string|null;
+  identity:{brand:string;expression:string;edition?:string|null;batch?:string|null;bottler?:string|null;market?:string|null;
     category?:string|null;country?:string|null;region?:string|null;abv?:number|null;
     ageStatement?:'UNKNOWN'|'NAS'|'NUMBERED';ageYears?:number|null;vintageYear?:number|null;bottledYear?:number|null;
     caskNumber?:string|null;maturationCask?:string|null;finishCask?:string|null;
@@ -48,6 +52,8 @@ export interface AiSuggestionCard {
   presentationSource?:{kind:'RULE'|'MODEL';provider?:string|null;model?:string|null;promptVersion?:string|null;status:string}|null;
   catalogFacts?:CatalogFacts|null;
   productSourceObservations?:ProductSourceObservations|null;
+  collectedBottlingInformation?:CollectedBottlingInformation|null;
+  candidateOrigin?:CollectedCandidateOrigin|null;
 }
 export interface ProductSourceObservations {
   scope:'PRODUCT_PAGE';status:'CURRENT';bottlingIdentityConfirmed:false;
@@ -118,6 +124,11 @@ export function toAiSuggestion(v:V3Response):AiSuggestionCard|null {
     !a.presentation.summary.every(x=>typeof x==='string' && x.length<=2000) ||
     !Array.isArray(a.presentation.pairings) || a.reasons!=null && (!Array.isArray(a.reasons) || !a.reasons.every(x=>typeof x==='string')))return null;
   const p=a.identity;
+  // Origin is a required access boundary for source-selected identities, not a discardable enhancement.
+  if(a.candidateOrigin!=null && (!validCandidateOrigin(a.candidateOrigin)||
+      !validCollectedBottlingInformation(a.collectedBottlingInformation)||a.collectedBottlingInformation.status!=='NAME_MATCH'||
+      a.collectedBottlingInformation.usageScope!==a.candidateOrigin.usageScope)||
+    a.reasons?.includes('COLLECTED_CANDIDATE')&&a.candidateOrigin==null)return null;
   const source=a.presentationSource;
   if(a.localizedName!=null && (typeof a.localizedName!=='string' || a.localizedName.length<2 || a.localizedName.length>140 ||
       !/[가-힣]/.test(a.localizedName) || /[\u3400-\u9fff<>\u0000-\u001f\u007f]/.test(a.localizedName)) ||
@@ -125,7 +136,7 @@ export function toAiSuggestion(v:V3Response):AiSuggestionCard|null {
     source!=null && (!['RULE','MODEL'].includes(source.kind) || typeof source.status!=='string' || source.status.length>80 ||
       [source.provider,source.model,source.promptVersion].some(x=>x!=null && (typeof x!=='string' || x.length>100 || !/^[A-Za-z0-9_.-]+$/.test(x))) ||
       source.kind==='MODEL' && (!source.provider || !source.model || !source.promptVersion || !['GENERATED','GENERATED_FILTERED'].includes(source.status)))) return null;
-  if([p.edition,p.batch,p.bottler,p.category,p.country,p.region,p.caskNumber,p.maturationCask,p.finishCask]
+  if([p.edition,p.batch,p.bottler,p.market,p.category,p.country,p.region,p.caskNumber,p.maturationCask,p.finishCask]
     .some(x=>x!=null && (typeof x!=='string' || x.length>240)) ||
     p.abv!=null && (typeof p.abv!=='number' || !Number.isFinite(p.abv) || p.abv<=0 || p.abv>100) ||
     p.ageYears!=null && (!Number.isInteger(p.ageYears) || p.ageYears<1 || p.ageYears>100) ||
@@ -136,8 +147,12 @@ export function toAiSuggestion(v:V3Response):AiSuggestionCard|null {
     [p.independentBottling,p.oldBottle].some(x=>x!=null && typeof x!=='boolean'))return null;
   // An invalid optional enhancement must not hide an otherwise usable saved AI recommendation.
   const clean=a.catalogFacts==null || validFacts(a.catalogFacts)?a:{...a,catalogFacts:null};
-  return clean.productSourceObservations==null || validProductSourceObservations(clean.productSourceObservations)?clean:
+  const sourceClean=clean.productSourceObservations==null || validProductSourceObservations(clean.productSourceObservations)?clean:
     {...clean,productSourceObservations:null};
+  if(sourceClean.collectedBottlingInformation==null)return sourceClean;
+  return validCollectedBottlingInformation(sourceClean.collectedBottlingInformation)?
+    {...sourceClean,collectedBottlingInformation:cleanCollectedInformation(sourceClean.collectedBottlingInformation)}:
+    {...sourceClean,collectedBottlingInformation:null};
 }
 
 /** No silently dropped hard constraints or free text from an older contract. */
