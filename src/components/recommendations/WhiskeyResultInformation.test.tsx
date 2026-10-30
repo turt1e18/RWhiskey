@@ -23,16 +23,27 @@ test('fixed basic labels and a native bottling entry persist even when no values
   }
   const html=markup(empty);assert.equal((html.match(/정보 없음/g)??[]).length,4);assert.equal((html.match(/현재 안내할 수 있는 병입 정보가 없어요/g)??[]).length,1);
 });
-test('held fields never render an AI alternative and the owned result card keeps the photo loading flow without source panels',()=>{
+test('held fields never render an AI alternative and an unconfirmed viewer cannot render a stored result',()=>{
   const held={...card,collectedBottlingInformation:{...collected,status:'AMBIGUOUS' as const,basicFields:undefined}};
   const html=markup(held);assert.ok(!html.includes('AI 추정'));assert.ok(html.includes('정보 확인 필요'));
   const response:V3Response={apiVersion:'V3',state:'SUCCESS',nextAction:'NONE',operationId:card.id,appliedLevel:'BEGINNER',recommendedAt:'2026-10-26T00:00:00Z',
     verification:{atRecommendation:'AI_SUGGESTED',current:'UNVERIFIED'},aiSuggestion:card};
-  const result=renderToStaticMarkup(<WhiskeyAiSuggestionCard response={response}/>);
-  assert.ok(result.includes('Deanston 12 Year Old'));assert.ok(result.includes('46.3%'));
+  const result=renderToStaticMarkup(<WhiskeyAiSuggestionCard response={response} ownerUid={42}/>);
+  assert.ok(result.includes('저장한 추천을 확인할 수 없어요'));
+  for(const privateBody of ['Deanston','46.3%','마신 뒤 시음 기록','마셔보고 싶어요','사진을 찾고 있어요'])assert.ok(!result.includes(privateBody),privateBody);
   const heldResponse:V3Response={...response,aiSuggestion:{...card,collectedBottlingInformation:{...collected,status:'AMBIGUOUS',availableVolumesMl:[],basicFields:undefined,fields:collected.fields.map(f=>({...f,status:'UNKNOWN',value:null,sources:[],reason:'CONFLICTING_OBSERVATIONS'}))}}};
-  const heldCard=renderToStaticMarkup(<WhiskeyAiSuggestionCard response={heldResponse}/>);assert.ok(heldCard.includes('정보 확인 필요'));assert.ok(!heldCard.includes('AI 추정'));
+  const heldCard=renderToStaticMarkup(<WhiskeyAiSuggestionCard response={heldResponse} ownerUid={null}/>);assert.ok(heldCard.includes('로그인한 계정과 추천 주소'));assert.ok(!heldCard.includes('AI 추정'));
+  assert.ok(!heldCard.includes('도수가 높을수록'));
   for(const noise of ['출처','사진 다시 찾기','등록 제품명','연결했어요','공개 이용','https://'])assert.ok(!result.includes(noise),noise);
+});
+test('beginner strength guidance follows displayed facts without exposing a held or missing strength',()=>{
+  const display=whiskeyResultInformation(card);
+  assert.ok(!renderToStaticMarkup(<WhiskeyResultBasicFacts display={display}/>).includes('도수가 높을수록'));
+  assert.ok(renderToStaticMarkup(<WhiskeyResultBasicFacts display={display} beginner/>).includes('도수가 높을수록'));
+  for(const kind of ['MISSING','HELD'] as const) {
+    const unavailable={...display,basic:display.basic.map(f=>f.field==='abv'?{...f,kind,value:'정보 확인 필요'}:f)};
+    assert.ok(!renderToStaticMarkup(<WhiskeyResultBasicFacts display={unavailable} beginner/>).includes('도수가 높을수록'));
+  }
 });
 test('the result photo uses the existing search loading state without a source link',()=>{
   const html=renderToStaticMarkup(<WhiskeyResultImage identity={card.identity}/>);assert.ok(html.includes('사진을 찾고 있어요'));assert.ok(!html.includes('위스키 기본 이미지'));assert.ok(!html.includes('href='));

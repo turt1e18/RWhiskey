@@ -67,9 +67,10 @@ export const authApi = {
     });
   },
   // 현재 로그인된 사용자 정보 확인 (세션 유지용)
-  me: () => {
+  me: (timeoutMs?:number) => {
     return apiClient<MeResponse>('/api/auth/me', {
       method: 'GET',
+      timeoutMs,
     });
   },
 };

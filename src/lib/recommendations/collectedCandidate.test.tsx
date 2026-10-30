@@ -41,10 +41,10 @@ test('explicit withdrawal differs from transient failure and renewal preserves o
   assert.deepEqual(result.card.presentation,sourceCard.presentation);assert.equal(result.card.candidateOrigin,next.candidateOrigin);
   assert.equal(result.changed,false);
 });
-test('expired result hides identity introduction and photo request while keeping a retry action',()=>{
+test('expired result cannot expose identity or feedback before its original owner is confirmed',()=>{
   const expired={...response,aiSuggestion:{...sourceCard,candidateOrigin:{...origin,checkedAt:new Date(now-901000).toISOString(),validUntil:new Date(now-1000).toISOString()}}};
-  const html=renderToStaticMarkup(<WhiskeyAiSuggestionCard response={expired}/>);
-  assert.ok(html.includes('제품 정보를 다시 확인'));assert.ok(html.includes('첫인상'));
+  const html=renderToStaticMarkup(<WhiskeyAiSuggestionCard response={expired} ownerUid={null}/>);
+  assert.ok(html.includes('저장한 추천을 확인할 수 없어요'));assert.ok(html.includes('새 탭에서 다시 로그인'));
   for(const text of ['Deanston','저장한 추천 소개예요.','<img','병입 정보 더보기'])assert.ok(!html.includes(text),text);
 });
 test('read restrictions link to the same owned record and never invent a new recommendation',()=>{

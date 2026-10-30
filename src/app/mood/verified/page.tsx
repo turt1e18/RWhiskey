@@ -122,6 +122,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   const [inputs, setInputs] = useState<Inputs>(initialInputs);
   const [result, setResult] = useState<WhiskeyVerifiedRecommendationResponse | null>(null);
   const [aiResult,setAiResult]=useState<V3Response|null>(null);
+  const [aiResultOwnerUid,setAiResultOwnerUid]=useState<number|null>(null);
   const [resultPreferences, setResultPreferences] = useState({
     category: "", country: "", region: "", targetAbv: null as number | null,
     preferredFlavor: "UNKNOWN" as WhiskeyFlavorPreference,
@@ -172,12 +173,12 @@ export default function VerifiedWhiskeyPreviewPage() {
   const aiEnabled = process.env.NEXT_PUBLIC_WHISKEY_AI_SUGGESTION_ENABLED === "true";
   const v3Enabled = aiEnabled || process.env.NEXT_PUBLIC_WHISKEY_V3_ENABLED === "true";
   const v3 = useV3Order(uid, v3Enabled, (card, response) => {
-    setAiResult(null);setResult(card); setShowForm(false); setSavedAt(response.recommendedAt ?? null);
+    setAiResult(null);setAiResultOwnerUid(null);setResult(card); setShowForm(false); setSavedAt(response.recommendedAt ?? null);
     setFeedbackStatus(null); setFeedbackSentiment("NEUTRAL"); setFeedbackReason("NONE");
     setFeedbackComment(""); setSavedFeedbackSentiment(null);
     const p=response.requestSummary?.preferences;
     setResultPreferences({category:p?.category ?? "",country:p?.country ?? "",region:p?.region ?? "",targetAbv:p?.targetAbv ?? null,preferredFlavor:"UNKNOWN"});
-  }, response=>{setAiResult(response);setResult(null);setShowForm(false);setSavedAt(response.recommendedAt??null);});
+  }, response=>{setAiResultOwnerUid(uid??null);setAiResult(response);setResult(null);setShowForm(false);setSavedAt(response.recommendedAt??null);});
   const v3Mode = v3Enabled || Boolean(v3.pending) || result?.code === "V3_SAVED" || Boolean(aiResult);
   useEffect(() => {
     if (!v3.message) return;
@@ -186,7 +187,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   }, [v3.message, reduceMotion]);
   const enabled = v3Mode || process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true";
   const currentCard=useRef({uid,id:result?.recommendationId});currentCard.current={uid,id:result?.recommendationId};
-  useEffect(() => { setAiResult(null);setResult(null);setShowForm(true);setSavedAt(null);setFeedbackStatus(null);setSavedFeedbackSentiment(null);setFeedbackComment(""); }, [uid]);
+  useEffect(() => { setAiResult(null);setAiResultOwnerUid(null);setResult(null);setShowForm(true);setSavedAt(null);setFeedbackStatus(null);setSavedFeedbackSentiment(null);setFeedbackComment(""); }, [uid]);
   const todayStr = useMemo(() => {
     const date = new Date();
     return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
@@ -539,7 +540,7 @@ export default function VerifiedWhiskeyPreviewPage() {
       ) : aiResult && !showForm ? (
         <section className="mx-auto w-full py-4">
           <h2 ref={resultHeadingRef} tabIndex={-1} className="sr-only">오늘의 AI 추천 결과</h2>
-          <WhiskeyAiSuggestionCard key={`${uid}:${aiResult.operationId}`} response={aiResult}/>
+          <WhiskeyAiSuggestionCard key={`${aiResultOwnerUid}:${aiResult.operationId}`} response={aiResult} ownerUid={aiResultOwnerUid}/>
         </section>
       ) : !selected ? (
         <motion.div initial={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : 8 }} animate={{ opacity: 1, y: 0 }}
