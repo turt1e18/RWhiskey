@@ -88,7 +88,7 @@ async function apiClient<T>(endpoint: string, options: RequestInit & { timeoutMs
 
     // 204 No Content 처리
     if (response.status === 204) {
-      return {} as T;
+      return (options.emptyBodyAsNull ? null : {}) as T;
     }
 
     // 에러 상태 처리

@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { ApiResponseError } from '../../api/apiClient';
 import { whiskeyV3Api } from '../../api/whiskeyV3Api';
+import { authApi } from '../../api/whiskeyApi';
 import { isV3Response, toV3Request, toVerifiedCard, toAiSuggestion } from '../../lib/recommendations/v3Contract';
 import type { V3Response } from '../../lib/recommendations/v3Contract';
 import type { WhiskeyCandidateRequest, WhiskeyVerifiedRecommendationResponse } from '../../type/ApiInterface';
 import { logVerifiedResponse } from '../../lib/recommendations/debugResponse';
+import {collectedRecoveryId} from '../../lib/recommendations/collectedCandidate';
 
 const messages: Record<string,string> = {
+  DISCOVERY_PROVIDER_TIMEOUT:'응답이 늦어 이번 추천을 마치지 못했어요. 추천 횟수는 사용하지 않았고 선택은 그대로예요. 잠시 후 같은 조건으로 다시 추천받아 주세요.',
+  DISCOVERY_PROVIDER_UNAVAILABLE:'추천 서비스를 잠시 이용할 수 없어요. 추천 횟수는 사용하지 않았고 선택은 그대로예요. 잠시 후 다시 추천받아 주세요.',
   UNRECEIVED_REQUEST_CLOSED:'이전 주문의 뒤늦은 접수를 막는 확인을 마쳤어요. 원하시면 새 주문을 넣어주세요.',
   REQUEST_ROUTE_CONFLICT:'다른 추천 방식에서 접수한 주문이에요. 원래 추천 화면에서 결과를 확인해 주세요.',
   ADMISSION_UNAVAILABLE:'지금은 주문을 안전하게 접수할 수 없어요. 잠시 뒤 다시 시도해 주세요.',
@@ -19,6 +23,8 @@ const messages: Record<string,string> = {
   AI_RESULT_SAVE_FAILED:'이번 추천을 저장하지 못했어요. 추천 횟수는 사용하지 않았어요. 조건을 확인하고 새 주문을 넣어주세요.',
   RESULT_SAVE_UNCONFIRMED:'추천 저장과 횟수 처리를 확인하고 있어요. 새 주문 대신 이전 주문 결과를 확인해 주세요.',
   HISTORICAL_EVIDENCE_NOT_CURRENT:'이전 추천의 제품 정보를 다시 확인해야 해요. 당시 기록은 시음 노트에서 볼 수 있어요.',
+  COLLECTED_SOURCE_RESTRICTED:'저장한 같은 추천의 제품 정보를 다시 확인해야 해요. 시음 기록은 계속 확인하고 작성할 수 있어요.',
+  COLLECTED_SOURCE_UNAVAILABLE:'저장한 추천의 제품 정보를 잠시 불러오지 못했어요. 시음 기록에서 같은 추천을 다시 확인해 주세요.',
 };
 export function useV3Order(uid: number | undefined, enabled: boolean,
   onSuccess:(card:WhiskeyVerifiedRecommendationResponse, response:V3Response)=>void,
@@ -26,13 +32,14 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
   const [pending,setPending]=useState<string|null>(null);
   const [message,setMessage]=useState<string|null>(null);
   const [historicalId,setHistoricalId]=useState<number|null>(null);
+  const [historicalAiId,setHistoricalAiId]=useState<string|null>(null);
   const [busy,setBusy]=useState(false);
   const [authRequired,setAuthRequired]=useState(false);
   const [missing,setMissing]=useState(false);
   const running=useRef(false); const owner=useRef(uid); owner.current=uid;
   const storageKey=uid ? `rwhiskey:order:v3:${uid}` : null;
   useEffect(()=>{
-    setPending(null);setMessage(null);setHistoricalId(null);setAuthRequired(false);setMissing(false);
+    setPending(null);setMessage(null);setHistoricalId(null);setHistoricalAiId(null);setAuthRequired(false);setMissing(false);
     if(!storageKey)return;
     try {
       const saved=sessionStorage.getItem(storageKey);
@@ -44,6 +51,7 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
     if(storageKey)try {if(key)sessionStorage.setItem(storageKey,key);else sessionStorage.removeItem(storageKey);} catch { /* In-memory recovery remains available. */ }
   }
   function accept(response:V3Response) {
+    setHistoricalAiId(collectedRecoveryId(response));
     if(toAiSuggestion(response) && onAiSuccess){remember(null);setMessage(null);setHistoricalId(null);onAiSuccess(response);return;}
     const card=toVerifiedCard(response);
     if(card){remember(null);setMessage(null);setHistoricalId(null);onSuccess(card,response);return;}
@@ -59,11 +67,19 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
   }
   async function run(request?:WhiskeyCandidateRequest,closeMissing=false) {
     if(!uid || running.current)return;
-    const requestOwner=uid;running.current=true;setBusy(true);setMessage(null);setAuthRequired(false);
+    const requestOwner=uid;running.current=true;setBusy(true);setMessage(null);setHistoricalAiId(null);setAuthRequired(false);
     const operation=pending ? closeMissing ? 'close-unreceived' : 'recover' : 'recommend';
     // Preserve a known missing order across authentication/transport failures until the server resolves it.
     if(!pending)setMissing(false);
     try {
+      if(authRequired) {
+        const session=await authApi.me();
+        if(!session.authenticated || session.uid!==requestOwner) {
+          setAuthRequired(true);
+          setMessage('주문을 시작한 같은 계정으로 새 탭에서 로그인한 뒤 돌아와 주세요. 선택과 이전 주문은 그대로 보관 중이에요.');
+          return;
+        }
+      }
       let response:V3Response;
       if(pending) response=closeMissing ? await whiskeyV3Api.closeUnreceived(pending) : await whiskeyV3Api.recover(pending);
       else {
@@ -79,8 +95,10 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
     } catch(e) {
       if(owner.current!==requestOwner)return;
       if(e instanceof ApiResponseError)logVerifiedResponse('V3',`${operation}-error`,e.data,e.status);
-      if(e instanceof ApiResponseError && e.status===401) {setAuthRequired(true);setMessage('다시 로그인한 뒤 이전 주문 결과를 확인해 주세요.');}
-      else if(e instanceof ApiResponseError && e.status===403)setMessage('화면을 새로고침해 요청 인증을 갱신한 뒤 이전 주문 결과를 확인해 주세요.');
+      if(e instanceof ApiResponseError && [401,403].includes(e.status)) {
+        setAuthRequired(true);
+        setMessage('요청 인증을 다시 확인해야 해요. 새 탭에서 같은 계정으로 로그인한 뒤 이 화면으로 돌아와 이전 주문 결과를 확인해 주세요. 선택은 그대로 유지돼요.');
+      }
       else if(closeMissing){setMissing(true);setMessage('서버에서 이전 주문 확인을 종료하지 못했어요. 주문 키는 보관 중이에요. 잠시 뒤 다시 확인해 주세요.');}
       else if(e instanceof ApiResponseError && isV3Response(e.data)) {
         // A missing ledger row does not prove the POST was never received. Do not dispatch it again.
@@ -90,5 +108,5 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
       } else setMessage('연결 또는 저장 결과를 확인하지 못했어요. 새 주문을 보내지 말고 이전 주문 결과를 확인해 주세요.');
     } finally {running.current=false;setBusy(false);}
   }
-  return { pending,message,historicalId,busy,authRequired,missing,run,closeMissing:()=>run(undefined,true) };
+  return { pending,message,historicalId,historicalAiId,busy,authRequired,missing,run,closeMissing:()=>run(undefined,true) };
 }

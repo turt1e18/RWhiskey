@@ -33,6 +33,23 @@ export function whiskeyLabel(kind: "category" | "country" | "region", value: str
 
 export function bilingualLabel(kind: "category" | "country", value: string | null, facets: WhiskeyCatalogFacetsResponse | null): string | null {
   if (!value) return null;
+  const key=value.trim().replace(/[_/\-]+/g,' ').replace(/\s+/g,' ').toLowerCase();
+  if(['unknown','n a','not available'].includes(key))return null;
+  const common:Record<string,[string,string]>=kind==='category'?{
+    'single malt':['Single Malt','싱글 몰트'],'blended malt':['Blended Malt','블렌디드 몰트'],
+    'blended':['Blended Whisky','블렌디드 위스키'],'blended whisky':['Blended Whisky','블렌디드 위스키'],
+    'single grain':['Single Grain','싱글 그레인'],'blended grain':['Blended Grain','블렌디드 그레인'],
+    'bourbon':['Bourbon','버번'],'rye':['Rye Whiskey','라이 위스키'],'rye whiskey':['Rye Whiskey','라이 위스키'],
+    'tennessee':['Tennessee Whiskey','테네시 위스키'],'tennessee whiskey':['Tennessee Whiskey','테네시 위스키'],
+    'single pot still':['Single Pot Still','싱글 팟 스틸']
+  }:{'scotland':['Scotland','스코틀랜드'],'ireland':['Ireland','아일랜드'],
+    'united states':['United States','미국'],'usa':['United States','미국'],'us':['United States','미국'],
+    'japan':['Japan','일본'],'canada':['Canada','캐나다'],'taiwan':['Taiwan','대만'],'india':['India','인도'],
+    'england':['England','잉글랜드'],'wales':['Wales','웨일스']};
+  const mapped=common[key];if(mapped)return `${mapped[0]} (${mapped[1]})`;
+  const known=Object.keys(kind==='category'?categoryLabels:countryLabels).find(k=>k.toLowerCase()===key);
+  if(known){const label=whiskeyLabel(kind,known,facets);return label===known?known:`${known} (${label})`;}
+  if(/[_/\-]/.test(value))return value.trim().replace(/[_/\-]+/g,' ').replace(/\s+/g,' ').toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase());
   const label = whiskeyLabel(kind, value, facets);
   return label === value ? value : `${value} (${label})`;
 }

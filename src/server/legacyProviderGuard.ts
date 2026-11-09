@@ -1,5 +1,6 @@
 import "server-only";
 import { NextResponse } from "next/server";
+import { isSameOriginRequest } from './requestOrigin';
 
 export class LegacyProviderFailure extends Error {
   constructor(public readonly code: string, public readonly status: number) { super(code); }
@@ -34,7 +35,7 @@ export async function authorizeLegacyProvider(req: Request, purpose: "GEMINI" | 
   if (req.signal.aborted) timer.abort();
   try {
     if (!base) throw new LegacyProviderFailure("ADMISSION_UNAVAILABLE", 503);
-    if (req.headers.get("origin") !== new URL(req.url).origin ||
+    if (!isSameOriginRequest(req) ||
         !req.headers.get("content-type")?.startsWith("application/json"))
       throw new LegacyProviderFailure("AUTH_REQUEST_REJECTED", 403);
     if (!headers.has("Cookie")) throw new LegacyProviderFailure("AUTH_REQUIRED", 401);

@@ -19,7 +19,7 @@ export const whiskeyV3Api = {
   }),
   byId: (id:string) => apiClient<V3Response>(`/api/recommendations/v3/operations/${encodeURIComponent(id)}`,{method:'GET'}),
   aiHistory: () => apiClient<V3Response[]>('/api/recommendations/v3/ai-suggestions',{method:'GET'}),
-  aiFeedback: (id:string,stage:'EXPECTED'|'CONSUMED') => apiClient<AiFeedbackView|null>(`/api/recommendations/v3/ai-suggestions/${encodeURIComponent(id)}/feedback/${stage}`,{method:'GET',emptyBodyAsNull:true}),
+  aiFeedback: (id:string,stage:'EXPECTED'|'CONSUMED',timeoutMs?:number) => apiClient<AiFeedbackView|null>(`/api/recommendations/v3/ai-suggestions/${encodeURIComponent(id)}/feedback/${stage}`,{method:'GET',emptyBodyAsNull:true,timeoutMs}),
   saveAiFeedback: (id:string,stage:'EXPECTED'|'CONSUMED',input:AiFeedbackInput) => apiClient<AiFeedbackView>(`/api/recommendations/v3/ai-suggestions/${encodeURIComponent(id)}/feedback/${stage}`,{method:'PUT',body:JSON.stringify(input)}),
   history: () => apiClient<WhiskeyHistoryItem[]>('/api/recommendations/history', { method:'GET' }),
   recommend: (request: V3Request, key: string) => apiClient<V3Response>('/api/recommendations/v3/verified', {
