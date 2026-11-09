@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/storybook-static/
+/storybook.log
 
 # next.js
 /.next/

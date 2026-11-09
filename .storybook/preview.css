@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Same paper/ink palette, with local system fonts and no remote font requests. */
+:root {
+  color-scheme: light;
+  --background: #1a120d;
+  --foreground: #ededed;
+}
+body {
+  margin: 0;
+  background: var(--background);
+  font-family: Pretendard, 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+}
+button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visible {
+  outline: 2px solid #856236;
+  outline-offset: 3px;
+}
