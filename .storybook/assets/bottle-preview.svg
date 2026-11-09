@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480" viewBox="0 0 720 480" role="img" aria-labelledby="title desc">
+  <title id="title">추천 카드 배치 확인을 위한 위스키 병 일러스트</title>
+  <desc id="desc">실제 제품 사진을 대신하는 미리보기 전용 황금빛 병과 상자</desc>
+  <defs>
+    <linearGradient id="back" x2="1" y2="1"><stop stop-color="#fbf5e7"/><stop offset="1" stop-color="#e9dbbe"/></linearGradient>
+    <linearGradient id="box" x2="1"><stop stop-color="#c2ae88"/><stop offset=".15" stop-color="#e6dbc0"/><stop offset=".85" stop-color="#d6c7a7"/><stop offset="1" stop-color="#b9a17b"/></linearGradient>
+    <linearGradient id="glass" x2="1"><stop stop-color="#755123"/><stop offset=".13" stop-color="#d7a14a"/><stop offset=".35" stop-color="#e7b450"/><stop offset=".72" stop-color="#ad7027"/><stop offset="1" stop-color="#62421f"/></linearGradient>
+    <linearGradient id="neck" x2="1"><stop stop-color="#7e704e"/><stop offset=".3" stop-color="#d9cd9e"/><stop offset="1" stop-color="#746b48"/></linearGradient>
+    <radialGradient id="shadow"><stop stop-color="#3e2a1e" stop-opacity=".26"/><stop offset="1" stop-color="#3e2a1e" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="720" height="480" fill="url(#back)"/>
+  <ellipse cx="366" cy="420" rx="204" ry="28" fill="url(#shadow)"/>
+  <rect x="225" y="61" width="135" height="348" rx="7" fill="url(#box)" stroke="#b19a73"/>
+  <path d="M242 71v328M346 71v328" stroke="#f7f1e1" stroke-opacity=".7"/>
+  <text x="292" y="131" text-anchor="middle" fill="#3c3328" font-family="Georgia,serif" font-size="16" letter-spacing="3">DEANSTON</text>
+  <text x="292" y="240" text-anchor="middle" fill="#6c4a24" font-family="Georgia,serif" font-size="69">12</text>
+  <text x="292" y="269" text-anchor="middle" fill="#645742" font-family="Georgia,serif" font-size="12" letter-spacing="2">YEAR OLD</text>
+  <path d="M390 112h58v71c0 19 37 35 37 69v145c0 12-8 19-20 19h-93c-12 0-20-7-20-19V252c0-34 38-50 38-69z" fill="url(#glass)" stroke="#805a2d" stroke-width="2"/>
+  <path d="M366 260v124" stroke="#fff4c8" stroke-width="7" opacity=".34" stroke-linecap="round"/>
+  <rect x="387" y="81" width="64" height="39" rx="4" fill="#454035"/>
+  <path d="M390 92h58M390 103h58" stroke="#706958"/>
+  <rect x="391" y="121" width="55" height="57" fill="url(#neck)"/>
+  <rect x="359" y="267" width="120" height="113" rx="2" fill="#f6f0dc" stroke="#cbb98c"/>
+  <text x="419" y="298" text-anchor="middle" fill="#342e25" font-family="Georgia,serif" font-size="13" letter-spacing="1.8">DEANSTON</text>
+  <text x="419" y="339" text-anchor="middle" fill="#8c6332" font-family="Georgia,serif" font-size="39">12</text>
+  <text x="419" y="360" text-anchor="middle" fill="#706049" font-family="Georgia,serif" font-size="9" letter-spacing="1.6">SINGLE MALT</text>
+</svg>

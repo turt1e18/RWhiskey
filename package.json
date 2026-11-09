@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open --ci",
+    "build-storybook": "storybook build",
     "postbuild": "next-sitemap"
   },
   "dependencies": {
@@ -29,6 +31,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@storybook/nextjs-vite": "10.6.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -39,7 +42,9 @@
     "postcss": "^8.5.1",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "storybook": "10.6.4",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "7.3.1"
   }
 }
