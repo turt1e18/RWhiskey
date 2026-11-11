@@ -143,9 +143,10 @@ export const recommendationApi = {
    * 새로운 추천 결과 저장
    * @param data - 사용자 입력 조건 및 AI 추천 결과 데이터
    */
-  save: (data: RecommendationSaveRequest) => {
+  save: (data: RecommendationSaveRequest, settlementToken?: string) => {
     return apiClient<number>('/api/recommendations', {
       method: 'POST',
+      headers: settlementToken ? { 'X-Settlement-Token': settlementToken } : undefined,
       body: JSON.stringify(data),
     });
   },
@@ -222,9 +223,10 @@ export const cocktailApi = {
   /**
    * 새로운 칵테일 추천 결과 저장
    */
-  save: (data: CocktailSaveRequest) => {
+  save: (data: CocktailSaveRequest, settlementToken?: string) => {
     return apiClient<number>('/api/cocktails', {
       method: 'POST',
+      headers: settlementToken ? { 'X-Settlement-Token': settlementToken } : undefined,
       body: JSON.stringify(data),
     });
   },
@@ -256,16 +258,11 @@ export const userTokenApi = {
       method: 'GET',
     });
   },
-  // 토큰 차감
-  decrement: () => {
-    return apiClient<{ success: boolean; message: string }>('/api/user/token/decrement', {
-      method: 'POST',
-    });
-  },
-  // 토큰 복구 (에러 발생 시)
-  increment: () => {
-    return apiClient<{ success: boolean; message: string }>('/api/user/token/increment', {
-      method: 'POST',
+  // 저장이 실패했을 때 그 추천에서 차감한 1회를 정산 표로 되돌린다(표는 한 번만 쓸 수 있다).
+  refund: (settlementToken: string) => {
+    return apiClient<void>(`/api/recommendations/legacy/admission/${encodeURIComponent(settlementToken)}?refund=true`, {
+      method: 'DELETE',
+      emptyBodyAsNull: true,
     });
   },
 };

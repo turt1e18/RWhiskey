@@ -312,7 +312,7 @@ ${mainTasteTag ? `Priority Taste: ${mainTasteTag} (This is the most important fa
     }
 
     succeeded = resultText != undefined;
-    return NextResponse.json(resultText);
+    return NextResponse.json(resultText, succeeded ? { headers: { "X-Settlement-Token": permit.settlement } } : undefined);
   } catch (error) {
     return legacyProviderError(error);
   } finally {
