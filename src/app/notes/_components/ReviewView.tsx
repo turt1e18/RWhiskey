@@ -66,8 +66,8 @@ export const ReviewView = ({ whisky, onBack, onSubmit }: Props) => {
       {isRated && (
         <div className="pointer-events-none absolute -right-4 -top-6 md:-top-8">
           <div className="stamp-circle font-serif w-[155px] h-[155px] md:w-[180px] md:h-[180px] border-[4px] flex flex-col items-center justify-center">
-            <span className="text-[8px] md:text-[10px] tracking-[0.2em] font-bold">TASTED</span>
-            <span className="text-[7px] md:text-[8px] mt-2 tracking-widest font-medium">
+            <span className="text-xs md:text-xs tracking-[0.2em] font-bold">TASTED</span>
+            <span className="text-xs md:text-xs mt-2 tracking-widest font-medium">
               {whisky.ratedAt ?? ""}
             </span>
           </div>

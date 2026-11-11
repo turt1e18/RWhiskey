@@ -144,39 +144,39 @@ export default function AfterScreen({
         <article className="relative bg-[#e5d5b7] w-full max-w-md p-8 md:p-10 text-stone-900 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#4a3728] rounded-sm flex flex-col items-center">
           {/* Top Details */}
           <div className="w-full flex justify-between absolute top-4 px-8 md:px-10 left-0 right-0">
-            <span className="text-[9px] font-bold tracking-widest text-stone-700 italic">
+            <span className="text-xs font-bold tracking-widest text-stone-700 italic">
               No. {resultData?.oid ? String(resultData.oid).padStart(3, "0") : "..."}
             </span>
-            <span className="text-[9px] font-bold tracking-widest text-stone-700 italic">
+            <span className="text-xs font-bold tracking-widest text-stone-700 italic">
               {todayStr}
             </span>
           </div>
 
-          <div className="border border-[#4a3728] px-3 py-0.5 text-[10px] font-bold tracking-[0.2em] text-[#4a3728] uppercase mb-4 mt-2">오늘의 추천</div>
-          <div className="text-[10px] text-stone-700 tracking-wider font-medium mb-6">{resultData?.classification}</div>
+          <div className="border border-[#4a3728] px-3 py-0.5 text-xs font-bold tracking-[0.2em] text-[#4a3728] uppercase mb-4 mt-2">오늘의 추천</div>
+          <div className="text-xs text-stone-700 tracking-wider font-medium mb-6">{resultData?.classification}</div>
 
           <RecommendationSearchImage key={resultData?.image || "empty"} src={resultData?.image} name={resultData?.whiskyName || "위스키"} />
 
           <div className="flex flex-col items-center mb-4 leading-tight">
             <h1 className="font-serif font-bold text-xl md:text-2xl text-center text-black">{resultData?.whiskyName}</h1>
-            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-widest mt-1">{resultData?.whiskyNameEn}</span>
+            <span className="text-xs font-bold text-stone-500 uppercase tracking-widest mt-1">{resultData?.whiskyNameEn}</span>
           </div>
 
           <div className="flex flex-wrap justify-center gap-2 mb-8">
             {resultData?.featureTags.map((tag, idx) => (
-              <span key={idx} className="border border-[#4a3728]/30 rounded-full px-3 py-0.5 text-[11px] text-[#4a3728]">{tag}</span>
+              <span key={idx} className="border border-[#4a3728]/30 rounded-full px-3 py-0.5 text-xs text-[#4a3728]">{tag}</span>
             ))}
           </div>
 
           {/* Bartender's Consideration */}
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">바텐더의 고려 (풍미 선택 시 재추천)</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">바텐더의 고려 (풍미 선택 시 재추천)</h2>
             <div className="flex flex-wrap gap-2">
               {mainTasteTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => handleTasteTagClick(tag)}
-                  className="border border-[#4a3728]/30 rounded-full px-3 py-0.5 text-[11px] text-[#4a3728] hover:bg-[#4a3728]/10 transition-colors uppercase tracking-wider"
+                  className="border border-[#4a3728]/30 rounded-full px-3 py-0.5 text-xs text-[#4a3728] hover:bg-[#4a3728]/10 transition-colors uppercase tracking-wider"
                 >
                   {tag}
                 </button>
@@ -186,19 +186,19 @@ export default function AfterScreen({
 
           {/* Other sections */}
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">어울리는 안주</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">어울리는 안주</h2>
             <p className="text-sm leading-relaxed text-black font-medium">{resultData?.foodName}</p>
           </div>
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">추천 이유</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">추천 이유</h2>
             <p className="text-[13px] leading-relaxed text-black font-medium">{resultData?.pairingNote}</p>
           </div>
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-8 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">바텐더의 한마디</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">바텐더의 한마디</h2>
             <p className="text-[13px] leading-relaxed italic text-stone-800 font-medium">"{resultData?.bartenderWord}"</p>
           </div>
           <div className="w-full text-center pt-4 border-t border-[#4a3728]/25 mt-4">
-            <span className="text-[9px] tracking-widest font-bold text-stone-600 uppercase italic">R-Whiskey Selection</span>
+            <span className="text-xs tracking-widest font-bold text-stone-600 uppercase italic">R-Whiskey Selection</span>
           </div>
         </article>
       </main>

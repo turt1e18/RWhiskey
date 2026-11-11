@@ -45,15 +45,15 @@ export default function AfterScreen(props: AfterScreenProps) {
         <article className="relative bg-[#e5d5b7] w-full max-w-md p-8 md:p-10 text-stone-900 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#4a3728] rounded-sm flex flex-col items-center">
           {/* Top Details */}
           <div className="w-full flex justify-between absolute top-4 px-8 md:px-10 left-0 right-0">
-            <span className="text-[9px] font-bold tracking-widest text-stone-700 italic">
+            <span className="text-xs font-bold tracking-widest text-stone-700 italic">
               No. {resultData?.oid ? String(resultData.oid).padStart(3, "0") : "..."}
             </span>
-            <span className="text-[9px] font-bold tracking-widest text-stone-700 italic">
+            <span className="text-xs font-bold tracking-widest text-stone-700 italic">
               {todayStr}
             </span>
           </div>
 
-          <div className="border border-[#4a3728] px-3 py-0.5 text-[10px] font-bold tracking-[0.2em] text-[#4a3728] uppercase mb-10 mt-2">오늘의 추천</div>
+          <div className="border border-[#4a3728] px-3 py-0.5 text-xs font-bold tracking-[0.2em] text-[#4a3728] uppercase mb-10 mt-2">오늘의 추천</div>
 
           <RecommendationSearchImage key={resultData?.images?.[0] || "empty"} src={resultData?.images?.[0]} name={resultData?.cocktailName || "칵테일"} />
 
@@ -63,25 +63,25 @@ export default function AfterScreen(props: AfterScreenProps) {
 
           {/* 1. 사용된 기주 Section */}
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">🥃 사용된 기주</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">🥃 사용된 기주</h2>
             <p className="text-[13px] leading-relaxed text-black font-medium">{resultData?.baseSpirit}</p>
           </div>
 
           {/* 2. 칵테일 도수 Section */}
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">📉 칵테일 도수</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">📉 칵테일 도수</h2>
             <p className="text-[13px] leading-relaxed text-black font-medium">{resultData?.abv}</p>
           </div>
 
           {/* 3. 추천 안주 Section */}
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">🥨 추천 안주</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">🥨 추천 안주</h2>
             <p className="text-[13px] leading-relaxed text-black font-medium">{resultData?.foodName}</p>
           </div>
 
           {/* 4. 바텐더의 추천 Section */}
           <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left">
-            <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">💡 바텐더의 추천</h2>
+            <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">💡 바텐더의 추천</h2>
             <p className="text-[13px] leading-relaxed text-black font-medium">{resultData?.pairingNote}</p>
           </div>
 
@@ -90,7 +90,7 @@ export default function AfterScreen(props: AfterScreenProps) {
             <>
               {/* 5. 필요한 재료 Section */}
               <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left animate-in fade-in slide-in-from-top-2 duration-500">
-                <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">📝 필요한 재료</h2>
+                <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">📝 필요한 재료</h2>
                 <ul className="list-disc list-inside space-y-1">
                   {resultData?.checkList?.map((item, idx) => (
                     <li key={idx} className="text-[12px] text-black font-medium">{item}</li>
@@ -100,7 +100,7 @@ export default function AfterScreen(props: AfterScreenProps) {
 
               {/* 6. 조주 방법 Section */}
               <div className="w-full border-t border-[#4a3728]/25 pt-4 mb-8 text-left animate-in fade-in slide-in-from-top-2 duration-700">
-                <h2 className="text-[11px] font-bold text-stone-800 uppercase tracking-widest mb-2">🪜 조주 방법</h2>
+                <h2 className="text-xs font-bold text-stone-800 uppercase tracking-widest mb-2">🪜 조주 방법</h2>
                 <div className="space-y-2">
                   {resultData?.method?.map((step, idx) => (
                     <div key={idx} className="flex gap-2 text-[12px] text-black font-medium">
@@ -114,7 +114,7 @@ export default function AfterScreen(props: AfterScreenProps) {
           )}
 
           <div className="w-full text-center pt-4 border-t border-[#4a3728]/25 mt-4">
-            <span className="text-[9px] tracking-widest font-bold text-stone-600 uppercase italic">R-Whiskey Selection</span>
+            <span className="text-xs tracking-widest font-bold text-stone-600 uppercase italic">R-Whiskey Selection</span>
           </div>
         </article>
       </main>

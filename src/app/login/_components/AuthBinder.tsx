@@ -28,7 +28,7 @@ export default function AuthBinder() {
       {/* Back to Home Button */}
       <button
         onClick={() => router.push("/main")}
-        className="absolute top-8 left-8 flex items-center gap-2 text-white/60 hover:text-white transition-colors duration-200 group"
+        className="absolute top-8 left-8 flex min-h-11 items-center gap-2 text-white/60 hover:text-white transition-colors duration-200 group"
       >
         <span className="text-2xl group-hover:-translate-x-1 transition-transform duration-200">←</span>
         <span className="font-serif text-sm tracking-widest uppercase">Home</span>

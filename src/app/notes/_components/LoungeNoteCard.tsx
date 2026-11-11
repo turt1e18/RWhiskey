@@ -69,7 +69,7 @@ export const LoungeNoteCard = ({ note, isLiked, index, onToggleScrap }: LoungeNo
         )}
         
         <div className="mt-5 flex items-center justify-between border-t border-dotted border-[#3e2616]/30 pt-3">
-          <span className="text-[10px] text-[#3e2616]/50 font-serif">RECOMMEND</span>
+          <span className="text-xs text-[#3e2616]/50 font-serif">RECOMMEND</span>
           <GlencairnButton
             liked={isLiked}
             count={note.likes + (isLiked ? 1 : 0)}

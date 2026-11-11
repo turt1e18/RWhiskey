@@ -32,7 +32,7 @@ export default function BeforeScreen(props: any) {
     imRich,
     setImRich
   } = props;
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, isInitialized } = useAuthStore();
   const { selectedMainTag, resetMainTag } = useRecommendationStore();
   const router = useRouter();
 
@@ -64,9 +64,7 @@ export default function BeforeScreen(props: any) {
 
   async function callCombinedAPI() {
     if (!isAuthenticated || !user) {
-      alert("로그인이 필요한 서비스입니다. 로그인 후 이용해주세요.");
-      router.push("/login");
-      return;
+      return; // 비로그인은 제출 버튼이 막혀 있다(아래 안내와 로그인 링크).
     }
 
     if (
@@ -183,7 +181,8 @@ export default function BeforeScreen(props: any) {
                     <button
                       key={opt}
                       onClick={() => setWeather(opt)}
-                      className={`px-3 py-1 rounded-full text-[13px] transition-all border ${
+                      aria-pressed={weather === opt}
+                      className={`inline-flex min-h-11 items-center px-3 py-1 rounded-full text-[13px] transition-all border ${
                         weather === opt ? "bg-[#4a3728]/10 border-[#2d2017] font-bold text-[#2d2017]" : "bg-white/20 border-[#4a3728]/30 text-stone-700 hover:border-[#4a3728]/60"
                       }`}
                     >
@@ -205,7 +204,8 @@ export default function BeforeScreen(props: any) {
                     <button
                       key={opt}
                       onClick={() => setMood(opt)}
-                      className={`px-3 py-1 rounded-full text-[13px] transition-all border ${
+                      aria-pressed={mood === opt}
+                      className={`inline-flex min-h-11 items-center px-3 py-1 rounded-full text-[13px] transition-all border ${
                         mood === opt ? "bg-[#4a3728]/10 border-[#2d2017] font-bold text-[#2d2017]" : "bg-white/20 border-[#4a3728]/30 text-stone-700 hover:border-[#4a3728]/60"
                       }`}
                     >
@@ -227,7 +227,8 @@ export default function BeforeScreen(props: any) {
                     <button
                       key={opt}
                       onClick={() => setStrength(opt)}
-                      className={`px-3 py-1 rounded-full text-[13px] transition-all border ${
+                      aria-pressed={strength === opt}
+                      className={`inline-flex min-h-11 items-center px-3 py-1 rounded-full text-[13px] transition-all border ${
                         strength === opt ? "bg-[#4a3728]/10 border-[#2d2017] font-bold text-[#2d2017]" : "bg-white/20 border-[#4a3728]/30 text-stone-700 hover:border-[#4a3728]/60"
                       }`}
                     >
@@ -271,9 +272,13 @@ export default function BeforeScreen(props: any) {
               </div>
             </div>
 
+            {!isAuthenticated && isInitialized && (
+              <p role="status" className="mt-2 text-sm text-stone-700">로그인하면 추천을 받을 수 있어요. <Link href="/login" className="inline-flex min-h-11 items-center font-semibold underline">로그인하러 가기</Link></p>
+            )}
             <button
               onClick={callCombinedAPI}
-              className="w-full bg-[#111] text-white py-3 text-base font-bold tracking-widest hover:opacity-90 transition-opacity active:scale-[0.98] mt-2"
+              disabled={!isAuthenticated || !isInitialized}
+              className="min-h-11 w-full bg-[#111] text-white py-3 text-base font-bold tracking-widest hover:opacity-90 transition-opacity active:scale-[0.98] mt-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
               위스키 추천 받기
             </button>

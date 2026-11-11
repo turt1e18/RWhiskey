@@ -145,11 +145,11 @@ export default function SignupForm({ onBack }: SignupFormProps) {
           <p className="text-xs font-bold text-stone-800">베타 테스트 안내 사항</p>
         </div>
         <ul className="flex flex-col gap-1.5">
-          <li className="text-[11px] text-stone-600 leading-relaxed flex gap-1.5">
+          <li className="text-xs text-stone-600 leading-relaxed flex gap-1.5">
             <span className="flex-shrink-0">•</span>
             <span>베타 테스트 중이라서 비밀번호의 양식이 간단하게 8자리 이상입니다.</span>
           </li>
-          <li className="text-[11px] text-stone-600 leading-relaxed flex gap-1.5">
+          <li className="text-xs text-stone-600 leading-relaxed flex gap-1.5">
             <span className="flex-shrink-0">•</span>
             <span>베타 테스트 시 업데이트 마다 회원가입 정보를 초기화 할 가능성이 존재합니다. 초기화 시 테스터 분들에게 미리 알려드립니다. 감사합니다.</span>
           </li>
@@ -252,7 +252,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
             autoComplete="new-password"
             required
           />
-          <p className="text-[10px] text-stone-500 mt-1 pl-1">8자리 이상 등록해 주세요</p>
+          <p className="text-xs text-stone-500 mt-1 pl-1">8자리 이상 등록해 주세요</p>
         </div>
 
         {/* Privacy Policy Agreements */}
@@ -273,7 +273,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
                 [필수] 개인정보 수집 및 이용 동의
               </label>
             </div>
-            <div className="h-24 overflow-y-auto p-2 text-[11px] bg-stone-100/50 border border-stone-200 rounded leading-relaxed text-stone-600 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-stone-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <div className="h-24 overflow-y-auto p-2 text-xs bg-stone-100/50 border border-stone-200 rounded leading-relaxed text-stone-600 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-stone-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               RWhiskey은(는) 정보통신망 이용촉진 및 정보보호 등에 관한 법률 및 개인정보보호법에 따라 원활한 서비스 제공을 위해 아래와 같이 최소한의 개인정보를 수집 및 이용합니다.
               <br /><br />
               1. 수집 및 이용 목적<br />
@@ -306,7 +306,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
                 [선택] 개인정보 수집 및 이용 동의
               </label>
             </div>
-            <div className="h-24 overflow-y-auto p-2 text-[11px] bg-stone-100/50 border border-stone-200 rounded leading-relaxed text-stone-600 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-stone-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <div className="h-24 overflow-y-auto p-2 text-xs bg-stone-100/50 border border-stone-200 rounded leading-relaxed text-stone-600 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-stone-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               RWhiskey은(는) 이용자에게 맞춤형 혜택과 큐레이션 서비스를 제공하기 위해 아래와 같이 선택적 개인정보를 수집 및 이용합니다.
               <br /><br />
               1. 수집 및 이용 목적<br />

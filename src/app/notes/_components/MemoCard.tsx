@@ -20,7 +20,7 @@ export const MemoCard = ({ whisky }: { whisky: TastingNoteEntryInterface }) => {
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-28 bg-[#d4af37]/40 border border-[#d4af37]/20 shadow-sm rotate-[-2deg]" />
 
         <header className="border-b-2 border-double border-[#3e2616]/40 pb-5">
-          <p className="text-[11px] uppercase tracking-[0.4em] text-[#3e2616]/60 font-bold mb-1">
+          <p className="text-xs uppercase tracking-[0.4em] text-[#3e2616]/60 font-bold mb-1">
             Order Sheet Detail
           </p>
           <h2 className="font-serif text-2xl md:text-3xl text-[#3e2616] font-black leading-tight">
@@ -76,7 +76,7 @@ export const MemoCard = ({ whisky }: { whisky: TastingNoteEntryInterface }) => {
                 <Quote className="h-5 w-5 fill-current opacity-30" />
               </span>
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-[#3e2616]/60 font-black mb-1">
+                <p className="text-xs uppercase tracking-widest text-[#3e2616]/60 font-black mb-1">
                   Bartender&apos;s Word
                 </p>
                 <p className="text-xs md:text-sm leading-relaxed italic font-serif font-medium text-[#3e2616]/80 whitespace-pre-line">
@@ -87,7 +87,7 @@ export const MemoCard = ({ whisky }: { whisky: TastingNoteEntryInterface }) => {
           </div>
         </div>
 
-        <p className="mt-auto pt-4 text-[#3e2616]/40 text-[10px] uppercase tracking-[0.4em] text-center border-t border-dotted border-[#3e2616]/20">
+        <p className="mt-auto pt-4 text-[#3e2616]/40 text-xs uppercase tracking-[0.4em] text-center border-t border-dotted border-[#3e2616]/20">
           “Memory stays with the Scent”
         </p>
       </div>
@@ -111,7 +111,7 @@ const Row = ({
       {icon}
     </span>
     <div className="min-w-0 flex-1">
-      <p className="text-[10px] uppercase tracking-widest text-[#3e2616]/60 font-black mb-0.5">
+      <p className="text-xs uppercase tracking-widest text-[#3e2616]/60 font-black mb-0.5">
         {label}
       </p>
       <p className="text-sm md:text-base leading-snug font-normal text-[#3e2616] truncate md:whitespace-normal">

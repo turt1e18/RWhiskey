@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import { useDialogFocus } from "@/lib/useDialogFocus";
 
 export default function NoticeModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,12 +15,18 @@ export default function NoticeModal() {
   const handleClose = () => {
     setIsOpen(false);
   };
+  const dialogRef = useDialogFocus<HTMLDivElement>(isOpen, handleClose);
 
   return (
+    <MotionConfig reducedMotion="user">
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notice-modal-title"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -29,7 +36,7 @@ export default function NoticeModal() {
             <div className="p-6 md:p-8">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-2xl">📢</span>
-                <h2 className="text-xl md:text-2xl font-bold text-[#ffb247]">
+                <h2 id="notice-modal-title" className="text-xl md:text-2xl font-bold text-[#ffb247]">
                   안내 말씀
                 </h2>
               </div>
@@ -60,5 +67,6 @@ export default function NoticeModal() {
         </div>
       )}
     </AnimatePresence>
+    </MotionConfig>
   );
 }

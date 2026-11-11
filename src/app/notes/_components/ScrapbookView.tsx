@@ -57,7 +57,7 @@ const ReadOnlyStars = ({ value, size = 18 }: { value?: number; size?: number }) 
         const ratio = remain >= 1 ? 1 : remain >= 0.5 ? 0.5 : 0;
         return <StarIcon key={i} size={size} fillRatio={ratio} />;
       })}
-      <span className="ml-2 text-[11px] text-[#3e2616]/60 font-serif">{value.toFixed(1)}</span>
+      <span className="ml-2 text-xs text-[#3e2616]/60 font-serif">{value.toFixed(1)}</span>
     </span>
   );
 };
@@ -165,7 +165,7 @@ export const ScrapbookView = ({ notes }: Props) => {
                     <p className={`font-serif text-base text-[#3e2616] truncate ${active ? "font-bold" : ""}`}>
                       {n.whiskyName || (n as any).whiskeyName || (n as any).drinkName || (n as any).nameKo || n.cocktailName || "Unknown Item"}
                     </p>
-                    <p className="text-[11px] text-[#3e2616]/50 mt-0.5">
+                    <p className="text-xs text-[#3e2616]/50 mt-0.5">
                       {n.author} · {n.createdAt ?? "—"}
                     </p>
                   </div>
@@ -197,7 +197,7 @@ export const ScrapbookView = ({ notes }: Props) => {
               className="h-full flex flex-col"
             >
               <header className="mb-5 border-b border-dotted border-[#3e2616]/40 pb-4">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-[#3e2616]/50">
+                <p className="text-xs uppercase tracking-[0.3em] text-[#3e2616]/50">
                   Scrapped Note · {selected.author}
                 </p>
                 <h2 className="font-serif text-4xl text-[#3e2616] mt-2 leading-tight">
@@ -226,7 +226,7 @@ export const ScrapbookView = ({ notes }: Props) => {
                   </>
                 ) : (
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-[#3e2616]/50 mb-3 font-serif">
+                    <p className="text-xs uppercase tracking-[0.25em] text-[#3e2616]/50 mb-3 font-serif">
                       시음 메모
                     </p>
                     <p className="text-base leading-relaxed whitespace-pre-line">{selected.memo}</p>
@@ -235,7 +235,7 @@ export const ScrapbookView = ({ notes }: Props) => {
 
                 {selected.rating != null && (
                   <div className="pt-3 border-t border-dotted border-[#3e2616]/30">
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-[#3e2616]/50 mb-2 font-serif">
+                    <p className="text-xs uppercase tracking-[0.25em] text-[#3e2616]/50 mb-2 font-serif">
                       총점
                     </p>
                     <ReadOnlyStars value={selected.rating} size={18} />
@@ -285,7 +285,7 @@ const DetailField = ({
   text?: string;
 }) => (
   <div>
-    <p className="text-[11px] uppercase tracking-[0.25em] text-[#3e2616]/50 font-serif mb-2">{label}</p>
+    <p className="text-xs uppercase tracking-[0.25em] text-[#3e2616]/50 font-serif mb-2">{label}</p>
     <p className="text-base leading-relaxed text-[#3e2616]/90">
       {text || <span className="text-[#3e2616]/40 italic">기록 없음</span>}
     </p>
