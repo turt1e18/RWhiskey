@@ -40,7 +40,7 @@ export default function VerifiedNotesList({ onCount, showEmpty = true }: { onCou
     <ul className="mt-3 max-h-56 overflow-y-auto overscroll-contain divide-y divide-[#4a3728]/15 pr-2">
       {records.map((record) => <li key={record.id}><Link href={`/notes/verified/${record.id}`} className="flex min-h-14 flex-wrap items-center justify-between gap-2 py-3 text-sm">
         <span className="min-w-0 break-words">{record.selected?.displayName ?? `이전 추천 #${record.id}`}<span className="ml-2 text-xs text-stone-600">{record.selected?.edition}</span>
-          <span className="mt-1 block text-[11px] text-stone-600">{levels.get(record.id)==='V3_CERTIFIED' ? '병입 검증 후 저장한 추천' : levels.get(record.id)==='V2_REVIEWED' ? '기존 검수 방식으로 저장한 추천' : '당시 저장한 추천 기록'} · 현재 재검증 상태와 다를 수 있어요</span></span>
+          <span className="mt-1 block text-xs text-stone-600">{levels.get(record.id)==='V3_CERTIFIED' ? '병입 검증 후 저장한 추천' : levels.get(record.id)==='V2_REVIEWED' ? '기존 검수 방식으로 저장한 추천' : '당시 저장한 추천 기록'} · 현재 재검증 상태와 다를 수 있어요</span></span>
         <span className="text-xs font-semibold">{byId.has(record.id) ? "시음 기록 보기" : "시음 기록 남기기"} →</span></Link></li>)}
       {older.map((note) => <li key={note.recommendationId}><Link href={`/notes/verified/${note.recommendationId}`} className="flex min-h-14 items-center justify-between gap-2 py-3 text-sm">
         <span>{note.displayName}</span><span className="text-xs">시음 기록 보기 →</span></Link></li>)}

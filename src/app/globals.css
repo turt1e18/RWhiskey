@@ -110,6 +110,7 @@ body {
 
 /* ── Stamp/Ticket button style ────────────────────────– */
 .btn-stamp {
+  min-height: 2.75rem;
   font-family: "Cormorant Garamond", "Pretendard", sans-serif;
   background: transparent;
   color: var(--ink-dark);
@@ -135,4 +136,14 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 500;
+}
+
+/* 움직임을 줄이도록 설정한 사용자에게는 애니메이션·전환을 사실상 끈다. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

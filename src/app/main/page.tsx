@@ -284,7 +284,7 @@ export default function MainScreen() {
                   내 경험 수준과 선호하는 향에 맞는 위스키를 찾아드립니다.
                 </p>
                 <div className="pt-4 border-t border-[#ffb247]/10">
-                  <p className="text-[0.6875rem] text-[#ffb247]/70 uppercase tracking-widest mb-1">
+                  <p className="text-xs text-[#ffb247]/70 uppercase tracking-widest mb-1">
                     Example
                   </p>
                   <p className="text-[0.8125rem] md:text-[0.875rem] text-slate-300 italic">
@@ -305,7 +305,7 @@ export default function MainScreen() {
                   분위기에 맞는 칵테일과 레시피를 제안합니다.
                 </p>
                 <div className="pt-4 border-t border-white/5">
-                  <p className="text-[0.6875rem] text-[#ffb247]/70 uppercase tracking-widest mb-1">
+                  <p className="text-xs text-[#ffb247]/70 uppercase tracking-widest mb-1">
                     Example
                   </p>
                   <p className="text-[0.8125rem] md:text-[0.875rem] text-slate-300 italic">
@@ -431,10 +431,10 @@ export default function MainScreen() {
   "
                 >
                   <div className="w-full flex justify-between absolute top-[0.625rem] md:top-[0.75rem] px-[0.875rem] md:px-[1rem] lg:px-[1.5rem] left-0 right-0">
-                    <span className="text-[0.4375rem] md:text-[0.5rem] lg:text-[0.5625rem] font-bold tracking-[0.15em] text-stone-700 italic">
+                    <span className="text-xs md:text-xs lg:text-xs font-bold tracking-[0.15em] text-stone-700 italic">
                       No. 001
                     </span>
-                    <span className="text-[0.4375rem] md:text-[0.5rem] lg:text-[0.5625rem] font-bold tracking-[0.15em] text-stone-700 italic">
+                    <span className="text-xs md:text-xs lg:text-xs font-bold tracking-[0.15em] text-stone-700 italic">
                       2024/05/20
                     </span>
                   </div>
@@ -444,7 +444,7 @@ export default function MainScreen() {
       uppercase mt-[0.375rem] mb-[0.625rem] md:mb-[0.75rem] lg:mb-[0.875rem]
       border border-[#4a3728]
       px-[0.625rem] py-[0.125rem]
-      text-[0.4375rem] md:text-[0.5rem] lg:text-[0.625rem]
+      text-xs md:text-xs lg:text-xs
       font-bold tracking-[0.2em]
       text-[#4a3728]
     "
@@ -452,7 +452,7 @@ export default function MainScreen() {
                     오늘의 추천
                   </div>
 
-                  <div className="text-[0.4375rem] md:text-[0.5rem] lg:text-[0.625rem] text-stone-700 tracking-[0.08em] font-medium mb-[0.625rem] md:mb-[0.875rem] lg:mb-[1rem] text-center">
+                  <div className="text-xs md:text-xs lg:text-xs text-stone-700 tracking-[0.08em] font-medium mb-[0.625rem] md:mb-[0.875rem] lg:mb-[1rem] text-center">
                     싱글 몰트 / 아일라 위스키 / 스카치 위스키
                   </div>
 
@@ -477,7 +477,7 @@ export default function MainScreen() {
           rounded-full
           px-[0.375rem] md:px-[0.5rem] lg:px-[0.625rem]
           py-[0.125rem]
-          text-[0.5rem] md:text-[0.5625rem] lg:text-[0.6875rem]
+          text-xs md:text-xs lg:text-xs
           text-[#4a3728]
           bg-transparent
         "
@@ -489,10 +489,10 @@ export default function MainScreen() {
 
                   <div className="w-full">
                     <div className="border-t border-[rgba(74,55,40,0.25)] my-[0.375rem] md:my-[0.5rem] lg:my-[0.625rem]" />
-                    <h2 className="text-[0.5rem] md:text-[0.5625rem] lg:text-[0.6875rem] font-bold text-stone-800 uppercase tracking-[0.14em] mb-[0.1875rem] md:mb-[0.25rem] lg:mb-[0.375rem]">
+                    <h2 className="text-xs md:text-xs lg:text-xs font-bold text-stone-800 uppercase tracking-[0.14em] mb-[0.1875rem] md:mb-[0.25rem] lg:mb-[0.375rem]">
                       어울리는 안주
                     </h2>
-                    <p className="text-[0.5625rem] md:text-[0.625rem] lg:text-[0.75rem] leading-relaxed text-black font-medium">
+                    <p className="text-xs md:text-xs lg:text-[0.75rem] leading-relaxed text-black font-medium">
                       진한 풍미의 블루 치즈나 훈제 연어, 혹은 다크 초콜릿 한
                       조각.
                     </p>
@@ -500,10 +500,10 @@ export default function MainScreen() {
 
                   <div className="w-full">
                     <div className="border-t border-[rgba(74,55,40,0.25)] my-[0.375rem] md:my-[0.5rem] lg:my-[0.625rem]" />
-                    <h2 className="text-[0.5rem] md:text-[0.5625rem] lg:text-[0.6875rem] font-bold text-stone-800 uppercase tracking-[0.14em] mb-[0.1875rem] md:mb-[0.25rem] lg:mb-[0.375rem]">
+                    <h2 className="text-xs md:text-xs lg:text-xs font-bold text-stone-800 uppercase tracking-[0.14em] mb-[0.1875rem] md:mb-[0.25rem] lg:mb-[0.375rem]">
                       추천 이유
                     </h2>
-                    <p className="text-[0.5625rem] md:text-[0.625rem] lg:text-[0.75rem] leading-relaxed text-black font-medium">
+                    <p className="text-xs md:text-xs lg:text-[0.75rem] leading-relaxed text-black font-medium">
                       강렬한 피트 향 뒤에 숨겨진 말린 과일의 달콤함과 긴 여운이
                       매력적입니다. 오늘처럼 차분한 분위기에 깊은 대화를
                       나누거나 혼자만의 사색에 잠기기에 더할 나위 없는
@@ -513,10 +513,10 @@ export default function MainScreen() {
 
                   <div className="w-full">
                     <div className="border-t border-[rgba(74,55,40,0.25)] my-[0.375rem] md:my-[0.5rem] lg:my-[0.625rem]" />
-                    <h2 className="text-[0.5rem] md:text-[0.5625rem] lg:text-[0.6875rem] font-bold text-stone-800 uppercase tracking-[0.14em] mb-[0.1875rem] md:mb-[0.25rem] lg:mb-[0.375rem]">
+                    <h2 className="text-xs md:text-xs lg:text-xs font-bold text-stone-800 uppercase tracking-[0.14em] mb-[0.1875rem] md:mb-[0.25rem] lg:mb-[0.375rem]">
                       바텐더의 한마디
                     </h2>
-                    <p className="text-[0.5625rem] md:text-[0.625rem] lg:text-[0.75rem] leading-relaxed italic text-stone-800 font-medium">
+                    <p className="text-xs md:text-xs lg:text-[0.75rem] leading-relaxed italic text-stone-800 font-medium">
                       &quot;천천히, 시간을 두고 즐겨보세요. 잔 속에서 피어나는 연기가
                       당신의 밤을 지켜줄 것입니다.&quot;
                     </p>
@@ -524,7 +524,7 @@ export default function MainScreen() {
 
                   <div className="mt-[0.625rem] md:mt-[0.875rem] lg:mt-[1rem] w-full text-center">
                     <div className="border-t border-[rgba(74,55,40,0.25)] my-[0.375rem] md:my-[0.5rem] lg:my-[0.625rem]" />
-                    <span className="text-[0.4375rem] md:text-[0.5rem] lg:text-[0.5625rem] tracking-[0.15em] font-bold text-stone-600 uppercase italic">
+                    <span className="text-xs md:text-xs lg:text-xs tracking-[0.15em] font-bold text-stone-600 uppercase italic">
                       R-Whiskey Selection
                     </span>
                   </div>
@@ -535,7 +535,7 @@ export default function MainScreen() {
       ========================= */}
               <div className="flex flex-col justify-center h-full min-h-0">
                 <div className="mb-[0.875rem] md:mb-[0.875rem] lg:mb-[1.5rem] text-center md:text-left">
-                  <p className="text-[#ffb247]/80 text-[0.6875rem] md:text-[0.6875rem] lg:text-[0.875rem] uppercase tracking-[0.16em] md:tracking-[0.14em] lg:tracking-[0.2em] mb-[0.375rem] md:mb-[0.375rem] lg:mb-[0.5rem]">
+                  <p className="text-[#ffb247]/80 text-xs md:text-xs lg:text-[0.875rem] uppercase tracking-[0.16em] md:tracking-[0.14em] lg:tracking-[0.2em] mb-[0.375rem] md:mb-[0.375rem] lg:mb-[0.5rem]">
                     Result Preview
                   </p>
 
@@ -545,7 +545,7 @@ export default function MainScreen() {
                     추천의 핵심 정보를 바로 확인할 수 있습니다
                   </h4>
 
-                  <p className="text-white/70 leading-relaxed text-[0.6875rem] md:text-[0.75rem] lg:text-[1rem]">
+                  <p className="text-white/70 leading-relaxed text-xs md:text-[0.75rem] lg:text-[1rem]">
                     결과 화면에서는 단순히 술 이름만 보여주는 것이 아니라,
                     추천된 이유와 특징, 필요한 정보들을 함께 제공합니다.
                   </p>
@@ -553,38 +553,38 @@ export default function MainScreen() {
 
                 <div className="grid grid-cols-2 gap-[0.625rem] md:gap-[0.625rem] lg:gap-[1rem]">
                   <div className="rounded-[0.875rem] md:rounded-[0.875rem] lg:rounded-[1rem] border border-white/10 bg-[#1a140b]/40 p-[0.625rem] md:p-[0.75rem] lg:p-[1.25rem]">
-                    <h5 className="text-white font-semibold mb-[0.25rem] text-[0.6875rem] md:text-[0.75rem] lg:text-[1rem]">
+                    <h5 className="text-white font-semibold mb-[0.25rem] text-xs md:text-[0.75rem] lg:text-[1rem]">
                       추천 정보 확인
                     </h5>
-                    <p className="text-white/65 text-[0.5625rem] md:text-[0.625rem] lg:text-[0.875rem] leading-relaxed">
+                    <p className="text-white/65 text-xs md:text-xs lg:text-[0.875rem] leading-relaxed">
                       추천된 위스키나 칵테일의 이름과 핵심 특징을 확인할 수
                       있습니다.
                     </p>
                   </div>
 
                   <div className="rounded-[0.875rem] md:rounded-[0.875rem] lg:rounded-[1rem] border border-white/10 bg-[#1a140b]/40 p-[0.625rem] md:p-[0.75rem] lg:p-[1.25rem]">
-                    <h5 className="text-white font-semibold mb-[0.25rem] text-[0.6875rem] md:text-[0.75rem] lg:text-[1rem]">
+                    <h5 className="text-white font-semibold mb-[0.25rem] text-xs md:text-[0.75rem] lg:text-[1rem]">
                       재료 / 풍미 확인
                     </h5>
-                    <p className="text-white/65 text-[0.5625rem] md:text-[0.625rem] lg:text-[0.875rem] leading-relaxed">
+                    <p className="text-white/65 text-xs md:text-xs lg:text-[0.875rem] leading-relaxed">
                       칵테일은 재료를, 위스키는 풍미 포인트를 볼 수 있습니다.
                     </p>
                   </div>
 
                   <div className="rounded-[0.875rem] md:rounded-[0.875rem] lg:rounded-[1rem] border border-white/10 bg-[#1a140b]/40 p-[0.625rem] md:p-[0.75rem] lg:p-[1.25rem]">
-                    <h5 className="text-white font-semibold mb-[0.25rem] text-[0.6875rem] md:text-[0.75rem] lg:text-[1rem]">
+                    <h5 className="text-white font-semibold mb-[0.25rem] text-xs md:text-[0.75rem] lg:text-[1rem]">
                       추천 이유 확인
                     </h5>
-                    <p className="text-white/65 text-[0.5625rem] md:text-[0.625rem] lg:text-[0.875rem] leading-relaxed">
+                    <p className="text-white/65 text-xs md:text-xs lg:text-[0.875rem] leading-relaxed">
                       상황과 분위기에 맞춰 왜 이 결과가 나왔는지 설명합니다.
                     </p>
                   </div>
 
                   <div className="rounded-[0.875rem] md:rounded-[0.875rem] lg:rounded-[1rem] border border-white/10 bg-[#1a140b]/40 p-[0.625rem] md:p-[0.75rem] lg:p-[1.25rem]">
-                    <h5 className="text-white font-semibold mb-[0.25rem] text-[0.6875rem] md:text-[0.75rem] lg:text-[1rem]">
+                    <h5 className="text-white font-semibold mb-[0.25rem] text-xs md:text-[0.75rem] lg:text-[1rem]">
                       다음 행동 연결
                     </h5>
-                    <p className="text-white/65 text-[0.5625rem] md:text-[0.625rem] lg:text-[0.875rem] leading-relaxed">
+                    <p className="text-white/65 text-xs md:text-xs lg:text-[0.875rem] leading-relaxed">
                       다시 추천받기나 상세 확인으로 자연스럽게 이어집니다.
                     </p>
                   </div>

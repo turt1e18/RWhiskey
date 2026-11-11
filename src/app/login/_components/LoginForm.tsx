@@ -110,7 +110,7 @@ export default function LoginForm({ onSignup, onReset }: LoginFormProps) {
           <button
             type="button"
             onClick={onReset}
-            className="text-xs underline underline-offset-2 transition-colors duration-150"
+            className="inline-flex min-h-11 items-center text-xs underline underline-offset-2 transition-colors duration-150"
             style={{ color: "#5C4A39" }}
           >
             암호를 잊으셨나요?
@@ -138,7 +138,7 @@ export default function LoginForm({ onSignup, onReset }: LoginFormProps) {
           <button
             type="button"
             onClick={onSignup}
-            className="underline underline-offset-2 transition-colors duration-150 font-semibold"
+            className="inline-flex min-h-11 items-center underline underline-offset-2 transition-colors duration-150 font-semibold"
             style={{ color: "#3E2A1E" }}
           >
             회원 명부에 등록하기

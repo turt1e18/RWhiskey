@@ -117,7 +117,7 @@ export const HelpGuide = ({ parentView }: Props) => {
             />
           </div>
 
-          <div className="mt-10 pt-5 border-t border-[#3e2616]/20 text-[11px] uppercase tracking-[0.4em] text-[#3e2616]/50 text-center">
+          <div className="mt-10 pt-5 border-t border-[#3e2616]/20 text-xs uppercase tracking-[0.4em] text-[#3e2616]/50 text-center">
             — Sláinte —
           </div>
         </div>
@@ -139,7 +139,7 @@ const Section = ({
 }) => (
   <section>
     <div className="flex items-baseline gap-3 mb-2">
-      <span className="text-[11px] tracking-[0.3em] text-[#3e2616]/50">{index}</span>
+      <span className="text-xs tracking-[0.3em] text-[#3e2616]/50">{index}</span>
       <h3 className="font-serif text-xl text-[#3e2616]">{title}</h3>
     </div>
     <div className="pl-9 border-l border-dashed border-[#3e2616]/20">

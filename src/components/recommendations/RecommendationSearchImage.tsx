@@ -39,7 +39,7 @@ function ImageAttempt({src,fallbackSrc,name,sourceUrl,sourceTitle,showSource=tru
         className={"object-contain p-2 pb-7 transition-opacity duration-300 " + (status === "loaded" ? "opacity-100" : "opacity-0")}
         key={url} onLoad={() => {if(currentUrl.current===url && Date.now()-started.current<8000)setStatus("loaded");}}
         onError={()=>{if(currentUrl.current===url)failed();}} />
-      {status === "loaded" && <figcaption className="absolute inset-x-2 bottom-1 text-center text-[11px] leading-5 text-stone-700">
+      {status === "loaded" && <figcaption className="absolute inset-x-2 bottom-1 text-center text-xs leading-5 text-stone-700">
         {sourceUrl?'검색 참고 사진':'참고 이미지'}{showSource && sourceUrl && <> · <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline" title={sourceTitle}>사진 출처</a></>}
       </figcaption>}
     </> : <div role="status" className="px-5 text-center text-sm leading-relaxed text-stone-700">

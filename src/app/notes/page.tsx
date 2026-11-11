@@ -387,7 +387,7 @@ const LeatherIntro = () => (
         <p>이곳에 그날의 기억이 펼쳐집니다.</p>
       </div>
     </div>
-    <div className="text-[10px] uppercase tracking-[0.5em] opacity-50">
+    <div className="text-xs uppercase tracking-[0.5em] opacity-50">
       Est. 2026 · Vol. 1
     </div>
   </div>

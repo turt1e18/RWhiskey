@@ -1,5 +1,6 @@
 "use client";
 import { recommendationErrorMessage } from "@/lib/userFacingError";
+import { useDialogFocus } from "@/lib/useDialogFocus";
 import { useState, useMemo, Dispatch, SetStateAction } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { CocktailRecommendationRequest, ExperienceLevel } from "@/type/CocktailInterface";
@@ -178,6 +179,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
     }
   };
 
+  // Esc는 안내만 닫는다(로그인으로 보내지 않는다).
+  const dialogRef = useDialogFocus<HTMLDivElement>(modalConfig.show, () => setModalConfig(prev => ({ ...prev, show: false })));
+
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center w-screen h-[70vh]">
@@ -191,11 +195,11 @@ export default function BeforeScreen(props: BeforeScreenProps) {
       {/* 범용 안내 모달 */}
       {modalConfig.show && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-sm bg-[#2d2417] border border-[#ffb247]/30 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+          <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="cocktail-modal-title" className="w-full max-w-sm bg-[#2d2417] border border-[#ffb247]/30 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-6 md:p-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <span className="text-2xl">📢</span>
-                <h2 className="text-xl font-bold text-[#ffb247]">{modalConfig.title}</h2>
+                <h2 id="cocktail-modal-title" className="text-xl font-bold text-[#ffb247]">{modalConfig.title}</h2>
               </div>
 
               <div className="space-y-4 text-white/80 leading-relaxed text-[0.9375rem] font-light">
@@ -267,12 +271,12 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               <div className="text-base font-kyobo border-b-2 border-stone-900 pb-0.5 leading-none text-stone-900 font-bold">No. 001</div>
               <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
                 <span className="w-3 md:w-5 h-[1px] bg-stone-400" />
-                <div className="text-[11px] md:text-[13px] font-bold text-stone-800 tracking-[0.2em] text-center whitespace-nowrap uppercase">
+                <div className="text-xs md:text-[13px] font-bold text-stone-800 tracking-[0.2em] text-center whitespace-nowrap uppercase">
                   칵테일 추천 주문서
                 </div>
                 <span className="w-3 md:w-5 h-[1px] bg-stone-400" />
               </div>
-              <span className="text-[11px] text-stone-600 font-medium tracking-tighter">{todayStr}</span>
+              <span className="text-xs text-stone-600 font-medium tracking-tighter">{todayStr}</span>
             </div>
 
             <div className="flex-1 space-y-8 font-sans">
@@ -287,7 +291,8 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                       <button
                         key={opt.value}
                         onClick={() => setRequest(prev => ({ ...prev, experienceLevel: opt.value }))}
-                        className="flex items-center gap-3 p-2 border border-[#4a3728]/30 rounded hover:bg-[#4a3728]/5 transition-colors group font-sans"
+                        aria-pressed={request.experienceLevel === opt.value}
+                        className="flex min-h-11 items-center gap-3 p-2 border border-[#4a3728]/30 rounded hover:bg-[#4a3728]/5 transition-colors group font-sans"
                       >
                         <div className={`w-3.5 h-3.5 border border-[#4a3728] flex items-center justify-center transition-all ${request.experienceLevel === opt.value ? 'bg-[#4a3728]' : 'bg-transparent'}`}>
                           {request.experienceLevel === opt.value && (
@@ -296,9 +301,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                             </svg>
                           )}
                         </div>
-                        <span className={`text-[11px] ${request.experienceLevel === opt.value ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
+                        <span className={`text-xs ${request.experienceLevel === opt.value ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
                           {opt.label.split(' (')[0]} 
-                          <span className="text-[9px] opacity-60 font-normal ml-1">({opt.label.split(' (')[1]}</span>
+                          <span className="text-xs opacity-60 font-normal ml-1">({opt.label.split(' (')[1]}</span>
                         </span>
                       </button>
                     ))}
@@ -318,7 +323,8 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                       <button
                         key={String(opt.value)}
                         onClick={() => setRequest(prev => ({ ...prev, isNonAlcoholic: opt.value }))}
-                        className="flex items-center gap-3 p-2 border border-[#4a3728]/30 rounded hover:bg-[#4a3728]/5 transition-colors group font-sans"
+                        aria-pressed={request.isNonAlcoholic === opt.value}
+                        className="flex min-h-11 items-center gap-3 p-2 border border-[#4a3728]/30 rounded hover:bg-[#4a3728]/5 transition-colors group font-sans"
                       >
                         <div className={`w-3.5 h-3.5 border border-[#4a3728] flex items-center justify-center transition-all ${request.isNonAlcoholic === opt.value ? 'bg-[#4a3728]' : 'bg-transparent'}`}>
                           {request.isNonAlcoholic === opt.value && (
@@ -327,9 +333,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                             </svg>
                           )}
                         </div>
-                        <span className={`text-[11px] ${request.isNonAlcoholic === opt.value ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
+                        <span className={`text-xs ${request.isNonAlcoholic === opt.value ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
                           {opt.label.split(' (')[0]} 
-                          <span className="text-[9px] opacity-60 font-normal ml-1">({opt.label.split(' (')[1]}</span>
+                          <span className="text-xs opacity-60 font-normal ml-1">({opt.label.split(' (')[1]}</span>
                         </span>
                       </button>
                     ))}
@@ -348,7 +354,8 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                       <button
                         key={spirit}
                         onClick={() => setRequest(prev => ({ ...prev, baseSpirit: spirit }))}
-                        className={`px-3 py-1.5 text-[11px] font-bold border transition-all font-sans ${
+                        aria-pressed={request.baseSpirit === spirit}
+                        className={`inline-flex min-h-11 items-center px-3 py-1.5 text-xs font-bold border transition-all font-sans ${
                           request.baseSpirit === spirit 
                             ? "bg-[#4a3728] text-[#efe2c9] border-[#4a3728]" 
                             : "bg-white/30 text-stone-700 border-[#4a3728]/20 hover:border-[#4a3728]"
@@ -360,13 +367,14 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                     {request.experienceLevel === 'home_bar' && (
                       <button
                         onClick={() => setRequest(prev => ({ ...prev, baseSpirit: "기타(바틀지정)" }))}
-                        className={`px-3 py-1.5 text-[11px] font-bold border transition-all font-sans ${
+                        aria-pressed={request.baseSpirit === "기타(바틀지정)"}
+                        className={`inline-flex min-h-11 items-center px-3 py-1.5 text-xs font-bold border transition-all font-sans ${
                           request.baseSpirit === "기타(바틀지정)" 
                             ? "bg-[#4a3728] text-[#efe2c9] border-[#4a3728]" 
                             : "bg-white/30 text-stone-700 border-[#4a3728]/20 hover:border-[#4a3728]"
                         }`}
                       >
-                        기타 <span className="text-[9px] font-normal opacity-70">(바틀지정)</span>
+                        기타 <span className="text-xs font-normal opacity-70">(바틀지정)</span>
                       </button>
                     )}
                   </div>
@@ -395,13 +403,14 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                     <button
                       key={taste}
                       onClick={() => toggleArrayItem('preferredTaste', taste)}
-                      className={`px-3 py-1.5 text-[11px] font-bold border rounded-full transition-all font-sans ${
+                      aria-pressed={request.preferredTaste.includes(taste)}
+                      className={`inline-flex min-h-11 items-center px-3 py-1.5 text-xs font-bold border rounded-full transition-all font-sans ${
                         request.preferredTaste.includes(taste)
                           ? "bg-[#4a3728] text-[#efe2c9] border-[#4a3728]"
                           : "bg-white/30 text-stone-700 border-[#4a3728]/20 hover:border-[#4a3728]"
                       }`}
                     >
-                      {taste.split(' (')[0]} <span className="text-[9px] font-normal opacity-70 ml-0.5">({taste.split(' (')[1]}</span>
+                      {taste.split(' (')[0]} <span className="text-xs font-normal opacity-70 ml-0.5">({taste.split(' (')[1]}</span>
                     </button>
                   ))}
                 </div>
@@ -420,7 +429,8 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                     <button
                       key={String(opt.value)}
                       onClick={() => setRequest(prev => ({ ...prev, carbonation: opt.value }))}
-                      className="flex items-center gap-3 group font-sans"
+                        aria-pressed={request.carbonation === opt.value}
+                      className="flex min-h-11 items-center gap-3 group font-sans"
                     >
                       <div className={`w-4 h-4 border border-[#4a3728] flex items-center justify-center transition-all ${request.carbonation === opt.value ? 'bg-[#4a3728]' : 'bg-transparent'}`}>
                         {request.carbonation === opt.value && (
@@ -430,7 +440,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                         )}
                       </div>
                       <span className={`text-xs ${request.carbonation === opt.value ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
-                        {opt.label.split(' (')[0]} <span className="text-[9px] font-normal opacity-70 ml-0.5">({opt.label.split(' (')[1]}</span>
+                        {opt.label.split(' (')[0]} <span className="text-xs font-normal opacity-70 ml-0.5">({opt.label.split(' (')[1]}</span>
                       </span>
                     </button>
                   ))}
@@ -443,14 +453,15 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                   <h3 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">06.</span> 기피 재료
                   </h3>
-                  <span className="text-[10px] text-stone-500 font-medium font-sans">{request.dislikes.length} / 8</span>
+                  <span className="text-xs text-stone-500 font-medium font-sans">{request.dislikes.length} / 8</span>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4 font-sans">
                   {commonDislikes.map((item) => (
                     <button
                       key={item}
                       onClick={() => toggleArrayItem('dislikes', item)}
-                      className={`px-2.5 py-1 text-[10px] font-bold border transition-all font-sans ${
+                      aria-pressed={request.dislikes.includes(item)}
+                      className={`inline-flex min-h-11 items-center px-2.5 py-1 text-xs font-bold border transition-all font-sans ${
                         request.dislikes.includes(item)
                           ? "bg-red-800 text-white border-red-800"
                           : "bg-white/30 text-stone-600 border-[#4a3728]/20 hover:border-[#4a3728]"
@@ -471,7 +482,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                   />
                   <div className="flex flex-wrap gap-2 mt-2 font-sans">
                     {request.dislikes.filter(d => !commonDislikes.includes(d)).map(d => (
-                       <span key={d} className="px-2 py-0.5 bg-red-800/10 text-red-800 border border-red-800/20 text-[10px] font-bold rounded flex items-center gap-1 font-sans">
+                       <span key={d} className="px-2 py-0.5 bg-red-800/10 text-red-800 border border-red-800/20 text-xs font-bold rounded flex items-center gap-1 font-sans">
                          {d} <button onClick={() => toggleArrayItem('dislikes', d)} className="font-sans">✕</button>
                        </span>
                     ))}
@@ -485,7 +496,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                   <h3 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">07.</span> 바텐더에게 남기는 메모
                   </h3>
-                  <span className="text-[10px] text-stone-500 font-medium font-sans">{request.currentMood.length} / 100</span>
+                  <span className="text-xs text-stone-500 font-medium font-sans">{request.currentMood.length} / 100</span>
                 </div>
                 <textarea
                   className="w-full bg-transparent border-none px-0 py-1 text-sm leading-relaxed text-[#2d2017] outline-none placeholder:text-stone-400 resize-none min-h-[100px] font-medium font-sans"
@@ -510,7 +521,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                 </div>
                 <div className="cursor-pointer select-none font-sans" onClick={() => setImRich(!imRich)}>
                   <p className="text-sm font-bold text-stone-900 font-sans">오늘의 Flex</p>
-                  <p className="text-[11px] text-stone-600 leading-snug mt-1 font-sans">
+                  <p className="text-xs text-stone-600 leading-snug mt-1 font-sans">
                     평소보다 고급스러운 기주나 구하기 힘든 부재료를 활용한 프리미엄 칵테일 위주로 추천해 드립니다.
                   </p>
                 </div>
@@ -518,12 +529,12 @@ export default function BeforeScreen(props: BeforeScreenProps) {
             </div>
 
             <div className="mt-8 pt-6 border-t border-[#4a3728]/25 text-center font-sans">
-              <div className="bg-yellow-600/5 border border-yellow-700/20 p-2.5 rounded mb-6 text-[11px] text-stone-600 leading-relaxed text-left font-sans">
+              <div className="bg-yellow-600/5 border border-yellow-700/20 p-2.5 rounded mb-6 text-xs text-stone-600 leading-relaxed text-left font-sans">
                 ⚠️ 본 추천은 AI 분석에 기반한 참고 정보입니다. 실제 상황과 다를 수 있으니 참고용으로 이용해 주세요.
               </div>
               <button
                 onClick={startRecommendation}
-                className="w-[85%] mx-auto bg-[#111] text-white py-3 text-base font-bold hover:bg-black transition-all active:scale-[0.98] shadow-xl font-sans"
+                className="min-h-11 w-[85%] mx-auto bg-[#111] text-white py-3 text-base font-bold hover:bg-black transition-all active:scale-[0.98] shadow-xl font-sans"
               >
                 칵테일 추천받기
               </button>

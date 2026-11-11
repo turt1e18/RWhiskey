@@ -505,7 +505,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   const preferredCategories = (facets?.categories ?? []).filter((category) => !(inputs.country || inputs.preferredCountry) || !category.country || category.country === (inputs.country || inputs.preferredCountry));
   const hardRegions = (facets?.regions ?? []).filter((region) => !inputs.country || region.country === inputs.country);
   const caskLabel = (value: string) => facets?.casks?.find((item) => item.value === value)?.label ?? ({ BOURBON: "버번 통", SHERRY: "셰리 통", WINE: "와인 통", PORT: "포트 통", RUM: "럼 통", VIRGIN_OAK: "새 오크 통", OTHER: "기타 통" } as Record<string,string>)[value] ?? value;
-  const fieldChoiceClass = (active: boolean) => `cursor-pointer rounded-full border px-3 py-1.5 text-[13px] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4a3728] ${
+  const fieldChoiceClass = (active: boolean) => `inline-flex min-h-11 cursor-pointer items-center rounded-full border px-3 py-1.5 text-[13px] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4a3728] ${
     active ? "border-[#2d2017] bg-[#4a3728]/10 font-bold text-[#2d2017]" :
       "border-[#4a3728]/30 bg-white/20 text-stone-700 hover:border-[#4a3728]/60"
   }`;
@@ -693,11 +693,11 @@ export default function VerifiedWhiskeyPreviewPage() {
           transition={{ duration: reduceMotion ? 0 : 0.2 }} className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 py-4">
           <h2 ref={resultHeadingRef} tabIndex={-1} className="sr-only">오늘의 추천 결과</h2>
           {result && <article className="relative flex w-full max-w-md flex-col items-center rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 pt-12 text-stone-900 shadow-[0_10px_30px_rgba(0,0,0,0.5)] md:p-10 md:pt-14">
-                  <div className="absolute inset-x-7 top-5 flex justify-between text-[10px] font-bold tracking-widest text-stone-600 md:inset-x-10">
+                  <div className="absolute inset-x-7 top-5 flex justify-between text-xs font-bold tracking-widest text-stone-600 md:inset-x-10">
                     <span>No. {String(result.recommendationId).padStart(3, "0")}</span>
                     <span>{savedAt ? new Date(savedAt).toLocaleDateString("ko-KR") : todayStr}</span>
                   </div>
-                  <p className="mb-4 border border-[#4a3728] px-3 py-1 text-[10px] font-bold tracking-[0.2em]">{v3Mode && v3.message ? "이전 추천" : "오늘의 추천"}</p>
+                  <p className="mb-4 border border-[#4a3728] px-3 py-1 text-xs font-bold tracking-[0.2em]">{v3Mode && v3.message ? "이전 추천" : "오늘의 추천"}</p>
                   <WhiskeyBottleImage key={selected.bottlingId} url={selected.details?.experience?.imageUrl} name={selected.displayName} />
                   <h3 className="mt-3 text-center text-2xl font-bold leading-tight">{selected.displayName}</h3>
                   <p className="mt-3 text-center text-xs leading-6 text-stone-700">
@@ -752,7 +752,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                   <Link href={`/notes/verified/${result.recommendationId}`} className="mt-6 min-h-11 w-full border border-[#4a3728] px-3 py-3 text-center text-sm font-semibold">마신 뒤 시음 기록 남기기</Link>
                   <p className="mt-2 text-xs text-stone-600">나중에 내 시음 노트에서도 이 추천을 다시 찾을 수 있어요.</p>
                   <div className="mt-7 w-full border-t border-[#4a3728]/25 pt-4 text-center">
-                    <span className="text-[9px] font-bold uppercase italic tracking-widest text-stone-600">R-Whiskey Selection</span>
+                    <span className="text-xs font-bold uppercase italic tracking-widest text-stone-600">R-Whiskey Selection</span>
                   </div>
                 </article>}
               {result?.recommendationId && (

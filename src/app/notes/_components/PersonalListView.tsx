@@ -33,7 +33,7 @@ export const PersonalListView = ({ whiskies, onSelect }: Props) => {
             </span>
             <span className="w-16 flex justify-center">
               <span
-                className={`text-[10px] tracking-wider px-2 py-0.5 rounded-sm border ${
+                className={`text-xs tracking-wider px-2 py-0.5 rounded-sm border ${
                   w.status === "평가완료"
                     ? "border-[#a8201a]/60 text-[#a8201a]"
                     : "border-[#3e2616]/40 text-[#3e2616]/60"
@@ -46,10 +46,10 @@ export const PersonalListView = ({ whiskies, onSelect }: Props) => {
               <p className="font-serif text-lg text-[#3e2616] leading-tight truncate">
                 {w.whiskyName || (w as any).whiskeyName || (w as any).drinkName || (w as any).nameKo || w.cocktailName || "Unknown Item"}
               </p>
-              <p className="text-[11px] text-[#3e2616]/60 font-serif italic truncate">
+              <p className="text-xs text-[#3e2616]/60 font-serif italic truncate">
                 {w.whiskyNameEn || (w as any).whiskeyNameEn || (w as any).drinkNameEn || (w as any).nameEn || (w.category === "cocktail" ? "Cocktail Recipe" : "")}
               </p>
-              <p className="text-[10px] text-[#3e2616]/40 mt-1">{w.date}</p>
+              <p className="text-xs text-[#3e2616]/40 mt-1">{w.date}</p>
             </div>
             <div className="flex items-center gap-2">
               {w.status === "평가완료" ? (

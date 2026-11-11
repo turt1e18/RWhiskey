@@ -183,7 +183,8 @@ export default function BeforeScreen(props: any) {
                     <button
                       key={opt}
                       onClick={() => setWeather(opt)}
-                      className={`px-3 py-1 rounded-full text-[13px] transition-all border ${
+                      aria-pressed={weather === opt}
+                      className={`inline-flex min-h-11 items-center px-3 py-1 rounded-full text-[13px] transition-all border ${
                         weather === opt ? "bg-[#4a3728]/10 border-[#2d2017] font-bold text-[#2d2017]" : "bg-white/20 border-[#4a3728]/30 text-stone-700 hover:border-[#4a3728]/60"
                       }`}
                     >
@@ -205,7 +206,8 @@ export default function BeforeScreen(props: any) {
                     <button
                       key={opt}
                       onClick={() => setMood(opt)}
-                      className={`px-3 py-1 rounded-full text-[13px] transition-all border ${
+                      aria-pressed={mood === opt}
+                      className={`inline-flex min-h-11 items-center px-3 py-1 rounded-full text-[13px] transition-all border ${
                         mood === opt ? "bg-[#4a3728]/10 border-[#2d2017] font-bold text-[#2d2017]" : "bg-white/20 border-[#4a3728]/30 text-stone-700 hover:border-[#4a3728]/60"
                       }`}
                     >
@@ -227,7 +229,8 @@ export default function BeforeScreen(props: any) {
                     <button
                       key={opt}
                       onClick={() => setStrength(opt)}
-                      className={`px-3 py-1 rounded-full text-[13px] transition-all border ${
+                      aria-pressed={strength === opt}
+                      className={`inline-flex min-h-11 items-center px-3 py-1 rounded-full text-[13px] transition-all border ${
                         strength === opt ? "bg-[#4a3728]/10 border-[#2d2017] font-bold text-[#2d2017]" : "bg-white/20 border-[#4a3728]/30 text-stone-700 hover:border-[#4a3728]/60"
                       }`}
                     >
@@ -273,7 +276,7 @@ export default function BeforeScreen(props: any) {
 
             <button
               onClick={callCombinedAPI}
-              className="w-full bg-[#111] text-white py-3 text-base font-bold tracking-widest hover:opacity-90 transition-opacity active:scale-[0.98] mt-2"
+              className="min-h-11 w-full bg-[#111] text-white py-3 text-base font-bold tracking-widest hover:opacity-90 transition-opacity active:scale-[0.98] mt-2"
             >
               위스키 추천 받기
             </button>
