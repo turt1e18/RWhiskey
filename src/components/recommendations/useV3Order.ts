@@ -36,10 +36,13 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
   const [busy,setBusy]=useState(false);
   const [authRequired,setAuthRequired]=useState(false);
   const [missing,setMissing]=useState(false);
+  // Set when candidate discovery could not finish: the order failed, nothing was spent, and the choices are intact.
+  const [failureCode,setFailureCode]=useState<string|null>(null);
+  const [failureSeq,setFailureSeq]=useState(0);
   const running=useRef(false); const owner=useRef(uid); owner.current=uid;
   const storageKey=uid ? `rwhiskey:order:v3:${uid}` : null;
   useEffect(()=>{
-    setPending(null);setMessage(null);setHistoricalId(null);setHistoricalAiId(null);setAuthRequired(false);setMissing(false);
+    setPending(null);setMessage(null);setHistoricalId(null);setHistoricalAiId(null);setAuthRequired(false);setMissing(false);setFailureCode(null);
     if(!storageKey)return;
     try {
       const saved=sessionStorage.getItem(storageKey);
@@ -58,7 +61,11 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
     if(response.state==='SUCCESS'){setMessage('저장된 추천 정보를 확인하지 못했어요. 이전 주문 결과를 다시 확인해 주세요.');return;}
     setHistoricalId(response.historicalRecordId ?? null);
     if(response.nextAction!=='RECOVER')remember(null);
-    setMessage(messages[response.code ?? ''] ?? (response.nextAction==='RECOVER'
+    const discoveryFailed=response.state==='UNAVAILABLE' && (response.code ?? '').startsWith('DISCOVERY_');
+    if(discoveryFailed){setFailureCode(response.code ?? null);setFailureSeq(n=>n+1);}
+    setMessage(messages[response.code ?? ''] ?? (discoveryFailed
+      ? '이번 추천을 마치지 못했어요. 추천 횟수는 사용하지 않았고 선택은 그대로예요. 잠시 뒤 같은 조건으로 다시 신청해 주세요.'
+      : response.nextAction==='RECOVER'
       ? '주문 처리 결과를 아직 확인 중이에요. 새 주문 대신 이전 주문 결과를 확인해 주세요.'
       : response.state==='UNAVAILABLE' ? '지금은 추천 서비스를 이용할 수 없어요. 잠시 뒤 다시 시도해 주세요.'
       : response.state==='NEEDS_CLARIFICATION' ? '입력한 조건을 다시 확인해 주세요.'
@@ -67,7 +74,7 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
   }
   async function run(request?:WhiskeyCandidateRequest,closeMissing=false) {
     if(!uid || running.current)return;
-    const requestOwner=uid;running.current=true;setBusy(true);setMessage(null);setHistoricalAiId(null);setAuthRequired(false);
+    const requestOwner=uid;running.current=true;setBusy(true);setMessage(null);setFailureCode(null);setHistoricalAiId(null);setAuthRequired(false);
     const operation=pending ? closeMissing ? 'close-unreceived' : 'recover' : 'recommend';
     // Preserve a known missing order across authentication/transport failures until the server resolves it.
     if(!pending)setMissing(false);
@@ -108,5 +115,5 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
       } else setMessage('연결 또는 저장 결과를 확인하지 못했어요. 새 주문을 보내지 말고 이전 주문 결과를 확인해 주세요.');
     } finally {running.current=false;setBusy(false);}
   }
-  return { pending,message,historicalId,historicalAiId,busy,authRequired,missing,run,closeMissing:()=>run(undefined,true) };
+  return { pending,message,failureCode,failureSeq,historicalId,historicalAiId,busy,authRequired,missing,run,closeMissing:()=>run(undefined,true) };
 }

@@ -11,6 +11,7 @@ import ExpectationFeedback from "@/components/recommendations/ExpectationFeedbac
 import WhiskeyTasteFields from "@/components/recommendations/WhiskeyTasteFields";
 import WhiskeyBottleImage from "@/components/recommendations/WhiskeyBottleImage";
 import { useV3Order } from "@/components/recommendations/useV3Order";
+import OrderRetryNotice from "@/components/recommendations/OrderRetryNotice";
 import WhiskeyAiSuggestionCard from "@/components/recommendations/WhiskeyAiSuggestionCard";
 import type { V3Response } from "@/lib/recommendations/v3Contract";
 import { bilingualLabel, countryForCategory, recommendationReasons, whiskeyLabel as facetLabel } from "@/components/recommendations/whiskeyPresentation";
@@ -160,6 +161,8 @@ export default function VerifiedWhiskeyPreviewPage() {
   const reduceMotion = useReducedMotion();
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const orderMessageRef = useRef<HTMLParagraphElement>(null);
+  const retryNoticeRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const feedbackBusy = useRef(false);
   const busy = useRef(false);
   const pendingRequest = useRef<{ payload: string; key: string } | null>(null);
@@ -182,9 +185,10 @@ export default function VerifiedWhiskeyPreviewPage() {
   const v3Mode = v3Enabled || Boolean(v3.pending) || result?.code === "V3_SAVED" || Boolean(aiResult);
   useEffect(() => {
     if (!v3.message) return;
-    orderMessageRef.current?.focus({ preventScroll: true });
-    orderMessageRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-  }, [v3.message, reduceMotion]);
+    const target = orderMessageRef.current ?? retryNoticeRef.current;
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }, [v3.message, v3.failureSeq, reduceMotion]);
   const enabled = v3Mode || process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true";
   const currentCard=useRef({uid,id:result?.recommendationId});currentCard.current={uid,id:result?.recommendationId};
   useEffect(() => { setAiResult(null);setAiResultOwnerUid(null);setResult(null);setShowForm(true);setSavedAt(null);setFeedbackStatus(null);setSavedFeedbackSentiment(null);setFeedbackComment(""); }, [uid]);
@@ -523,7 +527,10 @@ export default function VerifiedWhiskeyPreviewPage() {
 
       <div className="flex flex-1 flex-col justify-center py-6 md:py-10">
       {v3Mode && <section aria-live="polite" className="mx-auto w-full max-w-3xl px-6 pb-4 text-sm leading-6">
-        {v3.message && <p role="status" ref={orderMessageRef} tabIndex={-1} className="rounded border border-amber-200/30 bg-[#241b16] p-4"><strong className="mb-1 block">이번 주문 안내</strong>{v3.message}</p>}
+        {v3.message && (v3.failureCode
+          ? <OrderRetryNotice ref={retryNoticeRef} seq={v3.failureSeq} busy={v3.busy || loading}
+              disabled={!isAuthenticated || !isInitialized || feedbackLoading} onRetry={() => formRef.current?.requestSubmit()} />
+          : <p role="status" ref={orderMessageRef} tabIndex={-1} className="rounded border border-amber-200/30 bg-[#241b16] p-4"><strong className="mb-1 block">이번 주문 안내</strong>{v3.message}</p>)}
         {v3.message && (v3.authRequired || !isAuthenticated) && <Link href="/login" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center underline">새 탭에서 로그인하고 돌아오기</Link>}
         {v3.historicalId && <Link href={`/notes/verified/${v3.historicalId}`} className="mt-3 inline-block underline">당시 추천 기록 보기</Link>}
         {v3.historicalAiId && <Link href={`/notes/ai/${v3.historicalAiId}`} className="mt-3 inline-flex min-h-11 items-center underline">저장한 같은 추천과 시음 기록 확인하기</Link>}
@@ -551,7 +558,7 @@ export default function VerifiedWhiskeyPreviewPage() {
             <p className="max-w-md text-sm leading-6 text-stone-400 md:text-base">{aiEnabled ? "위스키 경험과 선호하는 향을 고르면 AI가 찾은 후보 중에서 오늘의 한 잔을 골라드려요. 제품 정보는 외부 교차검증 전인 제안이에요." : "위스키 경험과 선호하는 향을 고르면 확인된 병입 중에서 오늘의 한 잔을 추천해드립니다."}</p>
             {profile.experienceLevel !== "BEGINNER" && <p className="max-w-md text-sm leading-6 text-stone-500">익숙한 취향이 있다면 주문서에서 조건을 더 구체적으로 선택할 수 있습니다.</p>}
           </header>
-          <form onSubmit={submit} noValidate aria-busy={loading || v3.busy} className="relative mx-auto w-full max-w-[550px] rounded-sm border border-[#4a3728] bg-[#efe2c9] p-6 text-stone-900 shadow-[0_20px_50px_rgba(0,0,0,0.4)] md:p-8">
+          <form ref={formRef} onSubmit={submit} noValidate aria-busy={loading || v3.busy} className="relative mx-auto w-full max-w-[550px] rounded-sm border border-[#4a3728] bg-[#efe2c9] p-6 text-stone-900 shadow-[0_20px_50px_rgba(0,0,0,0.4)] md:p-8">
             <div className="pointer-events-none absolute inset-2 border border-[#4a3728]/20" />
             <div className="relative mb-5 flex items-center justify-between text-[12px] font-bold tracking-[0.2em] text-stone-700">
               <span>R-WHISKEY</span>
