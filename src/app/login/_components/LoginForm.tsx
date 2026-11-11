@@ -1,6 +1,7 @@
 "use client";
 
 import { loginErrorMessage } from "@/lib/userFacingError";
+import { takeReturnPath } from "@/lib/loginRedirect";
 import { useState } from "react";
 import { authApi } from "@/api/whiskeyApi";
 import { useAuthStore } from "@/store/authStore";
@@ -34,7 +35,7 @@ export default function LoginForm({ onSignup, onReset }: LoginFormProps) {
           name: response.name,
           email: response.email
         });
-        router.push("/main");
+        router.push(takeReturnPath("/main"));
       } else {
         setError("회원 명부에서 찾을 수 없는 이메일 또는 비밀번호입니다.");
       }

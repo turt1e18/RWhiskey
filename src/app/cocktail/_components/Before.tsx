@@ -26,7 +26,7 @@ interface BeforeScreenProps {
 
 export default function BeforeScreen(props: BeforeScreenProps) {
   const { request, setRequest, imRich, setImRich, setDataPromise, setSwitchState } = props;
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [dislikeInput, setDislikeInput] = useState("");
@@ -55,6 +55,10 @@ export default function BeforeScreen(props: BeforeScreenProps) {
   ];
   const baseSpiritOptions = ["진", "보드카", "럼", "데킬라", "위스키", "브랜디", "리큐르", "상관없음"];
   const commonDislikes = ["민트", "오이", "계란 흰자", "시나몬", "고수", "올리브"];
+
+  // 기주 선택은 경험자·홈바에게만 보이므로, 보이지 않을 때 번호가 비지 않게 센다.
+  const hasBase = request.experienceLevel === 'experienced' || request.experienceLevel === 'home_bar';
+  const num = (n: number) => String(hasBase || n < 4 ? n : n - 1).padStart(2, '0') + '.';
 
   const todayStr = useMemo(() => {
     const d = new Date();
@@ -396,7 +400,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               {/* 4. 맛 선호 */}
               <section className="font-sans border-t border-[#4a3728]/10 pt-6">
                 <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
-                  <span className="text-red-800 text-xs font-sans">04.</span> 선호하는 맛 (다중 선택)
+                  <span className="text-red-800 text-xs font-sans">{num(4)}</span> 선호하는 맛 (다중 선택)
                 </h3>
                 <div className="flex flex-wrap gap-2 font-sans">
                   {tasteOptions.map((taste) => (
@@ -419,7 +423,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               {/* 5. 탄산 유무 */}
               <section className="font-sans">
                 <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
-                  <span className="text-red-800 text-xs font-sans">05.</span> 청량감 (탄산)
+                  <span className="text-red-800 text-xs font-sans">{num(5)}</span> 청량감 (탄산)
                 </h3>
                 <div className="flex gap-8 font-sans">
                   {[
@@ -451,7 +455,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               <section className="font-sans border-t border-[#4a3728]/10 pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
-                    <span className="text-red-800 text-xs font-sans">06.</span> 기피 재료
+                    <span className="text-red-800 text-xs font-sans">{num(6)}</span> 기피 재료
                   </h3>
                   <span className="text-xs text-stone-500 font-medium font-sans">{request.dislikes.length} / 8</span>
                 </div>
@@ -494,13 +498,14 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               <section className="font-sans border-t border-[#4a3728]/10 pt-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
-                    <span className="text-red-800 text-xs font-sans">07.</span> 바텐더에게 남기는 메모
+                    <span className="text-red-800 text-xs font-sans">{num(7)}</span> 바텐더에게 남기는 메모 <span className="text-red-800 text-xs font-normal">(필수)</span>
                   </h3>
                   <span className="text-xs text-stone-500 font-medium font-sans">{request.currentMood.length} / 100</span>
                 </div>
                 <textarea
                   className="w-full bg-transparent border-none px-0 py-1 text-sm leading-relaxed text-[#2d2017] outline-none placeholder:text-stone-400 resize-none min-h-[100px] font-medium font-sans"
                   placeholder="오늘의 기분, 날씨, 혹은 바텐더가 참고했으면 하는 특별한 요청 사항을 자유롭게 적어주세요..."
+                  aria-required="true"
                   value={request.currentMood}
                   maxLength={100}
                   onChange={(e) => setRequest(prev => ({ ...prev, currentMood: e.target.value }))}
@@ -532,9 +537,13 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               <div className="bg-yellow-600/5 border border-yellow-700/20 p-2.5 rounded mb-6 text-xs text-stone-600 leading-relaxed text-left font-sans">
                 ⚠️ 본 추천은 AI 분석에 기반한 참고 정보입니다. 실제 상황과 다를 수 있으니 참고용으로 이용해 주세요.
               </div>
+              {!isAuthenticated && isInitialized && (
+                <p role="status" className="mb-3 text-sm text-stone-700">로그인하면 추천을 받을 수 있어요. <a href="/login" className="inline-flex min-h-11 items-center font-semibold underline">로그인하러 가기</a></p>
+              )}
               <button
                 onClick={startRecommendation}
-                className="min-h-11 w-[85%] mx-auto bg-[#111] text-white py-3 text-base font-bold hover:bg-black transition-all active:scale-[0.98] shadow-xl font-sans"
+                disabled={!isAuthenticated || !isInitialized}
+                className="min-h-11 w-[85%] mx-auto bg-[#111] text-white py-3 text-base font-bold hover:bg-black transition-all active:scale-[0.98] shadow-xl font-sans disabled:cursor-not-allowed disabled:opacity-60"
               >
                 칵테일 추천받기
               </button>
