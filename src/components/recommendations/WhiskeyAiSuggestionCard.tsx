@@ -142,7 +142,7 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
   }
   if(ownerUnavailable||!viewerConfirmed)return <UnavailableRecommendation checking={sourceBusy||busy} onRetry={ownerUnavailable?()=>void refreshSources():undefined} busy={sourceBusy} message={sourceStatus}/>;
   return <div className="mx-auto flex w-full max-w-md flex-col items-center px-4">
-    <article className="w-full break-words rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 text-stone-900 shadow-xl md:p-10">
+    <article className="w-full break-words break-keep rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 text-stone-900 shadow-xl md:p-10">
       {hidden?<div><h2 className="text-lg font-semibold">제품 정보를 다시 확인해 주세요</h2>
         <p className="mt-3 text-sm leading-6">저장한 같은 추천의 제품 정보를 다시 확인해요. 첫인상은 그대로 유지돼요.</p>
         <button type="button" disabled={sourceBusy} onClick={()=>void refreshSources()} className="mt-3 min-h-11 text-sm underline disabled:opacity-60">{sourceBusy?'불러오는 중…':'제품 정보 다시 확인'}</button>
@@ -157,8 +157,10 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
       <WhiskeyResultBasicFacts display={display} beginner={response.appliedLevel==='BEGINNER'}/>
       {(p.independentBottling || p.oldBottle) && <p className="mt-4 text-sm font-semibold">{[p.independentBottling?'독립 병입':null,p.oldBottle?'올드바틀':null].filter(Boolean).join(' · ')}</p>}
       <h3 className="mt-6 border-t border-[#4a3728]/25 pt-4 font-bold">오늘 권해드리는 한 잔</h3>
-      <div className="mt-3 space-y-2 text-sm leading-7">{introduction.introduction.map((text,i)=><p key={i}>{text}</p>)}
-        <p className="pt-1"><span className="font-semibold">곁들이면 좋은 한 입 · </span>{introduction.food}</p>
+      <div className="mt-3 space-y-3 text-[15px] leading-7">{introduction.introduction.map((text,i)=><p key={i}>{text}</p>)}</div>
+      <div className="mt-4 border-l-2 border-[#4a3728]/40 pl-4">
+        <h4 className="text-[13px] font-semibold text-stone-700">곁들이면 좋은 한 입</h4>
+        <p className="mt-1 text-[15px] leading-7">{introduction.food}</p>
       </div>
       <WhiskeyCollectedBottlingPanel display={display}>
       <button type="button" disabled={sourceBusy} className="mt-3 min-h-11 py-2 text-left text-xs font-semibold underline disabled:opacity-60"
