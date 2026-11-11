@@ -1,4 +1,5 @@
 "use client";
+import { recommendationErrorMessage } from "@/lib/userFacingError";
 import { useState, useMemo, Dispatch, SetStateAction } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { CocktailRecommendationRequest, ExperienceLevel } from "@/type/CocktailInterface";
@@ -163,7 +164,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
       setSwitchState(1);
     } catch (err: any) {
       console.error("Recommendation Error:", err);
-      alert(err.message || "추천을 가져오는 중 오류가 발생했습니다.");
+      alert(recommendationErrorMessage(err));
     } finally {
       setLoading(false);
     }

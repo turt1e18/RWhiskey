@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import { recommendationErrorMessage } from "@/lib/userFacingError";
 import { getRecommendationImage } from "@/api/recommendationImages";
 import { useState, useMemo, useEffect } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
@@ -116,7 +117,7 @@ export default function BeforeScreen(props: any) {
       await combinedPromise;
       setSwitchState(1);
     } catch (err: any) {
-      alert(err.message || "추천을 가져오는 중 오류가 발생했습니다.");
+      alert(recommendationErrorMessage(err));
     } finally {
       setLoading(false);
     }
