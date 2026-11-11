@@ -20,14 +20,16 @@ export async function authorizeLegacyProvider(req: Request, purpose: "GEMINI" | 
   const headers = new Headers({ "Content-Type": "application/json" });
   if (req.headers.get("cookie")) headers.set("Cookie", req.headers.get("cookie")!);
   if (req.headers.get("x-xsrf-token")) headers.set("X-XSRF-TOKEN", req.headers.get("x-xsrf-token")!);
-  const release = async () => {
+  // refund=true: 제공자 호출이 실패했을 때 BE가 이 접수에서 차감한 1회만 되돌린다(BE가 접수당 한 번만 허용).
+  const release = async (options?: { refund?: boolean }) => {
     clearTimeout(timeout);
     req.signal.removeEventListener("abort", disconnected);
     if (lease) {
+      const refund = options?.refund === true;
       try {
-        await fetch(base.replace(/\/$/, "") + "/api/recommendations/legacy/admission/" + lease,
-          { method: "DELETE", headers, signal: AbortSignal.timeout(1000), cache: "no-store", redirect: "error" });
-      } catch { /* Lease expires if BE is unavailable. No allowance is refunded. */ }
+        await fetch(base.replace(/\/$/, "") + "/api/recommendations/legacy/admission/" + lease + (refund ? "?refund=true" : ""),
+          { method: "DELETE", headers, signal: AbortSignal.timeout(refund ? 3000 : 1000), cache: "no-store", redirect: "error" });
+      } catch { /* Lease expires if BE is unavailable. A failed refund is not retried. */ }
     }
   };
   const disconnected = () => timer.abort();

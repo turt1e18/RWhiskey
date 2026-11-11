@@ -207,6 +207,7 @@ const whiskySchema = {
 export async function POST(req: Request) {
   let permit: Awaited<ReturnType<typeof authorizeLegacyProvider>>;
   try { permit = await authorizeLegacyProvider(req, "GEMINI"); } catch (error) { return legacyProviderError(error); }
+  let succeeded = false;
   const body = await req.json();
   const data = body.data;
   const type = body.type;
@@ -310,10 +311,12 @@ ${mainTasteTag ? `Priority Taste: ${mainTasteTag} (This is the most important fa
       resultText = normalizeByType(parsed, type);
     }
 
+    succeeded = resultText != undefined;
     return NextResponse.json(resultText);
   } catch (error) {
     return legacyProviderError(error);
   } finally {
-    await permit.release();
+    // 접수 때 BE가 차감한 1회를, 결과를 못 만들었을 때만 되돌린다.
+    await permit.release({ refund: !succeeded });
   }
 }
