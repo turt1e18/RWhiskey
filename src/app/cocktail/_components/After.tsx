@@ -4,13 +4,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 "use client";
-import { use, useState, useMemo } from "react";
+import { use, useMemo } from "react";
 import RecommendationSearchImage from "@/components/recommendations/RecommendationSearchImage";
 import { CocktailDataInterface } from "@/type/CocktailDataInterface";
 import { ExperienceLevel } from "@/type/CocktailInterface";
-import { notesApi } from "@/api/whiskeyApi";
-import { toast } from "sonner";
-import { Bookmark, CheckCircle2 } from "lucide-react";
 
 interface AfterScreenProps {
   setSwitchState: (state: number) => void;
@@ -22,36 +19,11 @@ export default function AfterScreen(props: AfterScreenProps) {
   const { setSwitchState, dataPromise, experienceLevel } = props;
   const resultData = use(dataPromise);
 
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isBookmarking, setIsBookmarking] = useState(false);
-
   // 오늘 날짜 표시
   const todayStr = useMemo(() => {
     const d = new Date();
     return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
   }, []);
-
-  // 북마크 저장 (Keep)
-  const handleKeep = async () => {
-    if (!resultData?.oid) {
-      toast.error("주문 정보를 찾을 수 없습니다.");
-      return;
-    }
-    
-    setIsBookmarking(true);
-    try {
-      await notesApi.createNote(resultData.oid);
-      setIsBookmarked(true);
-      toast.success("테이스팅 노트에 저장되었습니다!", {
-        description: "나만의 오더 시트에서 확인하실 수 있습니다."
-      });
-    } catch (error) {
-      console.error("Bookmark failed:", error);
-      toast.error("저장에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setIsBookmarking(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-[#1a120d] selection:bg-amber-200/30 overflow-y-auto py-6">
@@ -65,31 +37,6 @@ export default function AfterScreen(props: AfterScreenProps) {
             <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></path>
           </svg>
           <span className="text-sm font-light">뒤로가기</span>
-        </button>
-
-        {/* Keep Button - Top Right */}
-        <button
-          onClick={handleKeep}
-          disabled={isBookmarked || isBookmarking}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md font-bold transition-all ${
-            isBookmarked 
-              ? "bg-emerald-600/20 text-emerald-500 cursor-default" 
-              : "bg-[#ffb247] hover:bg-[#f3a63a] text-[#1a140b] active:scale-[0.95]"
-          } disabled:opacity-80 shadow-lg`}
-        >
-          {isBookmarking ? (
-            <div className="w-4 h-4 border-2 border-[#1a140b]/20 border-t-[#1a140b] rounded-full animate-spin" />
-          ) : isBookmarked ? (
-            <>
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-xs">저장 완료</span>
-            </>
-          ) : (
-            <>
-              <Bookmark className="w-4 h-4" />
-              <span className="text-xs">노트에 Keep 하기</span>
-            </>
-          )}
         </button>
       </nav>
 
