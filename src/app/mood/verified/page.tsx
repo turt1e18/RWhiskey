@@ -513,7 +513,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   return (
     <main className="flex min-h-dvh flex-col bg-[#1a120d] text-stone-100 selection:bg-amber-200/30">
       <nav className={`mx-auto flex w-full items-center justify-between gap-4 px-6 py-4 ${selected ? "max-w-2xl" : "max-w-5xl"}`}>
-        <RecommendationBackLink href="/mood" />
+        <RecommendationBackLink href="/main" />
         {(selected || aiResult && !showForm) && (
           <button type="button" disabled={feedbackLoading} onClick={() => v3Mode ? setShowForm(true) : setResult(null)} className="flex items-center gap-2 text-sm font-light text-stone-500 transition-colors hover:text-white disabled:opacity-50">
             조건 다시 고르기
