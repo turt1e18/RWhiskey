@@ -6,7 +6,8 @@ import { whiskeyV3Api } from "@/api/whiskeyV3Api";
 import type { WhiskeyHistoryItem } from "@/api/whiskeyV3Api";
 import { ApiResponseError } from "@/api/apiClient";
 import type { WhiskeySavedRecommendation, WhiskeyTastingNoteSummary } from "@/type/ApiInterface";
-export default function VerifiedNotesList() {
+// onCount: 목록에 보일 기록 수(불러오기 실패는 null). showEmpty: 빈 상태 안내를 이 목록이 보일지 페이지가 정한다.
+export default function VerifiedNotesList({ onCount, showEmpty = true }: { onCount?: (count: number | null) => void; showEmpty?: boolean }) {
   const [records, setRecords] = useState<WhiskeySavedRecommendation[]>([]);
   const [notes, setNotes] = useState<WhiskeyTastingNoteSummary[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -19,11 +20,14 @@ export default function VerifiedNotesList() {
     setLoading(true); setStatus(null); setAuthExpired(false);
     void whiskeyV3Api.history().then((items)=>{if(active)setHistory(items);}).catch(()=>{if(active)setHistory([]);});
     void Promise.all([recommendationApi.getVerifiedRecords(), recommendationApi.getVerifiedTastingNotes()]).then(([saved, tasted]) => {
-      if (active) { setRecords(saved); setNotes(tasted); }
-    }).catch((caught) => { if (active) { setStatus("추천 시음 기록을 불러오지 못했어요."); setAuthExpired(caught instanceof ApiResponseError && caught.status === 401); } })
+      if (active) {
+        setRecords(saved); setNotes(tasted);
+        onCount?.(saved.length + tasted.filter((note) => !saved.some((record) => record.id === note.recommendationId)).length);
+      }
+    }).catch((caught) => { if (active) { setStatus("추천 시음 기록을 불러오지 못했어요."); setAuthExpired(caught instanceof ApiResponseError && caught.status === 401); onCount?.(null); } })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [reload]);
+  }, [reload, onCount]);
   const byId = new Map(notes.map((note) => [note.recommendationId, note]));
   const older = notes.filter((note) => !records.some((record) => record.id === note.recommendationId));
   const levels=new Map(history.filter(item=>item.sourceType==='VERIFIED_RECORD').map(item=>[item.sourceId,item.verificationAtRecommendation]));
@@ -32,7 +36,7 @@ export default function VerifiedNotesList() {
     <p className="mt-2 text-xs leading-5 text-stone-600">최근 추천과 저장한 시음 기록을 여기에서 다시 찾을 수 있어요.<br />마신 뒤 기록을 남겨주세요.</p>
     {loading && <p role="status" className="mt-3 text-sm">불러오는 중…</p>}
     {status && <p role="status" className="mt-3 text-sm">{status} {authExpired ? <Link href="/login" className="underline">다시 로그인</Link> : <button className="underline" onClick={() => setReload(reload + 1)}>다시 불러오기</button>}</p>}
-    {!loading && !status && records.length === 0 && older.length === 0 && <p className="mt-3 text-sm">아직 추천 기록이 없어요. <Link href="/mood/verified" className="underline">한 잔 추천받기</Link></p>}
+    {!loading && !status && records.length === 0 && older.length === 0 && showEmpty && <p className="mt-3 text-sm">아직 추천 기록이 없어요. <Link href="/mood/verified" className="underline">한 잔 추천받기</Link></p>}
     <ul className="mt-3 max-h-56 overflow-y-auto overscroll-contain divide-y divide-[#4a3728]/15 pr-2">
       {records.map((record) => <li key={record.id}><Link href={`/notes/verified/${record.id}`} className="flex min-h-14 flex-wrap items-center justify-between gap-2 py-3 text-sm">
         <span className="min-w-0 break-words">{record.selected?.displayName ?? `이전 추천 #${record.id}`}<span className="ml-2 text-xs text-stone-600">{record.selected?.edition}</span>

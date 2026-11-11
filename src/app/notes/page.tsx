@@ -34,6 +34,13 @@ export default function MyNotesPage() {
   const [loungeNotesData, setLoungeNotesData] = useState<LoungeNoteInterface[]>([]);
   const [selected, setSelected] = useState<TastingNoteEntryInterface | null>(null);
 
+  // 추천 기록 목록이 둘이라, 둘 다 불러온 뒤 전체가 비었을 때만 빈 상태 안내를 한 번 보여 준다.
+  const v2Enabled = process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true";
+  const [verifiedCount, setVerifiedCount] = useState<number | null>(null);
+  const [aiCount, setAiCount] = useState<number | null>(null);
+  const recordsLoaded = aiCount !== null && (!v2Enabled || verifiedCount !== null);
+  const noRecords = recordsLoaded && aiCount === 0 && (!v2Enabled || verifiedCount === 0);
+
   // 스크랩된 라운지 노트 ID 관리
   const [scrappedIds, setScrappedIds] = useState<string[]>([]);
   const scrappedNotes = loungeNotesData.filter((n) => scrappedIds.includes(n.id));
@@ -269,8 +276,8 @@ export default function MyNotesPage() {
                             transition={{ duration: 0.35 }}
                             className="h-full"
                           >
-                            {process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true" && <VerifiedNotesList />}
-                            <AiRecommendationsList />
+                            {v2Enabled && <VerifiedNotesList onCount={setVerifiedCount} showEmpty={noRecords} />}
+                            <AiRecommendationsList onCount={setAiCount} showEmpty={noRecords && !v2Enabled} />
                             <PersonalListView
                               whiskies={whiskies}
                               onSelect={handleSelect}
