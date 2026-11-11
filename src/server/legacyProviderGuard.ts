@@ -85,7 +85,8 @@ export async function authorizeLegacyProvider(req: Request, purpose: "GEMINI" | 
         typeof allowed.leaseToken !== "string" || !/^[a-f0-9-]{36}$/.test(allowed.leaseToken))
       throw new LegacyProviderFailure("ADMISSION_UNAVAILABLE", 503);
     lease = allowed.leaseToken;
-    return { signal: timer.signal, release };
+    // settlement: 성공한 결과를 저장할 때 BE가 소비하는 표(저장 실패 시에는 같은 표로 환불한다).
+    return { signal: timer.signal, release, settlement: lease };
   } catch (error) {
     await release();
     if (timer.signal.aborted) throw new LegacyProviderFailure("REQUEST_DEADLINE_EXCEEDED", 503);

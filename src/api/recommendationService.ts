@@ -31,7 +31,7 @@ export const getWhiskyRecommendation = async (
     mainTasteTag?: string;
   }
 ) => {
-  let isTokenDecremented = false;
+  let settlementToken: string | null = null;
 
   try {
     // 1. Gemini AI API 호출 (횟수 차감과 호출 실패 시 환불은 서버가 처리한다)
@@ -47,8 +47,8 @@ export const getWhiskyRecommendation = async (
     });
 
     if (!geminiResponse.ok) throw await geminiFailure(geminiResponse);
-    // 응답을 받았다면 서버가 1회를 차감한 채로 두었다. 이후 저장이 실패하면 아래 catch에서 환불한다.
-    isTokenDecremented = true;
+    // 서버가 1회를 차감해 두었고, 응답의 정산 표로 저장을 마치거나 실패 시 환불한다.
+    settlementToken = geminiResponse.headers.get("X-Settlement-Token");
 
     const aiResult: GeminiWhiskyResponse = await geminiResponse.json();
 
@@ -71,8 +71,8 @@ export const getWhiskyRecommendation = async (
       bartenderWord: aiResult.bartenderWord
     };
 
-    // 저장에 실패하면 가짜 번호(9999)로 이어가지 않고 아래 catch에서 토큰을 환불한 뒤 오류를 낸다.
-    const savedOid = await recommendationApi.save(saveRequest);
+    // 저장에 실패하면 가짜 번호(9999)로 이어가지 않고 아래 catch에서 정산 표로 환불한 뒤 오류를 낸다.
+    const savedOid = await recommendationApi.save(saveRequest, settlementToken ?? undefined);
 
     return {
       aiResult,
@@ -82,11 +82,11 @@ export const getWhiskyRecommendation = async (
     console.error("Whisky Recommendation Failed:", error);
 
     // [보상 트랜잭션] 토큰 복구
-    if (isTokenDecremented) {
+    if (settlementToken) {
       try {
-        await userTokenApi.increment();
-      } catch (incError) {
-        console.error("Token increment (recovery) failed:", incError);
+        await userTokenApi.refund(settlementToken);
+      } catch (refundError) {
+        console.error("Token refund failed:", refundError);
       }
     }
     
@@ -101,7 +101,7 @@ export const getCocktailRecommendation = async (
   request: CocktailRecommendationRequest,
   flexFlag: boolean
 ) => {
-  let isTokenDecremented = false;
+  let settlementToken: string | null = null;
 
   try {
     // 1. Gemini AI API 호출 (횟수 차감과 호출 실패 시 환불은 서버가 처리한다)
@@ -116,7 +116,7 @@ export const getCocktailRecommendation = async (
     });
 
     if (!geminiResponse.ok) throw await geminiFailure(geminiResponse);
-    isTokenDecremented = true;
+    settlementToken = geminiResponse.headers.get("X-Settlement-Token");
 
     const aiResult: GeminiCocktailResponse = await geminiResponse.json();
 
@@ -143,7 +143,7 @@ export const getCocktailRecommendation = async (
       method: aiResult.method
     };
 
-    const savedOid = await cocktailApi.save(saveRequest);
+    const savedOid = await cocktailApi.save(saveRequest, settlementToken ?? undefined);
 
     return {
       aiResult: { ...aiResult, images },
@@ -153,11 +153,11 @@ export const getCocktailRecommendation = async (
     console.error("Cocktail Recommendation Failed:", error);
 
     // [보상 트랜잭션] 토큰 복구
-    if (isTokenDecremented) {
+    if (settlementToken) {
       try {
-        await userTokenApi.increment();
-      } catch (incError) {
-        console.error("Token increment (recovery) failed:", incError);
+        await userTokenApi.refund(settlementToken);
+      } catch (refundError) {
+        console.error("Token refund failed:", refundError);
       }
     }
     
