@@ -224,7 +224,7 @@ export default function MainScreen() {
             </h1>
 
             <p className="text-[0.9375rem] sm:text-[1rem] md:text-[1.25rem] text-white/75 font-light leading-relaxed mb-8 md:mb-12">
-              랜덤 추천부터 기분 기반 맞춤 추천까지,
+              내 경험과 취향에 맞춘 추천으로,
               <br className="hidden sm:block" />
               당신에게 어울리는 한 잔을 찾아드립니다.
             </p>
@@ -240,12 +240,6 @@ export default function MainScreen() {
                 route={2}
                 variant="secondary"
               />
-              <button
-                onClick={() => alert("추후 추가될 기능입니다.")}
-                className="w-full py-4 rounded-xl bg-transparent border border-[#ffb247]/40 text-[#ffb247]/60 hover:text-[#ffb247] hover:border-[#ffb247] transition-all font-semibold text-base"
-              >
-                랜덤 위스키 추천
-              </button>
             </div>
           </div>
 
@@ -277,38 +271,17 @@ export default function MainScreen() {
               <div className="h-[0.25rem] w-16 md:w-20 bg-[#ffb247] mx-auto rounded-full" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-              {/* 랜덤 추천 카드 */}
-              <div className="relative p-5 md:p-8 rounded-2xl bg-gradient-to-b from-[#2d2417]/40 to-[#1a140b] border border-white/10 shadow-2xl">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-[#ffb247]/10 rounded-xl flex items-center justify-center mb-5 md:mb-8 border border-[#ffb247]/20 text-2xl md:text-4xl">
-                  🎲
-                </div>
-                <h4 className="text-[1.25rem] md:text-[1.5rem] font-bold text-white mb-3 md:mb-4">
-                  랜덤 위스키 추천
-                </h4>
-                <p className="text-slate-400 leading-relaxed font-light mb-4 text-[0.875rem] md:text-[1rem]">
-                  오늘의 위스키를 랜덤으로 추천합니다.
-                </p>
-                <div className="pt-4 border-t border-white/5">
-                  <p className="text-[0.6875rem] text-[#ffb247]/70 uppercase tracking-widest mb-1">
-                    Example
-                  </p>
-                  <p className="text-[0.8125rem] md:text-[0.875rem] text-slate-300 italic">
-                    Glenfiddich 15년 - 부드러운 꿀 향과 오크의 조화
-                  </p>
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
               {/* 맞춤 추천 카드 */}
               <div className="relative p-5 md:p-8 rounded-2xl bg-gradient-to-b from-[#2d2417]/60 to-[#1a140b] border border-[#ffb247]/20 shadow-[0_0_40px_rgba(255,178,71,0.05)]">
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-[#ffb247]/20 rounded-xl flex items-center justify-center mb-5 md:mb-8 border border-[#ffb247]/40 text-2xl md:text-4xl">
-                  🌤️
+                  🥃
                 </div>
                 <h4 className="text-[1.25rem] md:text-[1.5rem] font-bold text-white mb-3 md:mb-4">
                   맞춤 위스키 추천
                 </h4>
                 <p className="text-slate-300 leading-relaxed font-light mb-4 text-[0.875rem] md:text-[1rem]">
-                  기분과 상황에 어울리는 위스키를 찾아드립니다.
+                  내 경험 수준과 선호하는 향에 맞는 위스키를 찾아드립니다.
                 </p>
                 <div className="pt-4 border-t border-[#ffb247]/10">
                   <p className="text-[0.6875rem] text-[#ffb247]/70 uppercase tracking-widest mb-1">
@@ -375,10 +348,10 @@ export default function MainScreen() {
                   1
                 </div>
                 <h4 className="text-[1.25rem] md:text-[1.5rem] font-bold text-white mb-3 md:mb-4">
-                  상황과 기분 선택
+                  경험과 취향 선택
                 </h4>
                 <p className="text-slate-300 font-light leading-relaxed px-2 md:px-4 text-[0.875rem] md:text-[1rem] break-keep">
-                  오늘의 분위기나 선호하는 맛을 간단히 선택합니다.
+                  내 경험 수준과 선호하는 향·맛을 간단히 선택합니다.
                 </p>
               </div>
 

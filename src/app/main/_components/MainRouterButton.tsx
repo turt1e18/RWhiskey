@@ -12,8 +12,7 @@ export default function MainRouterButton(props: MainRouterButtonProps) {
 
   // route 값에 따라 페이지 이동
   function routePage(route: number) {
-    if (route === 0) router.push("/random");
-    else if (route === 1) router.push("/mood");
+    if (route === 1) router.push("/mood/verified");
     else router.push("/cocktail");
   }
 
