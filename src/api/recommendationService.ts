@@ -74,13 +74,8 @@ export const getWhiskyRecommendation = async (
       bartenderWord: aiResult.bartenderWord
     };
 
-    let savedOid = 9999;
-    try {
-      savedOid = await recommendationApi.save(saveRequest);
-    } catch (saveError) {
-      console.error("Failed to save recommendation to backend:", saveError);
-      // 저장 실패 시에도 AI 결과는 보여줄 수 있도록 폴백 처리하거나 에러를 던짐
-    }
+    // 저장에 실패하면 가짜 번호(9999)로 이어가지 않고 아래 catch에서 토큰을 환불한 뒤 오류를 낸다.
+    const savedOid = await recommendationApi.save(saveRequest);
 
     return {
       aiResult,
@@ -163,12 +158,7 @@ export const getCocktailRecommendation = async (
       method: aiResult.method
     };
 
-    let savedOid = 9999;
-    try {
-      savedOid = await cocktailApi.save(saveRequest);
-    } catch (saveError) {
-      console.error("Failed to save cocktail recommendation to backend:", saveError);
-    }
+    const savedOid = await cocktailApi.save(saveRequest);
 
     return {
       aiResult: { ...aiResult, images },
