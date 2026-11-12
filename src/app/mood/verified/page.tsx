@@ -107,6 +107,9 @@ const smokeOptions: { value: WhiskeySmokePreference; label: string }[] = [
   { value: "AVOID", label: "피하고 싶어요" },
 ];
 
+// V2 미리보기 경로 개폐 스위치. 닫힘이면 V3 설정이 꺼진 환경에서도 V2 엔드포인트를 호출하지 않는다.
+const V2_PATH_OPEN = false;
+
 function isVerifiedResponse(value: unknown): value is WhiskeyVerifiedRecommendationResponse {
   if (typeof value !== "object" || value === null || !("state" in value)) return false;
   return typeof value.state === "string" && value.state in stateMessages &&
@@ -186,7 +189,8 @@ export default function VerifiedWhiskeyPreviewPage() {
     orderMessageRef.current?.focus({ preventScroll: true });
     orderMessageRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   }, [v3.message, reduceMotion]);
-  const enabled = v3Mode || process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true";
+  // V2 추천 경로는 닫아 두었다(코드는 유지). 다시 열려면 V2_PATH_OPEN을 true로 바꾸고 NEXT_PUBLIC_WHISKEY_V2_ENABLED도 켠다.
+  const enabled = v3Mode || (V2_PATH_OPEN && process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true");
   const currentCard=useRef({uid,id:result?.recommendationId});currentCard.current={uid,id:result?.recommendationId};
   useEffect(() => { setAiResult(null);setAiResultOwnerUid(null);setResult(null);setShowForm(true);setSavedAt(null);setFeedbackStatus(null);setSavedFeedbackSentiment(null);setFeedbackComment(""); }, [uid]);
   const todayStr = useMemo(() => {
