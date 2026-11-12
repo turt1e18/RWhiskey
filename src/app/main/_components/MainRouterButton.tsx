@@ -1,20 +1,13 @@
-"use client";
-
+import Link from "next/link";
 import { MainRouter } from "@/type/MainInterface";
-import { useRouter } from "next/navigation";
 
 type MainRouterButtonProps = MainRouter & {
   variant?: "primary" | "secondary" | "ghost";
 };
 
 export default function MainRouterButton(props: MainRouterButtonProps) {
-  const router = useRouter();
-
-  // route 값에 따라 페이지 이동
-  function routePage(route: number) {
-    if (route === 1) router.push("/mood/verified");
-    else router.push("/cocktail");
-  }
+  // route 값에 따라 이동할 주소
+  const href = props.route === 1 ? "/mood/verified" : "/cocktail";
 
   // 버튼 종류별 스타일 분기
   function getButtonStyle(variant?: "primary" | "secondary" | "ghost") {
@@ -43,22 +36,13 @@ export default function MainRouterButton(props: MainRouterButtonProps) {
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => {
-        routePage(props.route);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          routePage(props.route);
-        }
-      }}
+    <Link
+      href={href}
       className={
         "relative group overflow-hidden w-full max-w-[440px] inline-flex items-center justify-center text-center cursor-pointer rounded-xl " +
         "px-8 py-4 md:px-12 md:py-5 text-base md:text-lg " +
         "transition-all duration-300 " +
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ffb247] " +
         getButtonStyle(props.variant)
       }
     >
@@ -67,6 +51,6 @@ export default function MainRouterButton(props: MainRouterButtonProps) {
 
       {/* 버튼 텍스트 */}
       <span className="relative z-10">{props.text}</span>
-    </div>
+    </Link>
   );
 }
