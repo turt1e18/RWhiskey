@@ -1,4 +1,5 @@
 "use client";
+import { displayExpression } from '@/lib/recommendations/aiPresentation';
 import {useEffect,useState} from 'react';
 import {getRecommendationPhoto,forgetRecommendationPhoto} from '@/api/recommendationImages';
 import {whiskeyPhotoQuery, type WhiskeyReferencePhoto} from '@/lib/recommendations/whiskeyPhoto';
@@ -16,7 +17,7 @@ export default function WhiskeySearchPhoto({identity,showSource=true}:{identity:
     return()=>{active=false;};
   },[query,retry]);
   return <div className="mt-5">
-    {ready ? <RecommendationSearchImage key={photo?.url??query} src={photo?.url} fallbackSrc={photo?.fallbackUrl} name={`${identity.brand} ${identity.expression}`}
+    {ready ? <RecommendationSearchImage key={photo?.url??query} src={photo?.url} fallbackSrc={photo?.fallbackUrl} name={`${identity.brand} ${displayExpression(identity.expression)}`}
       sourceUrl={photo?.sourceUrl} sourceTitle={photo?.sourceTitle} showSource={showSource} onRetry={photo?retryPhoto:undefined}/> :
       <div role="status" className="mb-6 flex h-52 items-center justify-center text-sm text-stone-600">사진을 찾고 있어요…</div>}
     {ready && !photo && <button type="button" className="mb-3 inline-flex min-h-11 items-center text-xs text-stone-700 underline"

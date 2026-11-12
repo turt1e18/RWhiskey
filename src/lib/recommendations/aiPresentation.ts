@@ -9,3 +9,9 @@ const normalize=(value:string)=>value.toLowerCase().replace(/[^a-z0-9]+/g,' ').t
 export function aiKoreanName(identity:{brand:string;expression:string},localizedName?:string|null):string|null {
   return localizedName ?? aliases[`${normalize(identity.brand)}|${normalize(identity.expression)}`] ?? null;
 }
+
+/** 수집 제품명 끝의 용량 표기("— 50ml")는 화면에서만 뺀다. 신원 값은 원본 제품명 대조에 쓰이므로 바꾸지 않는다. */
+export function displayExpression(expression:string):string {
+  const cleaned=expression.replace(/\s*[—–-]\s*\d+(?:\.\d+)?\s*(?:ml|cl|l)\s*$/i,'').trim();
+  return cleaned||expression;
+}

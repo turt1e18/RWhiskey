@@ -159,6 +159,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const reduceMotion = useReducedMotion();
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const formHeadingRef = useRef<HTMLHeadingElement>(null);
   const orderMessageRef = useRef<HTMLParagraphElement>(null);
   const feedbackBusy = useRef(false);
   const busy = useRef(false);
@@ -236,6 +237,10 @@ export default function VerifiedWhiskeyPreviewPage() {
   useEffect(() => {
     if (result || aiResult) resultHeadingRef.current?.focus();
   }, [result, aiResult, showForm]);
+  // "조건 다시 고르기"를 누르면 버튼이 사라지므로, 포커스를 조건 입력 화면 제목으로 옮긴다.
+  useEffect(() => {
+    if (showForm && (result || aiResult)) formHeadingRef.current?.focus();
+  }, [showForm]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     setDetailsOpen(profile.experienceLevel === "ADVANCED");
     setError(null);
@@ -547,7 +552,7 @@ export default function VerifiedWhiskeyPreviewPage() {
           transition={{ duration: reduceMotion ? 0 : 0.2 }} className="mx-auto grid w-full max-w-5xl items-center gap-10 px-6 py-4 md:gap-12 lg:grid-cols-2">
           <header className="flex flex-col justify-center space-y-4">
             <p className="text-sm font-medium uppercase tracking-[0.25em] text-amber-300/80">Whiskey Recommendation</p>
-            <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl lg:text-4xl">오늘의 취향에 맞는<br />위스키를 찾아보세요</h1>
+            <h1 ref={formHeadingRef} tabIndex={-1} className="text-2xl font-bold leading-tight text-white outline-none md:text-3xl lg:text-4xl">오늘의 취향에 맞는<br />위스키를 찾아보세요</h1>
             <p className="max-w-md text-sm leading-6 text-stone-400 md:text-base">{aiEnabled ? "위스키 경험과 선호하는 향을 고르면 AI가 찾은 후보 중에서 오늘의 한 잔을 골라드려요. 제품 정보는 외부 교차검증 전인 제안이에요." : "위스키 경험과 선호하는 향을 고르면 확인된 병입 중에서 오늘의 한 잔을 추천해드립니다."}</p>
             {profile.experienceLevel !== "BEGINNER" && <p className="max-w-md text-sm leading-6 text-stone-500">익숙한 취향이 있다면 주문서에서 조건을 더 구체적으로 선택할 수 있습니다.</p>}
           </header>
