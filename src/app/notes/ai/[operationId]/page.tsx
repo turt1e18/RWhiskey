@@ -1,4 +1,5 @@
 "use client";
+import { displayExpression } from '@/lib/recommendations/aiPresentation';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -35,7 +36,7 @@ export default function AiTastingNotePage(){
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)){setBusy(false);setStatus('올바르지 않은 추천 주소예요.');return;}
     void Promise.all([whiskeyV3Api.byId(id),whiskeyV3Api.aiFeedback(id,'CONSUMED')]).then(([response,saved])=>{
       const card=toAiSuggestion(response);if(!card&&!sourceReadFailure(response))throw new Error('INVALID_AI_RECORD');
-      if(active){setName(card?`${card.identity.brand} ${card.identity.expression}`:'');setProduct(card);setRestricted(!card);setRecordLoaded(true);setNote(saved?.feedback??{});}
+      if(active){setName(card?`${card.identity.brand} ${displayExpression(card.identity.expression)}`:'');setProduct(card);setRestricted(!card);setRecordLoaded(true);setNote(saved?.feedback??{});}
     }).catch(e=>{if(active){const expired=e instanceof ApiResponseError&&(e.status===401||e.status===403);setLoadError(true);setStatus(expired?'로그인을 다시 확인한 뒤 시음 기록을 불러와 주세요.':e instanceof ApiResponseError && e.status===404 ? '이 계정에서 해당 AI 추천 기록을 찾지 못했어요. 주소와 계정을 확인해 주세요.' : '시음 기록을 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.');setAuth(expired);}})
       .finally(()=>{if(active)setBusy(false);});
     return ()=>{active=false;};
@@ -50,7 +51,7 @@ export default function AiTastingNotePage(){
       if(failure==='TEMPORARY'){setSourceStatus('제품 정보를 불러오지 못했어요. 작성 중인 내용은 유지돼요.');return;}
       const card=toAiSuggestion(response);
       if(!card||card.id!==id)throw new Error('INVALID_AI_RECORD');
-      const result=product?refreshResultInformation(product,card):{card,unavailable:false,changed:true};setProduct(result.card);setName(`${card.identity.brand} ${card.identity.expression}`);setRestricted(false);
+      const result=product?refreshResultInformation(product,card):{card,unavailable:false,changed:true};setProduct(result.card);setName(`${card.identity.brand} ${displayExpression(card.identity.expression)}`);setRestricted(false);
       setSourceStatus(result.unavailable?result.changed?'제품 정보가 업데이트됐지만 일부 정보를 불러오지 못했어요. 작성 중인 내용은 유지돼요.':'일부 제품 정보를 불러오지 못했어요. 작성 중인 내용은 유지돼요.':result.changed?'제품 정보가 업데이트됐어요.':'표시할 정보에 변경이 없어요.');
     }catch(error){if(current()){setSourceStatus('제품 정보를 불러오지 못했어요. 작성 중인 내용은 유지돼요. 잠시 뒤 다시 확인해 주세요.');setAuth(error instanceof ApiResponseError&&(error.status===401||error.status===403));}}
     finally{if(current())setSourceBusy(false);}

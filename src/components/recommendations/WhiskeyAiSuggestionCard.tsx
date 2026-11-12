@@ -9,7 +9,7 @@ import type { V3Response } from '@/lib/recommendations/v3Contract';
 import type { WhiskeyFeedbackReason, WhiskeyFeedbackSentiment } from '@/type/ApiInterface';
 import ExpectationFeedback from './ExpectationFeedback';
 import { bilingualLabel } from './whiskeyPresentation';
-import { aiKoreanName } from '@/lib/recommendations/aiPresentation';
+import { aiKoreanName, displayExpression } from '@/lib/recommendations/aiPresentation';
 import {useAuthStore} from '@/store/authStore';
 import WhiskeyResultImage from './WhiskeyResultImage';
 import WhiskeyResultBasicFacts from './WhiskeyResultBasicFacts';
@@ -150,7 +150,7 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
         {sourceAuth&&<Link href="/login" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline">새 탭에서 다시 로그인</Link>}
         <Link href={`/notes/ai/${a.id}`} className="mt-2 flex min-h-11 items-center text-sm underline">내 시음 기록 열기</Link>
       </div>:<>
-      <h2 className="text-[22px] font-semibold leading-snug tracking-tight md:text-2xl">{p.brand} {p.expression}</h2>
+      <h2 className="text-[22px] font-semibold leading-snug tracking-tight md:text-2xl">{p.brand} {displayExpression(p.expression)}</h2>
       {koreanName && <p lang="ko" className="mt-2 text-[13px] leading-5 text-stone-700">{koreanName}</p>}
       {p.edition && <p className="mt-2 text-sm">{p.edition}</p>}
       <WhiskeyResultImage identity={p}/>
