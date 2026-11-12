@@ -27,6 +27,11 @@
   --label-text:  #5C4A39;
 }
 
+/* 스크롤바가 생기고 사라질 때 가운데 정렬된 화면이 좌우로 흔들리지 않게 자리를 항상 남긴다. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   width: 100%;
   height: 100%;

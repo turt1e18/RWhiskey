@@ -514,7 +514,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   const preferredCategories = (facets?.categories ?? []).filter((category) => !(inputs.country || inputs.preferredCountry) || !category.country || category.country === (inputs.country || inputs.preferredCountry));
   const hardRegions = (facets?.regions ?? []).filter((region) => !inputs.country || region.country === inputs.country);
   const caskLabel = (value: string) => facets?.casks?.find((item) => item.value === value)?.label ?? ({ BOURBON: "버번 통", SHERRY: "셰리 통", WINE: "와인 통", PORT: "포트 통", RUM: "럼 통", VIRGIN_OAK: "새 오크 통", OTHER: "기타 통" } as Record<string,string>)[value] ?? value;
-  const fieldChoiceClass = (active: boolean) => `inline-flex min-h-11 cursor-pointer items-center rounded-full border px-3 py-1.5 text-[13px] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4a3728] ${
+  const fieldChoiceClass = (active: boolean) => `inline-flex min-h-11 cursor-pointer items-center rounded-sm border px-3 py-1.5 text-[13px] transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#4a3728] ${
     active ? "border-[#2d2017] bg-[#4a3728]/10 font-bold text-[#2d2017]" :
       "border-[#4a3728]/30 bg-white/20 text-stone-700 hover:border-[#4a3728]/60"
   }`;
@@ -530,7 +530,7 @@ export default function VerifiedWhiskeyPreviewPage() {
         )}
       </nav>
 
-      <div className="flex flex-1 flex-col justify-center py-6 md:py-10">
+      <div className="flex flex-1 flex-col justify-start py-6 md:py-10">
       {v3Mode && <section aria-live="polite" className="mx-auto w-full max-w-3xl px-6 pb-4 text-sm leading-6">
         {v3.message && <p role="status" ref={orderMessageRef} tabIndex={-1} className="rounded border border-amber-200/30 bg-[#241b16] p-4"><strong className="mb-1 block">이번 주문 안내</strong>{v3.message}</p>}
         {v3.message && (v3.authRequired || !isAuthenticated) && <Link href="/login" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center underline">새 탭에서 로그인하고 돌아오기</Link>}
@@ -553,12 +553,13 @@ export default function VerifiedWhiskeyPreviewPage() {
         </section>
       ) : !selected ? (
         <motion.div initial={{ opacity: reduceMotion ? 1 : 0, y: reduceMotion ? 0 : 8 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.2 }} className="mx-auto grid w-full max-w-5xl items-center gap-10 px-6 py-4 md:gap-12 lg:grid-cols-2">
+          transition={{ duration: reduceMotion ? 0 : 0.2 }} className="mx-auto grid w-full max-w-5xl items-start gap-10 px-6 py-4 md:gap-12 lg:grid-cols-2">
           <header className="flex flex-col justify-center space-y-4">
             <p className="text-sm font-medium uppercase tracking-[0.25em] text-amber-300/80">Whiskey Recommendation</p>
             <h1 ref={formHeadingRef} tabIndex={-1} className="text-2xl font-bold leading-tight text-white outline-none md:text-3xl lg:text-4xl">오늘의 취향에 맞는<br />위스키를 찾아보세요</h1>
             <p className="max-w-md text-sm leading-6 text-stone-400 md:text-base">{aiEnabled ? "위스키 경험과 선호하는 향을 고르면 AI가 찾은 후보 중에서 오늘의 한 잔을 골라드려요. 제품 정보는 외부 교차검증 전인 제안이에요." : "위스키 경험과 선호하는 향을 고르면 확인된 병입 중에서 오늘의 한 잔을 추천해드립니다."}</p>
-            {profile.experienceLevel !== "BEGINNER" && <p className="max-w-md text-sm leading-6 text-stone-500">익숙한 취향이 있다면 주문서에서 조건을 더 구체적으로 선택할 수 있습니다.</p>}
+            {/* invisible로 자리를 유지해 단계를 바꿔도 아래 주문서가 밀리지 않게 한다. */}
+            <p className={`max-w-md text-sm leading-6 text-stone-500 ${profile.experienceLevel === "BEGINNER" ? "invisible" : ""}`}>익숙한 취향이 있다면 주문서에서 조건을 더 구체적으로 선택할 수 있습니다.</p>
           </header>
           <form onSubmit={submit} noValidate aria-busy={loading || v3.busy} className="relative mx-auto w-full max-w-[550px] rounded-sm border border-[#4a3728] bg-[#efe2c9] p-6 text-stone-900 shadow-[0_20px_50px_rgba(0,0,0,0.4)] md:p-8">
             <div className="pointer-events-none absolute inset-2 border border-[#4a3728]/20" />
@@ -586,12 +587,14 @@ export default function VerifiedWhiskeyPreviewPage() {
                   ))}
                 </div>
               </fieldset>
-              <motion.p key={profile.experienceLevel} initial={{ opacity: reduceMotion ? 1 : 0 }} animate={{ opacity: 1 }}
-                transition={{ duration: reduceMotion ? 0 : 0.18 }} className="mt-4 text-sm leading-6 text-stone-700">
-                {profile.experienceLevel === "BEGINNER" ? "처음이라면 아래 두 가지만 골라도 됩니다. 잘 모르겠다면 그대로 추천받으세요." :
-                  profile.experienceLevel === "INTERMEDIATE" ? "알고 있는 취향만 고르고, 필요하면 아래 조건으로 더 구체화하세요. 모르는 항목은 비워두어도 됩니다." :
-                    (aiEnabled ? "제안된 병입 유형과 세부 정보를 함께 살펴봐요. 정확한 제품 정보는 외부 교차검증 전이에요." : "병입 유형과 검수된 세부 정보를 함께 살펴봅니다. 모르는 취향은 비워두어도 됩니다.")}
-              </motion.p>
+              {/* 세 안내문을 한 칸에 겹쳐 가장 긴 문장 높이로 고정한다. 단계를 바꿔도 아래 항목이 움직이지 않는다. */}
+              <div className="mt-4 grid text-sm leading-6 text-stone-700">
+                {([
+                  ["BEGINNER", "처음이라면 아래 두 가지만 골라도 됩니다. 잘 모르겠다면 그대로 추천받으세요."],
+                  ["INTERMEDIATE", "알고 있는 취향만 고르고, 필요하면 아래 조건으로 더 구체화하세요. 모르는 항목은 비워두어도 됩니다."],
+                  ["ADVANCED", aiEnabled ? "제안된 병입 유형과 세부 정보를 함께 살펴봐요. 정확한 제품 정보는 외부 교차검증 전이에요." : "병입 유형과 검수된 세부 정보를 함께 살펴봅니다. 모르는 취향은 비워두어도 됩니다."],
+                ] as const).map(([level, text]) => <p key={level} className={`col-start-1 row-start-1 ${profile.experienceLevel === level ? "" : "invisible"}`}>{text}</p>)}
+              </div>
               {levelStatus && <p role="status" className="mt-2 text-xs text-amber-900">{levelStatus}</p>}
               <fieldset className="mt-5">
                 <legend className="text-sm font-semibold">{profile.experienceLevel === "BEGINNER" ? "연기 향이 나도 괜찮나요?" :

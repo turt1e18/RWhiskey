@@ -20,7 +20,7 @@ export default function WhiskeyTasteFields({ profile, onChange }: { profile: Whi
         const active = selected.includes(value);
         return <button key={value} type="button" aria-pressed={active} disabled={!active && selected.length >= max}
           onClick={() => onChange({ ...profile, preferredFlavor: "UNKNOWN", aromaPreferences: active ? selected.filter((item) => item !== value) : [...selected, value] })}
-          className={`min-h-11 rounded-full border px-3 py-2 text-xs transition-colors disabled:opacity-45 ${active ? "border-[#4a3728] bg-[#4a3728] text-white" : "border-[#4a3728]/35 bg-white/25 text-stone-800"}`}>{label}</button>;
+          className={`min-h-11 rounded-sm border px-3 py-2 text-xs transition-colors disabled:opacity-45 ${active ? "border-[#4a3728] bg-[#4a3728] text-white" : "border-[#4a3728]/35 bg-white/25 text-stone-800"}`}>{label}</button>;
       })}</div>
       <p role="status" className="mt-2 text-xs leading-5 text-stone-600">{selected.length >= max ? `${max}개를 골랐어요. 다른 향을 고르려면 하나를 해제해 주세요.` : `${selected.length}개 선택`}</p>
     </fieldset>
