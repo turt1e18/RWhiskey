@@ -12,7 +12,7 @@ import type {V3Response} from '@/lib/recommendations/v3Contract';
 function markup(value=card){const display=whiskeyResultInformation(value);return renderToStaticMarkup(<><WhiskeyResultBasicFacts display={display}/><WhiskeyCollectedBottlingPanel display={display}/></>);}
 test('actual information values are readable without source UI or empty bottling fields',()=>{
   const html=markup();assert.ok(html.includes('46.3%'));assert.ok(html.includes('12년'));assert.ok(html.includes('Bourbon'));
-  assert.equal((html.match(/AI 추정/g)??[]).length,2);
+  assert.equal((html.match(/참고 정보/g)??[]).length,2);
   for(const noise of ['출처','https://','2026-10-22','등록 제품명','캐스크 번호','피니시 통','Highland','미확인'])assert.ok(!html.includes(noise),noise);
 });
 test('fixed basic labels and a native bottling entry persist even when no values exist',()=>{
@@ -21,11 +21,11 @@ test('fixed basic labels and a native bottling entry persist even when no values
     const positions=['위스키 종류','위스키 생산국','알코올 도수','숙성 연수','병입 정보 더보기'].map(label=>html.indexOf(label));
     assert.ok(positions.every((v,i)=>v>=0&&(i===0||v>positions[i-1])));assert.ok(html.includes('<details'));
   }
-  const html=markup(empty);assert.equal((html.match(/정보 없음/g)??[]).length,4);assert.equal((html.match(/현재 안내할 수 있는 병입 정보가 없어요/g)??[]).length,1);
+  const html=markup(empty);assert.equal((html.match(/아직 정보가 없어요/g)??[]).length,4);assert.equal((html.match(/현재 안내할 수 있는 병입 정보가 없어요/g)??[]).length,1);
 });
 test('held fields never render an AI alternative and an unconfirmed viewer cannot render a stored result',()=>{
   const held={...card,collectedBottlingInformation:{...collected,status:'AMBIGUOUS' as const,basicFields:undefined}};
-  const html=markup(held);assert.ok(!html.includes('AI 추정'));assert.ok(html.includes('정보 확인 필요'));
+  const html=markup(held);assert.ok(!html.includes('참고 정보'));assert.ok(html.includes('정보 확인 필요'));
   const response:V3Response={apiVersion:'V3',state:'SUCCESS',nextAction:'NONE',operationId:card.id,appliedLevel:'BEGINNER',recommendedAt:'2026-10-26T00:00:00Z',
     verification:{atRecommendation:'AI_SUGGESTED',current:'UNVERIFIED'},aiSuggestion:card};
   const result=renderToStaticMarkup(<WhiskeyAiSuggestionCard response={response} ownerUid={42}/>);

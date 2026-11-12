@@ -12,12 +12,12 @@ test('actual facts remain values while basic-only original AI estimates are brie
   assert.deepEqual(view.basic.map(f=>f.field),['category','country','abv','age']);
   assert.deepEqual(view.basic.map(f=>f.kind),['AI','AI','KNOWN','KNOWN']);
   assert.equal(view.basic[2].value,'46.3%');assert.equal(view.basic[3].value,'12년');
-  assert.deepEqual(view.bottling,[{field:'maturationCask',label:'숙성 통',value:'Bourbon (버번)'}]);assert.deepEqual(view.volumes,[]);
+  assert.deepEqual(view.bottling,[{field:'maturationCask',label:'숙성 통',value:'Bourbon (버번)',raw:'BOURBON'}]);assert.deepEqual(view.volumes,[]);
   assert.equal(JSON.stringify(card),before);
 });
 test('all missing basic labels stay fixed and null age is never NAS',()=>{
   const view=whiskeyResultInformation({...card,identity:{brand:'Example',expression:'One'},collectedBottlingInformation:null});
-  assert.equal(view.basic.length,4);assert.ok(view.basic.every(f=>f.kind==='MISSING'&&f.value==='정보 없음'));
+  assert.equal(view.basic.length,4);assert.ok(view.basic.every(f=>f.kind==='MISSING'&&f.value==='아직 정보가 없어요'));
   assert.deepEqual(view.bottling,[]);
   for(const value of ['UNKNOWN','N/A',' ']){
     const info={...collected,fields:collected.fields.map(f=>f.field==='maturationCask'?{...f,value}:f)};

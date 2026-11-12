@@ -7,7 +7,7 @@ import {bottlingLabels,caskDisplay} from './bottlingDisplay';
 import {bilingualLabel} from '@/components/recommendations/whiskeyPresentation';
 
 export interface ResultBasicFact {field:CollectedBasicFieldName;label:string;value:string;kind:'KNOWN'|'AI'|'MISSING'|'HELD'}
-export interface ResultInformation {basic:ResultBasicFact[];bottling:{field:string;label:string;value:string}[];volumes:number[];notice:string|null}
+export interface ResultInformation {basic:ResultBasicFact[];bottling:{field:string;label:string;value:string;raw?:string}[];volumes:number[];notice:string|null}
 const labels={category:'위스키 종류',country:'위스키 생산국',abv:'알코올 도수',age:'숙성 연수'};
 const heldReasons=new Set(['CONFLICTING_OBSERVATIONS','UNCERTAIN_SCOPE_OR_VALUE','AGE_NOT_CONFIRMED','VARIANT_NOT_CONFIRMED','MULTIPLE_PRODUCT_LINES','CONFLICTING_PRODUCT_GROUPS']);
 const extraLabels:Record<string,string>={edition:'에디션',market:'판매 지역',independentBottling:'독립 병입',oldBottle:'올드바틀',
@@ -78,7 +78,7 @@ export function whiskeyResultInformation(card:AiSuggestionCard,now=Date.now()):R
     if(pageConflict){return {field,label:labels[field],value:'정보 확인 필요',kind:'HELD'};}
     const proposed=field==='age'?(p.ageStatement==='NAS'?'NAS':p.ageStatement==='NUMBERED'&&p.ageYears!=null?String(p.ageYears):null):p[field];
     const value=normalized(field,typeof proposed==='number'?String(proposed):proposed);
-    return {field,label:labels[field],value:value&&!card.candidateOrigin?basicFormat(field,value):'정보 없음',kind:value&&!card.candidateOrigin?'AI':'MISSING'};
+    return {field,label:labels[field],value:value&&!card.candidateOrigin?basicFormat(field,value):'아직 정보가 없어요',kind:value&&!card.candidateOrigin?'AI':'MISSING'};
   });
   const bottling:ResultInformation['bottling']=[];
   for(const field of Object.keys(bottlingLabels)){
@@ -89,7 +89,7 @@ export function whiskeyResultInformation(card:AiSuggestionCard,now=Date.now()):R
     if(!raw&&info?.status==='NAME_MATCH'&&source?.status==='OBSERVED'&&!source.sources.some(s=>s.attribution||s.licenseUrl))raw=source.value;
     if(!raw)raw=pageFields.find(f=>f.field===field)?.value??null;
     const value=raw?detailFormat(field,raw):null;
-    if(value)bottling.push({field,label:bottlingLabels[field],value});
+    if(value)bottling.push({field,label:bottlingLabels[field],value,...(field==='maturationCask'||field==='finishCask'?{raw:String(raw)}:{})});
   }
   for(const f of catalogFields){
     if(!extraLabels[f.field])continue;

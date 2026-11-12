@@ -14,9 +14,8 @@ import {useAuthStore} from '@/store/authStore';
 import WhiskeyResultImage from './WhiskeyResultImage';
 import WhiskeyResultBasicFacts from './WhiskeyResultBasicFacts';
 import WhiskeyCollectedBottlingPanel from './WhiskeyCollectedBottlingPanel';
-import {sameProposedCaskPreference} from '@/lib/recommendations/caskPreference';
+import {caskPreferenceNote} from '@/lib/recommendations/caskPreference';
 import {bartenderPresentation} from '@/lib/recommendations/bartenderPresentation';
-import {caskDisplay} from '@/lib/recommendations/bottlingDisplay';
 import {collectedBodyHidden,sourceReadFailure} from '@/lib/recommendations/collectedCandidate';
 import {useCollectedLease} from '@/lib/recommendations/useCollectedLease';
 import {refreshResultInformation,whiskeyResultInformation} from '@/lib/recommendations/whiskeyResultInformation';
@@ -88,8 +87,8 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
     pref?.country && !a.reasons?.includes('PROPOSED_COUNTRY_MATCH')?`선호하신 생산국은 ${bilingualLabel('country',pref.country,null)}이며, 이번 한 잔은 ${bilingualLabel('country',p.country??null,null)||'생산국 정보 없음'}이에요.`:null,
     pref?.region && !a.reasons?.includes('PROPOSED_REGION_MATCH')?`선호하신 산지는 ${pref.region}이며, 이번 한 잔의 산지는 ${p.region||'정보 없음'}이에요.`:null,
     pref?.targetAbv!=null && !a.reasons?.includes('PROPOSED_ABV_MATCH')?`선호하신 도수는 ${pref.targetAbv}%이며, 이번 한 잔의 도수는 ${p.abv==null?'정보 없음':p.abv+'%'}이에요.`:null,
-    pref?.maturationCask && !a.reasons?.includes('PROPOSED_MATURATION_MATCH') && !sameProposedCaskPreference(pref.maturationCask,p.maturationCask)?`선호하신 숙성 통은 ${caskDisplay(pref.maturationCask)}이며, 이번 한 잔의 숙성 통은 ${caskDisplay(p.maturationCask)}이에요.`:null,
-    pref?.finishCask && !a.reasons?.includes('PROPOSED_FINISH_MATCH') && !sameProposedCaskPreference(pref.finishCask,p.finishCask)?`선호하신 피니시 통은 ${caskDisplay(pref.finishCask)}이며, 이번 한 잔의 피니시 통은 ${caskDisplay(p.finishCask)}이에요.`:null,
+    pref?.maturationCask?caskPreferenceNote('숙성 통',pref.maturationCask,display.bottling.find(b=>b.field==='maturationCask')):null,
+    pref?.finishCask?caskPreferenceNote('피니시 통',pref.finishCask,display.bottling.find(b=>b.field==='finishCask')):null,
   ].filter(Boolean);
   function denyAccess(authRequired=false,temporary=false){
     requestVersion.current++;accessBlocked.current=true;refreshing.current=false;
@@ -154,7 +153,7 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
       {koreanName && <p lang="ko" className="mt-2 text-[13px] leading-5 text-stone-700">{koreanName}</p>}
       {p.edition && <p className="mt-2 text-sm">{p.edition}</p>}
       <WhiskeyResultImage identity={p}/>
-      <WhiskeyResultBasicFacts display={display} beginner={response.appliedLevel==='BEGINNER'}/>
+      <WhiskeyResultBasicFacts display={display} beginner={response.appliedLevel==='BEGINNER'} notice={a.notice}/>
       {(p.independentBottling || p.oldBottle) && <p className="mt-4 text-sm font-semibold">{[p.independentBottling?'독립 병입':null,p.oldBottle?'올드바틀':null].filter(Boolean).join(' · ')}</p>}
       <h3 className="mt-6 border-t border-[#4a3728]/25 pt-4 font-bold">오늘 권해드리는 한 잔</h3>
       <div className="mt-3 space-y-2 text-sm leading-7">{introduction.introduction.map((text,i)=><p key={i}>{text}</p>)}
