@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {bilingualLabel} from '../../components/recommendations/whiskeyPresentation';
 import {bottlingRows,caskDisplay} from './bottlingDisplay';
 import {collectedBottlingFields,validCollectedBottlingInformation} from './collectedBottlingInformation';
-import {bartenderPresentation} from './bartenderPresentation';
+import {bartenderPresentation,servingSteps} from './bartenderPresentation';
 import type {CollectedBottlingInformation} from './collectedBottlingInformation';
 const info:CollectedBottlingInformation={status:'NAME_MATCH',checkedAt:'2026-10-23T00:00:00Z',evidenceStatus:'SOURCE_OBSERVATION_UNVERIFIED',
   bottlingIdentityConfirmed:false,datasetBuildId:'a'.repeat(64),recordCount:1,availableVolumesMl:[],
@@ -36,7 +36,14 @@ test('name-only means DB name found but never provides fabricated bottling facts
 test('saved short explanations and drinking advice share one introduction with a food line',()=>{
   const summary=['오늘의 취향을 떠올리며 한 잔을 골라드렸어요.'];const original=JSON.stringify(summary);
   const view=bartenderPresentation(summary,'물 한 모금과 함께 천천히 향을 살펴보세요.');
-  assert.equal(view.introduction.length,2);assert.match(view.food,/크래커/);assert.equal(JSON.stringify(summary),original);
+  assert.equal(view.introduction.length,2);assert.match(view.food,/크래커/);assert.equal(view.foodSuggested,false);assert.equal(JSON.stringify(summary),original);
+  assert.equal(bartenderPresentation(summary,'다크초콜릿을 조금 곁들여보세요.').foodSuggested,true);
   assert.equal(bartenderPresentation(summary,'다크초콜릿을 조금 곁들여보세요.').food,'다크초콜릿을 조금 곁들여보세요.');
   assert.equal(bartenderPresentation(summary,'배 한 조각을 곁들여 보세요.').food,'배 한 조각을 곁들여 보세요.');
+});
+test('serving steps mention strength only when it is displayed and follow the experience level',()=>{
+  const beginner=servingSteps('BEGINNER',null);
+  assert.equal(beginner.length,3);assert.doesNotMatch(beginner.join(' '),/%/);assert.match(beginner[2],/하이볼/);
+  assert.match(servingSteps('ADVANCED',57.1)[1],/57.1%로 높은 편/);
+  assert.doesNotMatch(servingSteps('INTERMEDIATE',40)[1],/%/);
 });

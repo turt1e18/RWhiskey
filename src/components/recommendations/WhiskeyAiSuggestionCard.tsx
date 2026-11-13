@@ -15,10 +15,11 @@ import WhiskeyResultImage from './WhiskeyResultImage';
 import WhiskeyResultBasicFacts from './WhiskeyResultBasicFacts';
 import WhiskeyCollectedBottlingPanel from './WhiskeyCollectedBottlingPanel';
 import {caskPreferenceNote} from '@/lib/recommendations/caskPreference';
-import {bartenderPresentation} from '@/lib/recommendations/bartenderPresentation';
+import {bartenderPresentation,servingSteps} from '@/lib/recommendations/bartenderPresentation';
 import {collectedBodyHidden,sourceReadFailure} from '@/lib/recommendations/collectedCandidate';
 import {useCollectedLease} from '@/lib/recommendations/useCollectedLease';
 import {refreshResultInformation,whiskeyResultInformation} from '@/lib/recommendations/whiskeyResultInformation';
+import {orderSummaryChips,receiptDate} from '@/lib/recommendations/orderSummary';
 
 export default function WhiskeyAiSuggestionCard({response,ownerUid}:{response:V3Response;ownerUid:number|null}) {
   const uid=useAuthStore(s=>s.user?.uid)??null;
@@ -82,6 +83,12 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
   const koreanName=aiKoreanName(p,a.localizedName);
   const introduction=bartenderPresentation(a.presentation.summary,a.servingSuggestion);
   const pref=response.requestSummary?.preferences;
+  const orderChips=orderSummaryChips(response.requestSummary);
+  const orderedOn=receiptDate(response.recommendedAt);
+  // 화면에 실제로 보이는 도수만 안내 문장에 쓴다(보류·누락 값은 쓰지 않음).
+  const shownAbv=display.basic.find(f=>f.field==='abv'&&(f.kind==='KNOWN'||f.kind==='AI'));
+  const steps=servingSteps(response.appliedLevel,shownAbv?Number.parseFloat(shownAbv.value)||null:null);
+  const pairings=(a.presentation.pairings??[]).filter(x=>x.food?.trim());
   const differences=[
     pref?.category && !a.reasons?.includes('PROPOSED_CATEGORY_MATCH')?`선호하신 종류는 ${bilingualLabel('category',pref.category,null)}이며, 이번 한 잔은 ${bilingualLabel('category',p.category??null,null)||'종류 정보 없음'}이에요.`:null,
     pref?.country && !a.reasons?.includes('PROPOSED_COUNTRY_MATCH')?`선호하신 생산국은 ${bilingualLabel('country',pref.country,null)}이며, 이번 한 잔은 ${bilingualLabel('country',p.country??null,null)||'생산국 정보 없음'}이에요.`:null,
@@ -140,7 +147,7 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
     finally{if(current())setBusy(false);}
   }
   if(ownerUnavailable||!viewerConfirmed)return <UnavailableRecommendation checking={sourceBusy||busy} onRetry={ownerUnavailable?()=>void refreshSources():undefined} busy={sourceBusy} message={sourceStatus}/>;
-  return <div className="mx-auto flex w-full max-w-md flex-col items-center px-4">
+  return <div className="mx-auto flex w-full max-w-md flex-col items-center px-4 lg:max-w-4xl">
     <article className="w-full break-words rounded-sm border border-[#4a3728] bg-[#e5d5b7] p-7 text-stone-900 shadow-xl md:p-10">
       {hidden?<div><h2 className="text-lg font-semibold">제품 정보를 다시 확인해 주세요</h2>
         <p className="mt-3 text-sm leading-6">저장한 같은 추천의 제품 정보를 다시 확인해요. 첫인상은 그대로 유지돼요.</p>
@@ -149,16 +156,50 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
         {sourceAuth&&<Link href="/login" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline">새 탭에서 다시 로그인</Link>}
         <Link href={`/notes/ai/${a.id}`} className="mt-2 flex min-h-11 items-center text-sm underline">내 시음 기록 열기</Link>
       </div>:<>
-      <h2 className="text-[22px] font-semibold leading-snug tracking-tight md:text-2xl">{p.brand} {displayExpression(p.expression)}</h2>
+      {/* 영수증 머리: 주문서와 같은 형식으로 이어지고, AI 제안이라는 점을 보이는 칩으로 밝힌다. */}
+      <div className="flex items-center justify-between text-xs font-bold tracking-[0.2em] text-stone-700">
+        <span>R-WHISKEY</span>{orderedOn&&<span>{orderedOn}</span>}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="border border-[#4a3728] px-2.5 py-0.5 text-xs font-bold tracking-[0.2em] text-[#4a3728]">오늘의 추천</span>
+        <span className="rounded-full bg-[#4a3728]/10 px-2.5 py-0.5 text-xs text-stone-700">AI 바텐더 추천</span>
+      </div>
+      {/* PC에서는 왼쪽에 이름·내 주문·이유·안주, 오른쪽에 사진·제품 정보. 모바일은 같은 순서로 위에서 아래. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-x-10">
+      <div>
+      <h2 className="mt-5 text-[22px] font-semibold leading-snug tracking-tight md:text-2xl">{p.brand} {displayExpression(p.expression)}</h2>
       {koreanName && <p lang="ko" className="mt-2 text-[13px] leading-5 text-stone-700">{koreanName}</p>}
       {p.edition && <p className="mt-2 text-sm">{p.edition}</p>}
+      {orderChips.length>0&&<section aria-label="내 주문" className="mt-5">
+        <h3 className="text-xs font-bold tracking-[0.1em] text-stone-700">내 주문</h3>
+        <ul className="mt-2 flex flex-wrap gap-1.5">{orderChips.map(chip=><li key={chip} className="border border-[#4a3728]/30 px-2 py-0.5 text-xs text-[#4a3728]">{chip}</li>)}</ul>
+      </section>}
+      <h3 className="mt-6 border-t border-[#4a3728]/25 pt-4 font-bold">바텐더의 한마디</h3>
+      {/* 바텐더가 건네는 말처럼 읽히도록 인용문으로 보여 준다. 따옴표는 장식이라 보조기술에서 숨긴다. */}
+      <figure className="mt-4">
+        <blockquote className="relative space-y-2 break-keep pl-9 font-serif text-[15px] leading-8 text-stone-900">
+          <span aria-hidden="true" className="absolute left-0 top-0 font-serif text-5xl leading-none text-[#4a3728]/40">&ldquo;</span>
+          {introduction.introduction.map((text,i)=><p key={i}>{text}</p>)}
+        </blockquote>
+        <figcaption className="mt-2 pl-9 text-xs tracking-[0.12em] text-stone-600">— R-WHISKEY 바텐더</figcaption>
+      </figure>
+      <h3 className="mt-6 font-bold">이렇게 마셔 보세요</h3>
+      <ol className="mt-3 space-y-2 text-sm leading-6">{steps.map((step,i)=><li key={step} className="flex gap-3">
+        <span aria-hidden="true" className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4a3728]/60 text-xs font-bold text-[#4a3728]">{i+1}</span>
+        <span>{step}</span></li>)}</ol>
+      {/* 서버가 음식별 이유를 준 경우 목록으로, 아니면 한 줄 안내. 기본 안내는 추천처럼 보이지 않게 제목을 바꾼다. */}
+      <div className="mt-6 border border-[#4a3728]/25 bg-white/20 p-4">
+        <h3 className="font-bold">{pairings.length>0||introduction.foodSuggested?'곁들이면 좋은 한 입':'마시는 팁'}</h3>
+        {pairings.length>0?<ul className="mt-2 space-y-2 text-sm leading-6">{pairings.map(x=><li key={x.food}>
+          <span className="font-semibold">{x.food}</span>{x.reason&&<span className="text-stone-700"> · {x.reason}</span>}</li>)}</ul>
+          :<p className="mt-2 text-sm leading-6">{introduction.food}</p>}
+        {(pairings.length>0||introduction.foodSuggested)&&<p className="mt-2 text-xs leading-5 text-stone-600">풍미를 참고한 제안이에요. 알레르기와 개인 취향을 확인해 주세요.</p>}
+      </div>
+      </div>
+      <div className="mt-6 border-t border-[#4a3728]/25 pt-2 lg:mt-5 lg:border-t-0 lg:pt-0">
       <WhiskeyResultImage identity={p}/>
       <WhiskeyResultBasicFacts display={display} beginner={response.appliedLevel==='BEGINNER'} notice={a.notice}/>
       {(p.independentBottling || p.oldBottle) && <p className="mt-4 text-sm font-semibold">{[p.independentBottling?'독립 병입':null,p.oldBottle?'올드바틀':null].filter(Boolean).join(' · ')}</p>}
-      <h3 className="mt-6 border-t border-[#4a3728]/25 pt-4 font-bold">오늘 권해드리는 한 잔</h3>
-      <div className="mt-3 space-y-2 text-sm leading-7">{introduction.introduction.map((text,i)=><p key={i}>{text}</p>)}
-        <p className="pt-1"><span className="font-semibold">곁들이면 좋은 한 입 · </span>{introduction.food}</p>
-      </div>
       <WhiskeyCollectedBottlingPanel display={display}>
       <button type="button" disabled={sourceBusy} className="mt-3 min-h-11 py-2 text-left text-xs font-semibold underline disabled:opacity-60"
         onClick={()=>void refreshSources()}>{sourceBusy?'불러오는 중…':'제품 정보 다시 확인'}</button>
@@ -168,7 +209,9 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
       {differences.length>0 && <div className="mt-5 border-t border-[#4a3728]/25 pt-4 text-sm leading-6"><h3 className="font-semibold">추천 당시 취향 비교</h3>
         <p className="mt-2 text-xs text-stone-600">추천 당시 선택한 조건과 비교했어요.</p>
         {differences.map(text=><p key={text} className="mt-2">{text}</p>)}</div>}
-      <Link href={`/notes/ai/${a.id}`} className="mt-6 block min-h-11 border border-[#4a3728] px-3 py-3 text-center text-sm font-semibold">마신 뒤 시음 기록 남기기</Link>
+      </div>
+      </div>
+      <Link href={`/notes/ai/${a.id}`} className="mt-8 flex min-h-12 items-center justify-center bg-[#111] px-5 text-sm font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#2d2017]">마신 뒤 시음 기록 남기기</Link>
       <p className="mt-2 text-xs leading-5 text-stone-600">내 시음 노트 목록에서 이 추천을 다시 찾을 수 있어요.</p>
       </>}
     </article>
