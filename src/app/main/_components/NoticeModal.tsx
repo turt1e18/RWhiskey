@@ -4,16 +4,24 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import { useDialogFocus } from "@/lib/useDialogFocus";
 
+const NOTICE_SEEN_KEY = "rw-notice-seen";
+
 export default function NoticeModal() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Show modal every time the component mounts
+    // 첫 방문에만 보여준다. 저장소를 못 쓰는 환경(사생활 보호 모드 등)에서는 매번 보여준다.
+    try {
+      if (localStorage.getItem(NOTICE_SEEN_KEY)) return;
+    } catch {}
     setIsOpen(true);
   }, []);
 
   const handleClose = () => {
     setIsOpen(false);
+    try {
+      localStorage.setItem(NOTICE_SEEN_KEY, "1");
+    } catch {}
   };
   const dialogRef = useDialogFocus<HTMLDivElement>(isOpen, handleClose);
 
