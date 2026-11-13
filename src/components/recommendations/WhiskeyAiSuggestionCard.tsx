@@ -175,13 +175,14 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
         <ul className="mt-2 flex flex-wrap gap-1.5">{orderChips.map(chip=><li key={chip} className="border border-[#4a3728]/30 px-2 py-0.5 text-xs text-[#4a3728]">{chip}</li>)}</ul>
       </section>}
       <h3 className="mt-6 border-t border-[#4a3728]/25 pt-4 font-bold">바텐더의 한마디</h3>
-      {/* 바텐더가 건네는 말처럼 읽히도록 인용문으로 보여 준다. 따옴표는 장식이라 보조기술에서 숨긴다. */}
-      <figure className="mt-4">
-        <blockquote className="relative space-y-2 break-keep pl-9 font-serif text-[15px] leading-8 text-stone-900">
-          <span aria-hidden="true" className="absolute left-0 top-0 font-serif text-5xl leading-none text-[#4a3728]/40">&ldquo;</span>
+      {/* 바텐더가 건네는 말처럼 인용문으로 보여 준다. 따옴표는 왼쪽 위·오른쪽 아래 모서리 장식(보조기술에서 숨김). */}
+      <figure className="relative mt-4 px-6 pb-5 pt-6">
+        <span aria-hidden="true" className="absolute left-0 top-0 font-serif text-4xl leading-none text-[#4a3728]/40">&ldquo;</span>
+        <span aria-hidden="true" className="absolute bottom-[-0.6rem] right-0 font-serif text-4xl leading-none text-[#4a3728]/40">&rdquo;</span>
+        <blockquote className="space-y-2 break-keep text-[15px] leading-7 text-stone-900">
           {introduction.introduction.map((text,i)=><p key={i}>{text}</p>)}
         </blockquote>
-        <figcaption className="mt-2 pl-9 text-xs tracking-[0.12em] text-stone-600">— R-WHISKEY 바텐더</figcaption>
+        <figcaption className="mt-3 text-xs leading-5 text-stone-600">— AI 바텐더 · 주문하신 조건을 바탕으로 정리했어요</figcaption>
       </figure>
       <h3 className="mt-6 font-bold">이렇게 마셔 보세요</h3>
       <ol className="mt-3 space-y-2 text-sm leading-6">{steps.map((step,i)=><li key={step} className="flex gap-3">
