@@ -296,9 +296,10 @@ export default function MainScreen() {
                 <br />
                 내 경험에 맞게
               </h2>
+              {/* 문장마다 줄을 나누고, 좁은 화면에서는 각 문장의 줄 길이를 고르게 맞춘다. */}
               <p className="mt-4 text-base md:text-lg leading-relaxed text-white/75 break-keep">
-                위스키가 처음이어도, 이미 좋아하는 병이 있어도 괜찮아요. 아는
-                만큼만 고르면 오늘 어울리는 한 잔과 그 이유를 알려드려요.
+                <span className="block text-balance">위스키가 처음이어도, 이미 좋아하는 병이 있어도 괜찮아요.</span>
+                <span className="block text-balance">아는 만큼만 고르면 오늘 어울리는 한 잔과 그 이유를 알려드려요.</span>
               </p>
             </div>
 
