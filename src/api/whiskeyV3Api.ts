@@ -12,7 +12,14 @@ export interface WhiskeyHistoryItem {
   verificationAtRecommendation:'V3_CERTIFIED'|'V2_REVIEWED'|'LEGACY_UNVERIFIED';snapshotAvailable:boolean;notePath:string;
 }
 
+export type InformationReportField='AGE_STATEMENT'|'ABV'|'CATEGORY_REGION'|'CASK'|'NAME'|'PHOTO_MISMATCH'|'OTHER';
+export type InformationReportSource='LABEL'|'OFFICIAL_SITE'|'RETAILER'|'MEMORY';
+export type InformationReportEntry='CARD_FOOTER'|'FACT_BADGE'|'PHOTO';
+export interface InformationReportInput {field:InformationReportField;content?:string|null;source?:InformationReportSource|null;entryPoint?:InformationReportEntry}
+export interface InformationReportReceipt {reportId:string;status:string;createdAt:string}
+
 export const whiskeyV3Api = {
+  informationReport: (id:string,input:InformationReportInput) => apiClient<InformationReportReceipt>(`/api/recommendations/v3/ai-suggestions/${encodeURIComponent(id)}/information-reports`,{method:'POST',body:JSON.stringify(input),timeoutMs:10_000}),
   suggest: (request:V3Request,key:string) => apiClient<V3Response>('/api/recommendations/v3/ai-suggestions', {
     method:'POST',headers:{'Idempotency-Key':key,
       ...(process.env.NODE_ENV === 'development' ? {'X-Whiskey-Debug-Candidates':'true'} : {})},body:JSON.stringify(request),timeoutMs:25_000,
