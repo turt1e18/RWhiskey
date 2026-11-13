@@ -31,6 +31,8 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
   onAiSuccess?:(response:V3Response)=>void) {
   const [pending,setPending]=useState<string|null>(null);
   const [message,setMessage]=useState<string|null>(null);
+  // 안내 종류(모달 여부) 판별용 마지막 응답 코드. 메시지와 함께 바뀐다.
+  const [code,setCode]=useState<string|null>(null);
   const [historicalId,setHistoricalId]=useState<number|null>(null);
   const [historicalAiId,setHistoricalAiId]=useState<string|null>(null);
   const [busy,setBusy]=useState(false);
@@ -39,7 +41,7 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
   const running=useRef(false); const owner=useRef(uid); owner.current=uid;
   const storageKey=uid ? `rwhiskey:order:v3:${uid}` : null;
   useEffect(()=>{
-    setPending(null);setMessage(null);setHistoricalId(null);setHistoricalAiId(null);setAuthRequired(false);setMissing(false);
+    setPending(null);setMessage(null);setCode(null);setHistoricalId(null);setHistoricalAiId(null);setAuthRequired(false);setMissing(false);
     if(!storageKey)return;
     try {
       const saved=sessionStorage.getItem(storageKey);
@@ -57,6 +59,7 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
     if(card){remember(null);setMessage(null);setHistoricalId(null);onSuccess(card,response);return;}
     if(response.state==='SUCCESS'){setMessage('저장된 추천 정보를 확인하지 못했어요. 이전 주문 결과를 다시 확인해 주세요.');return;}
     setHistoricalId(response.historicalRecordId ?? null);
+    setCode(response.code ?? (response.nextAction==='RECOVER' ? 'RECOVER' : null));
     if(response.nextAction!=='RECOVER')remember(null);
     setMessage(messages[response.code ?? ''] ?? (response.nextAction==='RECOVER'
       ? '주문 처리 결과를 아직 확인 중이에요. 새 주문 대신 이전 주문 결과를 확인해 주세요.'
@@ -67,7 +70,7 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
   }
   async function run(request?:WhiskeyCandidateRequest,closeMissing=false) {
     if(!uid || running.current)return;
-    const requestOwner=uid;running.current=true;setBusy(true);setMessage(null);setHistoricalAiId(null);setAuthRequired(false);
+    const requestOwner=uid;running.current=true;setBusy(true);setMessage(null);setCode(null);setHistoricalAiId(null);setAuthRequired(false);
     const operation=pending ? closeMissing ? 'close-unreceived' : 'recover' : 'recommend';
     // Preserve a known missing order across authentication/transport failures until the server resolves it.
     if(!pending)setMissing(false);
@@ -75,7 +78,7 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
       if(authRequired) {
         const session=await authApi.me();
         if(!session.authenticated || session.uid!==requestOwner) {
-          setAuthRequired(true);
+          setAuthRequired(true);setCode('AUTH_REQUIRED');
           setMessage('주문을 시작한 같은 계정으로 새 탭에서 로그인한 뒤 돌아와 주세요. 선택과 이전 주문은 그대로 보관 중이에요.');
           return;
         }
@@ -96,7 +99,7 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
       if(owner.current!==requestOwner)return;
       if(e instanceof ApiResponseError)logVerifiedResponse('V3',`${operation}-error`,e.data,e.status);
       if(e instanceof ApiResponseError && [401,403].includes(e.status)) {
-        setAuthRequired(true);
+        setAuthRequired(true);setCode('AUTH_REQUIRED');
         setMessage('요청 인증을 다시 확인해야 해요. 새 탭에서 같은 계정으로 로그인한 뒤 이 화면으로 돌아와 이전 주문 결과를 확인해 주세요. 선택은 그대로 유지돼요.');
       }
       else if(closeMissing){setMissing(true);setMessage('서버에서 이전 주문 확인을 종료하지 못했어요. 주문 키는 보관 중이에요. 잠시 뒤 다시 확인해 주세요.');}
@@ -105,8 +108,8 @@ export function useV3Order(uid: number | undefined, enabled: boolean,
         if(e.status===404){setMissing(true);setMessage('이 계정에서 이전 주문을 찾지 못했어요. 다시 확인하거나 서버에서 이전 주문 확인을 종료해 주세요.');}
         else if(e.data.state==='SUCCESS')setMessage('저장 결과와 응답 상태가 달라요. 이전 주문 결과를 다시 확인해 주세요.');
         else accept(e.data);
-      } else setMessage('연결 또는 저장 결과를 확인하지 못했어요. 새 주문을 보내지 말고 이전 주문 결과를 확인해 주세요.');
+      } else {setCode('RESULT_UNCONFIRMED');setMessage('연결 또는 저장 결과를 확인하지 못했어요. 새 주문을 보내지 말고 이전 주문 결과를 확인해 주세요.');}
     } finally {running.current=false;setBusy(false);}
   }
-  return { pending,message,historicalId,historicalAiId,busy,authRequired,missing,run,closeMissing:()=>run(undefined,true) };
+  return { pending,message,code,historicalId,historicalAiId,busy,authRequired,missing,run,closeMissing:()=>run(undefined,true) };
 }
