@@ -241,7 +241,7 @@ export default function VerifiedWhiskeyPreviewPage() {
   useEffect(() => {
     if (result || aiResult) resultHeadingRef.current?.focus();
   }, [result, aiResult, showForm]);
-  // "조건 다시 고르기"를 누르면 버튼이 사라지므로, 포커스를 조건 입력 화면 제목으로 옮긴다.
+  // "조건 바꿔 다시 주문"을 누르면 버튼이 사라지므로, 포커스를 조건 입력 화면 제목으로 옮긴다.
   useEffect(() => {
     if (showForm && (result || aiResult)) formHeadingRef.current?.focus();
   }, [showForm]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -524,8 +524,8 @@ export default function VerifiedWhiskeyPreviewPage() {
       <nav className={`mx-auto flex w-full items-center justify-between gap-4 px-6 py-4 ${selected ? "max-w-2xl" : "max-w-5xl"}`}>
         <RecommendationBackLink href="/main" />
         {(selected || aiResult && !showForm) && (
-          <button type="button" disabled={feedbackLoading} onClick={() => v3Mode ? setShowForm(true) : setResult(null)} className="flex items-center gap-2 text-sm font-light text-stone-500 transition-colors hover:text-white disabled:opacity-50">
-            조건 다시 고르기
+          <button type="button" disabled={feedbackLoading} onClick={() => v3Mode ? setShowForm(true) : setResult(null)} className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-stone-600 px-3 text-sm text-stone-200 transition-colors hover:border-amber-200/60 hover:text-white disabled:opacity-50">
+            조건 바꿔 다시 주문
           </button>
         )}
       </nav>
