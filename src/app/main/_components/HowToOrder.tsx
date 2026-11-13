@@ -65,7 +65,8 @@ export default function HowToOrder() {
         ))}
       </div>
 
-      {/* 두 탭을 한 칸에 겹쳐 더 긴 쪽 높이로 고정한다. 탭을 바꿔도 snap 위치가 흔들리지 않는다. */}
+      {/* 두 탭을 한 칸에 겹쳐 더 긴 쪽 높이로 고정한다. 탭을 바꿔도 snap 위치가 흔들리지 않는다.
+          목록이 남는 높이를 차지해 주문서 버튼은 두 탭 모두 카드 맨 아래 같은 자리에 둔다. */}
       <div className="relative grid">
         {tabs.map((tab, index) => (
           <div
@@ -75,7 +76,7 @@ export default function HowToOrder() {
             aria-labelledby={`howto-tab-${tab.id}`}
             className={`col-start-1 row-start-1 flex flex-col ${active === index ? "" : "invisible"}`}
           >
-            <ol className="mt-5 space-y-4">
+            <ol className="mt-5 flex-1 space-y-4">
               {tab.steps.map(([title, text], step) => (
                 <li key={title} className="flex gap-4">
                   <span aria-hidden="true" className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#4a3728] text-sm font-bold text-[#4a3728]">

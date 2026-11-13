@@ -32,6 +32,29 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* 메인 페이지 스크롤바: 어두운 바 배경 위 호박색 손잡이. 768px 이상에서 <main>이 스크롤 컨테이너다. */
+.rw-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.rw-scrollbar::-webkit-scrollbar-track {
+  background: #1a140b;
+}
+.rw-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 178, 71, 0.35);
+  border: 2px solid #1a140b;
+  border-radius: 9999px;
+}
+.rw-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 178, 71, 0.6);
+}
+/* ::-webkit-scrollbar를 모르는 브라우저(Firefox)는 표준 속성으로 같은 색을 쓴다. */
+@supports not selector(::-webkit-scrollbar) {
+  .rw-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 178, 71, 0.45) #1a140b;
+  }
+}
+
 body {
   width: 100%;
   height: 100%;

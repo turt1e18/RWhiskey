@@ -226,7 +226,7 @@ export default function MainScreen() {
           모바일: 자연 스크롤
           데스크탑: snap 스크롤 유지
       ========================= */}
-      <main ref={mainRef} tabIndex={-1} className="outline-none min-h-screen overflow-y-auto bg-[#1a140b] text-white md:h-screen md:snap-y md:snap-mandatory md:scroll-smooth">
+      <main ref={mainRef} tabIndex={-1} className="rw-scrollbar outline-none min-h-screen overflow-y-auto bg-[#1a140b] text-white md:h-screen md:snap-y md:snap-mandatory md:scroll-smooth">
         {/* =========================
             1. Hero Section
         ========================= */}
