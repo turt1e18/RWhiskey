@@ -616,7 +616,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                   </label>)}
                 </div>
               </fieldset>
-              {profile.smokePreference === "MILD" && <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "모델이 연기 향이 없거나 은은하다고 제안한 후보만 골라요. 실제 향을 확인한 것은 아니에요." : "연기 향이 없거나 은은하다고 확인된 병만 찾아요."} 향 정보가 없는 병은 제외됩니다.</p>}
+              {profile.smokePreference === "MILD" && <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "바텐더가 연기 향이 없거나 은은하다고 제안한 후보만 골라요. 실제 향을 확인한 것은 아니에요." : "연기 향이 없거나 은은하다고 확인된 병만 찾아요."} 향 정보가 없는 병은 제외됩니다.</p>}
               {profile.smokePreference === "BOLD" && <p className="mt-2 text-xs leading-5 text-stone-600">진한 연기 향을 우선 살펴보지만, 다른 병을 추천할 수도 있어요.</p>}
               <WhiskeyTasteFields profile={profile} onChange={editProfile} />
               <div hidden>
@@ -658,7 +658,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                 <p className="mt-2 text-xs text-stone-600">미국식 Proof는 ABV의 2배예요. 단위를 바꿔도 같은 도수가 유지됩니다.</p>
               </div>}
               <h3 className="mt-6 text-sm font-bold">꼭 맞아야 할 조건 (선택)</h3>
-              <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "모델이 제안한 제품 정보가 선택한 조건에 맞는 후보만 골라요. 실제 제품 사실을 확인한 것은 아니에요." : "선택한 조건에 맞는 병입만 추천합니다."}<br />고르지 않아도 됩니다.</p>
+              <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "바텐더가 제안한 제품 정보가 선택한 조건에 맞는 후보만 골라요. 실제 제품 사실을 확인한 것은 아니에요." : "선택한 조건에 맞는 병입만 추천합니다."}<br />고르지 않아도 됩니다.</p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <FacetField showAvailability={!aiEnabled} label="생산 국가" value={inputs.country} options={facets?.countries ?? []} strength="hard" onChange={(value) => update("country", value)} disabled={!facets} />
                 <FacetField showAvailability={!aiEnabled} label="위스키 종류" value={inputs.category} options={categoryOptions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("category", value)} disabled={!facets} />

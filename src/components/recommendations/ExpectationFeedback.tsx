@@ -5,6 +5,14 @@ import Link from "next/link";
 import type { WhiskeyFeedbackReason, WhiskeyFeedbackSentiment } from "@/type/ApiInterface";
 import { PaperReveal, PaperSelect } from "./PaperControls";
 
+// Same stored reason codes for both answers; only the wording follows the chosen sentiment.
+const reasonOptions = {
+  LIKE: [{ value: "TASTE", label: "설명된 맛·향이 끌려요" }, { value: "PRICE", label: "가격이 괜찮아 보여요" },
+    { value: "AVAILABILITY", label: "구하기 쉬워 보여요" }, { value: "OTHER", label: "기타" }],
+  DISLIKE: [{ value: "TASTE", label: "설명된 맛·향이 취향이 아니에요" }, { value: "PRICE", label: "가격이 부담돼요" },
+    { value: "AVAILABILITY", label: "구하기 어려워 보여요" }, { value: "OTHER", label: "기타" }],
+};
+
 export default function ExpectationFeedback({ sentiment, reason, savedSentiment, loading, status, authExpired, onSentiment, onReason, onSave, comment, onComment }: {
   sentiment: WhiskeyFeedbackSentiment; reason: WhiskeyFeedbackReason;
   savedSentiment: WhiskeyFeedbackSentiment | null;
@@ -35,8 +43,7 @@ export default function ExpectationFeedback({ sentiment, reason, savedSentiment,
         <div className="mt-5 border-t border-[#4a3728]/25 pt-4">
           <p className="mb-3 text-sm font-semibold">어떤 점이 그렇게 느껴졌나요?</p>
           <PaperSelect label="이유 (선택)" value={reason === "NONE" ? "" : reason} onChange={(value) => onReason((value || "NONE") as WhiskeyFeedbackReason)} disabled={loading}
-            options={[{ value: "TASTE", label: "설명된 맛·향" }, { value: "PRICE", label: "가격" },
-              { value: "AVAILABILITY", label: "구매하기 어려움" }, { value: "OTHER", label: "기타" }]} />
+            options={reasonOptions[sentiment === "DISLIKE" ? "DISLIKE" : "LIKE"]} />
           {reason === "OTHER" && <label className="mt-4 block text-sm">더 들려주실 이야기 (선택)
             <textarea value={comment} onChange={(event) => onComment(event.target.value)} maxLength={500} disabled={loading}
               className="mt-2 min-h-24 w-full rounded border border-stone-500/60 bg-white/70 p-3 text-sm" />
