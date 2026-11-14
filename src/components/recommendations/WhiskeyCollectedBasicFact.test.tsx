@@ -25,3 +25,10 @@ test('the server notice appears once, only when a reference value is shown',()=>
  const known=renderToStaticMarkup(<WhiskeyResultBasicFacts display={{...base,basic:[{...base.basic[0],kind:'KNOWN' as const}]}} notice="세부 정보는 참고용이에요."/>);
  assert.ok(!known.includes('세부 정보는 참고용이에요'));
 });
+test('report entry appears only beside missing or held values when reporting is enabled',()=>{
+  const missing={field:'age' as const,label:'숙성 연수',value:'아직 정보가 없어요',kind:'MISSING' as const};
+  assert.match(renderToStaticMarkup(<WhiskeyCollectedBasicFact fact={missing} onReport={()=>{}}/>),/숙성 연수 정보 알려주기/);
+  assert.match(renderToStaticMarkup(<WhiskeyCollectedBasicFact fact={{...missing,kind:'HELD',value:'정보 확인 필요'}} onReport={()=>{}}/>),/알려주기/);
+  assert.doesNotMatch(renderToStaticMarkup(<WhiskeyCollectedBasicFact fact={{...missing,kind:'KNOWN',value:'12년'}} onReport={()=>{}}/>),/알려주기/);
+  assert.doesNotMatch(renderToStaticMarkup(<WhiskeyCollectedBasicFact fact={missing}/>),/알려주기/);
+});

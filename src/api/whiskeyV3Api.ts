@@ -12,7 +12,17 @@ export interface WhiskeyHistoryItem {
   verificationAtRecommendation:'V3_CERTIFIED'|'V2_REVIEWED'|'LEGACY_UNVERIFIED';snapshotAvailable:boolean;notePath:string;
 }
 
+export type InformationReportField='NAME'|'DISTILLERY'|'CATEGORY_REGION'|'AGE_STATEMENT'|'ABV'|'CASK'|'EDITION'|'BOTTLING_YEAR'
+  |'VOLUME'|'BOTTLER'|'RELEASE_TYPE'|'FLAVOR'|'PHOTO_MISMATCH'|'OTHER';
+export type InformationReportSource='LABEL'|'OFFICIAL_SITE'|'RETAILER'|'MEMORY';
+export type InformationReportEntry='CARD_FOOTER'|'FACT_BADGE'|'PHOTO';
+export interface InformationReportItem {field:InformationReportField;content?:string|null}
+export interface InformationReportInput {items:InformationReportItem[];source?:InformationReportSource|null;entryPoint?:InformationReportEntry}
+export interface InformationReportReceipt {submissionId:string;status:string;createdAt:string;
+  fields:InformationReportField[];skippedPending:InformationReportField[]}
+
 export const whiskeyV3Api = {
+  informationReport: (id:string,input:InformationReportInput) => apiClient<InformationReportReceipt>(`/api/recommendations/v3/ai-suggestions/${encodeURIComponent(id)}/information-reports`,{method:'POST',body:JSON.stringify(input),timeoutMs:10_000}),
   suggest: (request:V3Request,key:string) => apiClient<V3Response>('/api/recommendations/v3/ai-suggestions', {
     method:'POST',headers:{'Idempotency-Key':key,
       ...(process.env.NODE_ENV === 'development' ? {'X-Whiskey-Debug-Candidates':'true'} : {})},body:JSON.stringify(request),timeoutMs:25_000,

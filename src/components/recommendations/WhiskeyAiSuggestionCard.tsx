@@ -14,6 +14,9 @@ import {useAuthStore} from '@/store/authStore';
 import WhiskeyResultImage from './WhiskeyResultImage';
 import WhiskeyResultBasicFacts from './WhiskeyResultBasicFacts';
 import WhiskeyCollectedBottlingPanel from './WhiskeyCollectedBottlingPanel';
+import WhiskeyInfoReport,{ReportDialog} from './WhiskeyInfoReport';
+import type {InformationReportEntry,InformationReportField} from '@/api/whiskeyV3Api';
+import {reportFieldForFact} from '@/lib/recommendations/informationReport';
 import {caskPreferenceNote} from '@/lib/recommendations/caskPreference';
 import {bartenderPresentation,servingSteps} from '@/lib/recommendations/bartenderPresentation';
 import {collectedBodyHidden,sourceReadFailure} from '@/lib/recommendations/collectedCandidate';
@@ -55,6 +58,10 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
   const [reason,setReason]=useState<WhiskeyFeedbackReason>('NONE');const [comment,setComment]=useState('');
   const [busy,setBusy]=useState(true);const [status,setStatus]=useState<string|null>(null);const [auth,setAuth]=useState(false);
   const [loaded,setLoaded]=useState(false);const [reload,setReload]=useState(0);
+  // 제보 입구(정보 칸·사진·카드 하단)가 모두 같은 대화상자를 연다. 스위치가 꺼져 있으면 입구를 만들지 않는다.
+  const [report,setReport]=useState<{field:InformationReportField|null;entry:InformationReportEntry}|null>(null);
+  const openReport=process.env.NEXT_PUBLIC_INFORMATION_REPORT_ENABLED==='true'
+    ?(field:InformationReportField|null,entry:InformationReportEntry)=>setReport({field,entry}):undefined;
   const id=a?.id;
   useEffect(()=>{
     if(!id||accessBlocked.current)return;
@@ -155,6 +162,7 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
         {sourceStatus&&<p role="status" className="mt-2 text-sm">{sourceStatus}</p>}
         {sourceAuth&&<Link href="/login" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline">새 탭에서 다시 로그인</Link>}
         <Link href={`/notes/ai/${a.id}`} className="mt-2 flex min-h-11 items-center text-sm underline">내 시음 기록 열기</Link>
+        {openReport&&<WhiskeyInfoReport onOpen={()=>openReport(null,'CARD_FOOTER')}/>}
       </div>:<>
       {/* 영수증 머리: 주문서와 같은 형식으로 이어지고, AI 제안이라는 점을 보이는 칩으로 밝힌다. */}
       <div className="flex items-center justify-between text-xs font-bold tracking-[0.2em] text-stone-700">
@@ -198,8 +206,9 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
       </div>
       </div>
       <div className="mt-6 border-t border-[#4a3728]/25 pt-2 lg:mt-5 lg:border-t-0 lg:pt-0">
-      <WhiskeyResultImage identity={p}/>
-      <WhiskeyResultBasicFacts display={display} beginner={response.appliedLevel==='BEGINNER'} notice={a.notice}/>
+      <WhiskeyResultImage identity={p} onReportPhoto={openReport&&(()=>openReport('PHOTO_MISMATCH','PHOTO'))}/>
+      <WhiskeyResultBasicFacts display={display} beginner={response.appliedLevel==='BEGINNER'} notice={a.notice}
+        onReport={openReport&&(field=>openReport(reportFieldForFact(field),'FACT_BADGE'))}/>
       {(p.independentBottling || p.oldBottle) && <p className="mt-4 text-sm font-semibold">{[p.independentBottling?'독립 병입':null,p.oldBottle?'올드바틀':null].filter(Boolean).join(' · ')}</p>}
       <WhiskeyCollectedBottlingPanel display={display}>
       <button type="button" disabled={sourceBusy} className="mt-3 min-h-11 py-2 text-left text-xs font-semibold underline disabled:opacity-60"
@@ -214,8 +223,10 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
       </div>
       <Link href={`/notes/ai/${a.id}`} className="mt-8 flex min-h-12 items-center justify-center bg-[#111] px-5 text-sm font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#2d2017]">마신 뒤 시음 기록 남기기</Link>
       <p className="mt-2 text-xs leading-5 text-stone-600">내 시음 노트 목록에서 이 추천을 다시 찾을 수 있어요.</p>
+      {openReport&&<WhiskeyInfoReport onOpen={()=>openReport(null,'CARD_FOOTER')}/>}
       </>}
     </article>
+    {report&&<ReportDialog operationId={a.id} initialField={report.field} entryPoint={report.entry} onClose={()=>setReport(null)}/>}
     {hidden&&<p className="mt-4 w-full text-sm text-stone-200">이전에 남긴 첫인상을 확인하거나 수정할 수 있어요.</p>}
     {!loaded ? <div className="mt-6 w-full rounded border border-[#4a3728] bg-[#efe2c9] p-5 text-sm text-stone-900">
       <p role="status">{busy?'저장한 첫인상을 확인하고 있어요…':status}</p>
