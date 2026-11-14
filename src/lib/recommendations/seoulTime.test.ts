@@ -19,7 +19,7 @@ test('mid-month uses the table value and other days interpolate without month-ed
 });
 
 test('phases follow that day sunrise and sunset: summer evening is still golden when winter is night',()=>{
-  // June 15: sunrise 05:12, sunset 19:55
+  // June 15: sunrise 05:10, sunset 19:55
   assert.equal(skyPhase(seoul(6,15,4,40)).phase,'PREDAWN');
   assert.equal(skyPhase(seoul(6,15,6,0)).phase,'MORNING');
   assert.equal(skyPhase(seoul(6,15,12,0)).phase,'DAY');
@@ -36,4 +36,12 @@ test('sun moves 0→11 across the day and the moon takes over at night',()=>{
   assert.equal(skyPhase(seoul(6,15,19,54)).sunStep,11);
   const night=skyPhase(seoul(6,15,23,0));
   assert.equal(night.sunStep,null);assert.ok(night.moonStep!==null&&night.moonStep>0&&night.moonStep<11);
+});
+
+test('progress runs 0→1 inside a phase so dusk can be blended minute by minute',()=>{
+  // June 15 sunset 19:55 → SUNSET 19:35–20:25, NIGHT 20:25 → next day 04:22
+  assert.equal(skyPhase(seoul(6,15,19,35)).progress,0);
+  assert.ok(Math.abs(skyPhase(seoul(6,15,20,0)).progress-0.5)<0.01);
+  assert.ok(skyPhase(seoul(6,15,20,24)).progress>0.95);
+  const lateNight=skyPhase(seoul(6,15,2,0));assert.equal(lateNight.phase,'NIGHT');assert.ok(lateNight.progress>0.6&&lateNight.progress<1);
 });

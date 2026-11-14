@@ -58,6 +58,22 @@
 .pxbar-view[data-liquid="2"] .pxbar-guest { transform: translateX(-50%); }
 .pxbar-view[data-liquid="3"] .pxbar-guest { transform: translateX(-75%); }
 
+/* Ice bucket appears once he sets it down; a glint crosses the poured whisky now and then. */
+.pxbar-bucket { opacity: 0; }
+.pxbar-view[data-bucket] .pxbar-bucket { opacity: 1; }
+.pxbar-glint { opacity: 0; }
+@keyframes pxbar-glint { 0%, 88%, 100% { opacity: 0; } 92% { opacity: 1; } 96% { opacity: 0.4; } }
+.pxbar-view:not([data-liquid="0"]) .pxbar-glint { animation: pxbar-glint 7s linear infinite; }
+
+/* Seasons in the window. */
+.pxbar-season { opacity: 0; transition: opacity 600ms ease; }
+.pxbar-view[data-season="winter"] .pxbar-in-winter,
+.pxbar-view[data-season="spring"] .pxbar-in-spring { opacity: 1; }
+@keyframes pxbar-fall { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.pxbar-fall { animation: pxbar-fall 16s steps(26) infinite; }
+@keyframes pxbar-drift-down { from { transform: translate(-6%, -50%); } to { transform: translate(6%, 0); } }
+.pxbar-drift-down { animation: pxbar-drift-down 22s steps(26) infinite; }
+
 @keyframes pxbar-drift { from { transform: translateX(-100%); } to { transform: translateX(50%); } }
 .pxbar-drift { animation: pxbar-drift 70s linear infinite; }
 @keyframes pxbar-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
@@ -66,9 +82,9 @@
 .pxbar-view[data-paused] * { animation-play-state: paused !important; }
 
 @media (max-width: 767px) {
-  .pxbar-drift { animation: none; }
+  .pxbar-drift, .pxbar-fall, .pxbar-drift-down { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pxbar-bartender, .pxbar-drift, .pxbar-twinkle { animation: none !important; }
-  .pxbar-time, .pxbar-lamp { transition: none !important; }
+  .pxbar-bartender, .pxbar-drift, .pxbar-twinkle, .pxbar-fall, .pxbar-drift-down, .pxbar-glint { animation: none !important; }
+  .pxbar-time, .pxbar-lamp, .pxbar-season { transition: none !important; }
 }

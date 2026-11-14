@@ -80,6 +80,19 @@ const P={
 // ---------- scene layout (source pixels of the 288x56 scene) ----------
 export const LAYOUT={window:[46,4],sky:[51,7],clock:[99,7],bartender:[124,0],placed:[146,33],guest:[163,33],props:[0,30]};
 
+// ---------- doorway on the left wall: the bartender walks out through it ----------
+const DOOR={x:8,y:6,w:16,h:34}; // opening; jambs are 2px either side
+function doorway(img){
+  for(let y=DOOR.y;y<DOOR.y+DOOR.h;y++)for(let x=DOOR.x;x<DOOR.x+DOOR.w;x++)img.set(x,y,(y-DOOR.y)/DOOR.h>BAYER[y%4][x%4]?'#140d09':'#0c0806');
+  // half-open door leaf swung inward, seen edge-on at the hinge side, with a brass knob
+  const leaf=new Mask().rect(DOOR.x+DOOR.w-5,DOOR.y+1,4,DOOR.h-1);shade(img,leaf,[P.wood[0],P.wood[1],P.wood[2],P.wood[3]],1,-1);
+  img.set(DOOR.x+DOOR.w-5,DOOR.y+18,P.brass[2]);
+  const frame=new Mask().rect(DOOR.x-2,DOOR.y-2,DOOR.w+4,2).rect(DOOR.x-2,DOOR.y,2,DOOR.h).rect(DOOR.x+DOOR.w,DOOR.y,2,DOOR.h);
+  shade(img,frame,[P.wood[1],P.wood[2],P.wood[3],P.wood[4]],1,-1);
+}
+/** The wall and jamb left of the opening, drawn again over the bartender so he disappears through the doorway. */
+function doorFront(back){const img=new Img(DOOR.x,40);for(let y=0;y<40;y++)for(let x=0;x<DOOR.x;x++){const p=back.px(x,y);if(p)img.set(x,y,p[0],p[1]);}return img;}
+
 // ---------- back wall, clock rim, rack, lamp, back bar (static) ----------
 function back(){
   const img=new Img(288,40);
@@ -95,9 +108,10 @@ function back(){
   img.rect(0,26,288,1,P.wood[3]);img.rect(0,27,288,1,P.wood[1]);
   for(let x=4;x<288;x+=24){img.rect(x,30,20,8,P.wall[0]);img.rect(x+1,31,18,6,P.wall[2]);img.rect(x+1,31,18,1,P.wall[3]);img.rect(x+18,31,1,6,P.wall[3]);}
   // chalk menu board (no readable text, just chalk strokes)
-  img.rect(8,8,30,16,P.wood[2]);img.rect(9,9,28,14,'#1d221f');
-  for(const [y,w] of [[11,18],[14,22],[16,14],[19,20]])for(let x=11;x<11+w;x+=1)if(rand()<0.7)img.set(x,y,'#9aa39b',rand()<0.3?120:200);
-  img.rect(11,11,6,1,'#c9cfc6');
+  img.rect(28,8,16,14,P.wood[2]);img.rect(29,9,14,12,'#1d221f');
+  for(const [y,w] of [[11,9],[13,11],[15,7],[17,10]])for(let x=30;x<30+w;x+=1)if(rand()<0.7)img.set(x,y,'#9aa39b',rand()<0.3?120:200);
+  img.rect(30,11,4,1,'#c9cfc6');
+  doorway(img);
   // glass rack with upside-down stemmed glasses
   img.rect(113,5,24,1,P.brass[2]);img.rect(113,6,24,1,P.brass[0]);
   for(const gx of [116,122,128,134]){
@@ -229,6 +243,12 @@ function glassAt(img,x,y,tilt=0,shine=false,liquid=0){
     if(r>=1&&r<=4)img.set(x+(shine?2:5)+(r<4?tilt:0),y+r,P.glass[3]);
   }
 }
+/** Small steel ice bucket (5x6) with ice on top. */
+function bucketAt(img,x,y){const m=new Mask().rect(x,y+1,5,5);shade(img,m,['#40484d','#6f7a80','#aab4b9','#dfe6e9'],1,-1);
+  img.rect(x,y,5,1,'#cfd8dc');for(const [dx,c] of [[1,'#f4fbfd'],[2,'#cfe6ee'],[3,'#f4fbfd']])img.set(x+dx,y,c);img.rect(x,y+3,5,1,'#5a646a');}
+function iceBucket(){const img=new Img(5,7);bucketAt(img,0,0);img.rect(0,6,5,1,'#2a2520');return img;}
+/** A short glint that crosses the poured whisky now and then. */
+function glint(){const img=new Img(9,9);img.set(3,6,'#fff6dc',230);img.set(4,5,'#fff6dc',170);return img;}
 function placedGlass(){const img=new Img(7,8);glassAt(img,0,0);return img;}
 /** Guest glass on a coaster with 4 fill states side by side (0, ~10, ~20, ~30%). */
 function guestGlass(){
@@ -266,6 +286,9 @@ function city(name){
 function cityLights(chance){const img=new Img(SKY_W,SKY_H);
   for(const [x,top,w] of CITY)for(let yy=top+2;yy<SKY_H-1;yy+=3)for(let xx=x+1;xx<x+w-1;xx+=2)if(rand()<chance)img.set(xx,yy,'#ffb247',220);return img;}
 function disc(core,rim,crater){const img=new Img(5,5);const m=new Mask().ellipse(2,2,2.5,2.5);m.each((x,y)=>img.set(x,y,Math.hypot(x-2,y-2)>1.6?rim:core));if(crater){img.set(1,2,rim);img.set(3,3,rim);}return img;}
+/** Seasonal tiles for the window, two sky-heights tall so a vertical loop is seamless. */
+function snow(){const img=new Img(SKY_W,SKY_H*2);for(let i=0;i<16;i++){const x=Math.floor(rand()*SKY_W),y=Math.floor(rand()*SKY_H);for(const yy of [y,y+SKY_H])img.set(x,yy,'#f2f6f8',rand()<0.5?255:190);}return img;}
+function petals(){const img=new Img(SKY_W,SKY_H*2);for(let i=0;i<7;i++){const x=Math.floor(rand()*SKY_W),y=Math.floor(rand()*SKY_H);for(const yy of [y,y+SKY_H]){img.set(x,yy,'#f2b8c6');if(i%2)img.set(x+1,yy,'#e59aae');}}return img;}
 function stars(pts){const img=new Img(SKY_W,SKY_H);pts.forEach(([x,y])=>img.set(x,y,'#efe4c8'));return img;}
 function clouds(){const img=new Img(84,8);
   for(const [cx,cy,w] of [[14,4,10],[56,3,14]]){const m=new Mask().ellipse(cx,cy,w/2,2).ellipse(cx-w/4,cy+1,w/3,1.6).ellipse(cx+w/4,cy+1,w/3,1.6);
@@ -338,6 +361,8 @@ const POSES={
   S01:{g:{e:[34,31],h:[39,36]},c:REST_L,head:[1,0]},
   S02:{g:{e:[35,31],h:[40,35]},c:REST_L,head:[1,0]},
   S03:{g:{e:[33,31],h:[34,37]},c:REST_L,head:[1,0]},
+  // 3/4 turn toward screen right, between facing front and walking (QL is its mirror)
+  Q1:{g:{e:[31,31],h:[29,38]},c:{e:[9,31],h:[14,37]},head:[2,0],quarter:true},
 };
 // Poured bottle, upright, as palette rows (top → bottom); gripped at row 7.
 const BOTTLE_ROWS=['.bb.','.gg.','.gg.','gGGg','gGGg','gLLg','gllg','gGGg','gGGg','gGGg','gGGg'];
@@ -369,16 +394,96 @@ function arm(img,sx,sy,{e,h},lx){
   shade(img,sleeve,P.shirt,lx,-1);shade(img,cuff,[P.shirt[0],P.shirt[1],P.shirt[2]],lx,-1);shade(img,fore,P.skin,lx,-1);
   shade(img,new Mask().ellipse(h[0],h[1],1.6,1.4),P.skin,1,-1);
 }
+// ---- back view (turning to the back bar) and side view (walking), 2nd stage ----
+const REST_BACK_L={e:[8,31],h:[12,37]},REST_BACK_R={e:[31,31],h:[28,37]};
+const BACK_POSES={
+  T01:{turn:true,l:REST_BACK_L,r:REST_BACK_R},
+  T02:{l:REST_BACK_L,r:REST_BACK_R},
+  K01:{l:REST_BACK_L,r:{e:[32,23],h:[28,15]}},
+  K02:{l:REST_BACK_L,r:{e:[32,24],h:[29,18]},bottle:'front'},
+  K03:{l:{e:[8,26],h:[19,21]},r:{e:[31,25],h:[25,21]},bottle:'back',head:[0,1]},
+  K04:{l:REST_BACK_L,r:{e:[32,23],h:[28,15]}},
+};
+const BOTTLE_BACK_ROWS=BOTTLE_ROWS.map(r=>r.replace(/[Ll]/g,'G'));
+function bartenderBack(name){
+  const pose=BACK_POSES[name],img=new Img(48,44),[hx,hy]=pose.head??[0,0];
+  // 2px narrower than the front torso so turning around does not read as the body widening
+  const torso=new Mask().poly([[13,19],[26,19],[30,23],[30,43],[9,43],[9,23]]);
+  const trousers=new Mask().rect(10,36,20,8),vest=new Mask();torso.each((x,y)=>{if(!trousers.has(x,y))vest.add(x,y);});
+  shade(img,vest,P.vest);shade(img,trousers,[P.apron[0],P.apron[1],P.apron[1]],1,0);
+  img.rect(19,22,1,13,P.vest[0]);img.rect(13,31,14,1,P.vest[0]);img.set(19,31,P.brass[2]);       // back seam and cinch strap
+  img.rect(15,34,10,2,P.apron[2]);img.rect(17,33,2,1,P.apron[2]);img.rect(21,33,2,1,P.apron[2]);  // apron bow
+  img.rect(17,18,6,2,P.shirt[2]);img.set(17,18,P.shirt[3]);                                      // collar
+  img.rect(11,21,3,1,P.vest[3]);img.rect(26,21,3,1,P.vest[3]);                                    // shoulder blades catch the light
+  // Arms after the body: hanging arms sit beside the torso, raised arms above the shoulder.
+  arm(img,29,21,pose.r,1);arm(img,10,21,pose.l,1);
+  shade(img,new Mask().rect(18,14+hy,4,4),P.skin,1,0);
+  const head=new Mask().ellipse(20+hx,10+hy,4.6,5.4);head.each((x,y)=>{if(y>13+hy)head.del(x,y);});
+  shade(img,head,P.hair);
+  img.set(15+hx,11+hy,P.skin[1]);img.set(25+hx,11+hy,P.skin[2]);
+  if(pose.turn){img.rect(24+hx,10+hy,2,4,P.skin[2]);img.set(25+hx,12+hy,P.skin[3]);img.set(24+hx,14+hy,P.hair[1]);} // cheek and moustache tip at 3/4
+  if(pose.bottle){
+    const rows=pose.bottle==='back'?BOTTLE_BACK_ROWS:BOTTLE_ROWS,[bx,by]=pose.r.h;
+    rows.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')img.set(bx-1+x,by-7+y,BOTTLE_COLORS[ch]);}));
+    shade(img,new Mask().ellipse(bx,by,1.6,1.4),P.skin,1,-1);
+    if(pose.bottle==='back')shade(img,new Mask().ellipse(pose.l.h[0],pose.l.h[1],1.6,1.4),P.skin,1,-1);
+  }
+  return img;
+}
+// Side view facing right; walking left is the same frames mirrored. near/far = hand positions of the two arms.
+const WALK=[
+  {near:{e:[22,28],h:[25,33]},far:{e:[16,28],h:[13,33]}},
+  {near:{e:[21,28],h:[23,34]},far:{e:[17,28],h:[15,34]},dy:-1},
+  {near:{e:[19,28],h:[19,35]},far:{e:[19,28],h:[19,35]}},
+  {near:{e:[17,28],h:[15,34]},far:{e:[21,28],h:[23,34]}},
+  {near:{e:[16,28],h:[13,33]},far:{e:[22,28],h:[25,33]},dy:-1},
+  {near:{e:[18,28],h:[17,35]},far:{e:[20,28],h:[21,35]}},
+];
+function bartenderSide(name){
+  const pose=WALK[Number(name.slice(1))-1],img=new Img(48,44),dy=pose.dy??0;
+  // far arm sits behind the body and is a step darker
+  const farSleeve=new Mask().line(19,21+dy,pose.far.e[0],pose.far.e[1]+dy,1.4),farHand=new Mask().line(pose.far.e[0],pose.far.e[1]+dy,pose.far.h[0],pose.far.h[1]+dy,1);
+  shade(img,farSleeve,[P.shirt[0],P.shirt[0],P.shirt[1]],1,-1);shade(img,farHand,[P.skin[0],P.skin[0],P.skin[1]],1,-1);
+  const torso=new Mask().poly([[15,19+dy],[24,19+dy],[26,23+dy],[26,43],[13,43],[13,23+dy]]);
+  const front=new Mask().rect(24,19+dy,2,11),apron=new Mask().rect(22,34,5,10);
+  const vest=new Mask();torso.each((x,y)=>{if(!front.has(x,y)&&!apron.has(x,y))vest.add(x,y);});
+  shade(img,vest,P.vest);shade(img,front,P.shirt.slice(0,3),1,0);shade(img,apron,P.apron,1,0);img.rect(13,34,10,1,P.apron[2]);
+  shade(img,new Mask().rect(19,15+dy,4,4),P.skin,1,0);
+  img.rect(24,19+dy,2,2,P.tie[1]);img.set(23,19+dy,P.shirt[2]);
+  const face=new Mask().ellipse(21,11+dy,4,5.4);shade(img,face,P.skin);
+  const hair=new Mask().ellipse(19.5,8+dy,5,3.8);hair.each((x,y)=>{if(y>=8+dy&&x>21)hair.del(x,y);});hair.rect(16,8+dy,3,5);shade(img,hair,P.hair);
+  img.set(25,12+dy,P.skin[2]);img.set(25,13+dy,P.skin[1]);                                       // nose
+  img.set(23,11+dy,P.hair[0]);img.set(23,10+dy,P.skin[1]);img.rect(22,9+dy,2,1,P.hair[1]);
+  img.rect(22,14+dy,3,1,P.hair[1]);img.set(19,11+dy,P.skin[1]);img.set(19,12+dy,P.skin[0]);         // moustache, ear
+  arm(img,19,21+dy,{e:[pose.near.e[0],pose.near.e[1]+dy],h:[pose.near.h[0],pose.near.h[1]+dy]},1);
+  return img;
+}
+
+/** Left-facing walk: the right-facing frame mirrored around the character's centre (x=20), not the cell centre, so he turns in place. */
+/** Mirror any frame around the character's centre (x=20). */
+function mirror(src){const img=new Img(48,44);for(let y=0;y<44;y++)for(let x=0;x<48;x++){const p=src.px(x,y),mx=40-x;if(p&&mx>=0&&mx<48)img.set(mx,y,p[0],p[1]);}return img;}
+/** Walking right with the ice bucket hanging from the near hand. */
+function carryWalk(name){const n=Number(name.slice(1)),img=bartenderSide('W'+n),{h}=WALK[n-1].near,dy=WALK[n-1].dy??0;
+  bucketAt(img,h[0]-2,h[1]+dy+1);shade(img,new Mask().ellipse(h[0],h[1]+dy,1.6,1.4),P.skin,1,-1);return img;}
+function mirrorWalk(name){const src=bartenderSide('W'+name.slice(1)),img=new Img(48,44);
+  for(let y=0;y<44;y++)for(let x=0;x<48;x++){const p=src.px(x,y),mx=40-x;if(p&&mx>=0&&mx<48)img.set(mx,y,p[0],p[1]);}return img;}
 function bartender(name){
+  if(BACK_POSES[name])return bartenderBack(name);
+  if(/^W\d$/.test(name))return bartenderSide(name);
+  if(/^L\d$/.test(name))return mirrorWalk(name);
+  if(/^C\d$/.test(name))return carryWalk(name);
+  if(name==='QL')return mirror(bartender('Q1'));
   const base=name==='B01'?'P01':name==='B02'?'E01':name,pose=POSES[base],img=new Img(48,44),[hx,hy0]=pose.head,dy=pose.dy??0,hy=hy0+dy;
-  const torso=new Mask().poly([[12,19+dy],[27,19+dy],[31,23+dy],[31,43],[8,43],[8,23+dy]]);
-  const vee=new Mask().poly([[17,19+dy],[22,19+dy],[20,29+dy],[19,29+dy]]),apron=new Mask().rect(8,35,24,9);
+  // 3/4 view: a narrower torso with the shirt front and tie shifted toward the facing side
+  const q=pose.quarter?2:0;
+  const torso=pose.quarter?new Mask().poly([[13,19+dy],[27,19+dy],[30,23+dy],[30,43],[10,43],[10,23+dy]]):new Mask().poly([[12,19+dy],[27,19+dy],[31,23+dy],[31,43],[8,43],[8,23+dy]]);
+  const vee=new Mask().poly([[17+q,19+dy],[22+q,19+dy],[20+q,29+dy],[19+q,29+dy]]),apron=new Mask().rect(8+q,35,24-q,9);
   const vest=new Mask();torso.each((x,y)=>{if(!vee.has(x,y)&&!apron.has(x,y))vest.add(x,y);});
   shade(img,vest,P.vest);shade(img,vee,P.shirt.slice(0,3));shade(img,apron,P.apron,1,0);
   img.rect(9,35,22,1,P.apron[2]);img.set(19,31+dy,P.brass[2]);img.set(19,33+dy,P.brass[2]);
   shade(img,new Mask().rect(18,15+dy,4,4),P.skin,1,0);
   img.set(17,19+dy,P.shirt[3]);img.set(22,19+dy,P.shirt[2]);img.set(16,20+dy,P.shirt[2]);img.set(23,20+dy,P.shirt[1]);
-  img.rect(17,19+dy,2,2,P.tie[1]);img.rect(21,19+dy,2,2,P.tie[1]);img.set(17,19+dy,P.tie[2]);img.rect(19,19+dy,2,2,P.tie[0]);
+  img.rect(17+q,19+dy,2,2,P.tie[1]);img.rect(21+q,19+dy,2,2,P.tie[1]);img.set(17+q,19+dy,P.tie[2]);img.rect(19+q,19+dy,2,2,P.tie[0]);
   const face=new Mask().ellipse(20+hx,11+hy,4.4,5.4);shade(img,face,P.skin);
   img.set(15+hx,11+hy,P.skin[1]);img.set(25+hx,11+hy,P.skin[2]);img.set(25+hx,12+hy,P.skin[1]);
   const hair=new Mask().ellipse(20+hx,6.5+hy,5.2,3.2);hair.each((x,y)=>{if(y>7+hy)hair.del(x,y);});
@@ -423,9 +528,10 @@ function css(){
 // ---------- write ----------
 const sheet=new Img(48*ACTS.frames.length,44);ACTS.frames.forEach((f,i)=>sheet.draw(bartender(f),i*48,0));
 await Promise.all([
-  back().save('back.png'),counter().save('counter.png'),counterProps().save('counter-props.png'),
+  (()=>{const b=back();return Promise.all([b.save('back.png'),doorFront(b).save('door-front.png')]);})(),counter().save('counter.png'),counterProps().save('counter-props.png'),
   windowFrame().save('window-frame.png'),neutralGlass().save('window-glass.png'),clockFace().save('clock-face.png'),
-  placedGlass().save('glass-placed.png'),guestGlass().save('glass-guest.png'),
+  placedGlass().save('glass-placed.png'),guestGlass().save('glass-guest.png'),iceBucket().save('ice-bucket.png'),glint().save('glint.png'),
+  snow().save('snow.png'),petals().save('petals.png'),
   ...Object.keys(SKIES).flatMap(k=>[sky(k).save(`sky-${k}.png`),city(k).save(`city-${k}.png`)]),
   cityLights(0.18).save('lights-early.png'),cityLights(0.3).save('lights-late.png'),
   disc('#fff4d2','#f6e2a8').save('sun.png'),disc('#ffc66a','#f29a48').save('sun-low.png'),disc('#efe4c8','#cfc3a3',true).save('moon.png'),
