@@ -12,6 +12,8 @@ import WhiskeyTasteFields from "@/components/recommendations/WhiskeyTasteFields"
 import WhiskeyBottleImage from "@/components/recommendations/WhiskeyBottleImage";
 import { useV3Order } from "@/components/recommendations/useV3Order";
 import WhiskeyAiSuggestionCard from "@/components/recommendations/WhiskeyAiSuggestionCard";
+import OrderNoticeModal from "@/components/recommendations/OrderNoticeModal";
+import { orderNoticeKind } from "@/lib/recommendations/orderNotice";
 import type { V3Response } from "@/lib/recommendations/v3Contract";
 import { bilingualLabel, countryForCategory, recommendationReasons, whiskeyLabel as facetLabel } from "@/components/recommendations/whiskeyPresentation";
 import { recommendationApi } from "@/api/whiskeyApi";
@@ -183,6 +185,10 @@ export default function VerifiedWhiskeyPreviewPage() {
     const p=response.requestSummary?.preferences;
     setResultPreferences({category:p?.category ?? "",country:p?.country ?? "",region:p?.region ?? "",targetAbv:p?.targetAbv ?? null,preferredFlavor:"UNKNOWN"});
   }, response=>{setAiResultOwnerUid(uid??null);setAiResult(response);setResult(null);setShowForm(false);setSavedAt(response.recommendedAt??null);});
+  // 행동이 필요한 주문 안내는 안내 칸 대신 모달로 띄운다. 같은 안내를 닫으면 다시 띄우지 않는다.
+  const noticeKind = v3.message ? orderNoticeKind(v3.code, v3.authRequired) : null;
+  const noticeKey = noticeKind ? `${noticeKind}:${v3.message}` : null;
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const v3Mode = v3Enabled || Boolean(v3.pending) || result?.code === "V3_SAVED" || Boolean(aiResult);
   useEffect(() => {
     if (!v3.message) return;
@@ -532,8 +538,9 @@ export default function VerifiedWhiskeyPreviewPage() {
 
       <div className="flex flex-1 flex-col justify-start py-6 md:py-10">
       {v3Mode && <section aria-live="polite" className="mx-auto w-full max-w-3xl px-6 pb-4 text-sm leading-6">
-        {v3.message && <p role="status" ref={orderMessageRef} tabIndex={-1} className="rounded border border-amber-200/30 bg-[#241b16] p-4"><strong className="mb-1 block">이번 주문 안내</strong>{v3.message}</p>}
-        {v3.message && (v3.authRequired || !isAuthenticated) && <Link href="/login" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center underline">새 탭에서 로그인하고 돌아오기</Link>}
+        {/* 모달로 띄우는 안내(로그인 재확인·오늘 추천 모두 사용·이전 주문 확인)는 칸에 다시 남기지 않는다. */}
+        {v3.message && !noticeKind && <p role="status" ref={orderMessageRef} tabIndex={-1} className="rounded border border-amber-200/30 bg-[#241b16] p-4"><strong className="mb-1 block">이번 주문 안내</strong>{v3.message}</p>}
+        {v3.message && !noticeKind && (v3.authRequired || !isAuthenticated) && <Link href="/login" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center underline">새 탭에서 로그인하고 돌아오기</Link>}
         {v3.historicalId && <Link href={`/notes/verified/${v3.historicalId}`} className="mt-3 inline-block underline">당시 추천 기록 보기</Link>}
         {v3.historicalAiId && <Link href={`/notes/ai/${v3.historicalAiId}`} className="mt-3 inline-flex min-h-11 items-center underline">저장한 같은 추천과 시음 기록 확인하기</Link>}
         {v3.missing && <div className="mt-3">
@@ -609,7 +616,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                   </label>)}
                 </div>
               </fieldset>
-              {profile.smokePreference === "MILD" && <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "모델이 연기 향이 없거나 은은하다고 제안한 후보만 골라요. 실제 향을 확인한 것은 아니에요." : "연기 향이 없거나 은은하다고 확인된 병만 찾아요."} 향 정보가 없는 병은 제외됩니다.</p>}
+              {profile.smokePreference === "MILD" && <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "바텐더가 연기 향이 없거나 은은하다고 제안한 후보만 골라요. 실제 향을 확인한 것은 아니에요." : "연기 향이 없거나 은은하다고 확인된 병만 찾아요."} 향 정보가 없는 병은 제외됩니다.</p>}
               {profile.smokePreference === "BOLD" && <p className="mt-2 text-xs leading-5 text-stone-600">진한 연기 향을 우선 살펴보지만, 다른 병을 추천할 수도 있어요.</p>}
               <WhiskeyTasteFields profile={profile} onChange={editProfile} />
               <div hidden>
@@ -651,7 +658,7 @@ export default function VerifiedWhiskeyPreviewPage() {
                 <p className="mt-2 text-xs text-stone-600">미국식 Proof는 ABV의 2배예요. 단위를 바꿔도 같은 도수가 유지됩니다.</p>
               </div>}
               <h3 className="mt-6 text-sm font-bold">꼭 맞아야 할 조건 (선택)</h3>
-              <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "모델이 제안한 제품 정보가 선택한 조건에 맞는 후보만 골라요. 실제 제품 사실을 확인한 것은 아니에요." : "선택한 조건에 맞는 병입만 추천합니다."}<br />고르지 않아도 됩니다.</p>
+              <p className="mt-2 text-xs leading-5 text-stone-600">{aiEnabled ? "바텐더가 제안한 제품 정보가 선택한 조건에 맞는 후보만 골라요. 실제 제품 사실을 확인한 것은 아니에요." : "선택한 조건에 맞는 병입만 추천합니다."}<br />고르지 않아도 됩니다.</p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <FacetField showAvailability={!aiEnabled} label="생산 국가" value={inputs.country} options={facets?.countries ?? []} strength="hard" onChange={(value) => update("country", value)} disabled={!facets} />
                 <FacetField showAvailability={!aiEnabled} label="위스키 종류" value={inputs.category} options={categoryOptions} countries={facets?.countries ?? []} strength="hard" onChange={(value) => update("category", value)} disabled={!facets} />
@@ -778,6 +785,11 @@ export default function VerifiedWhiskeyPreviewPage() {
       )}
       </div>
       <WhiskeyLoadingOverlay active={loading || v3.busy} messages={orderMessages} />
+      {/* 로딩 화면이 닫힌 뒤에만 띄워 두 겹으로 겹치지 않게 한다. 복구를 누르면 안내가 비워지고 로딩 화면으로 넘어간다. */}
+      {noticeKind && v3.message && noticeKey !== dismissedNotice && !loading && !v3.busy && (
+        <OrderNoticeModal kind={noticeKind} message={v3.message}
+          onRecover={() => void v3.run()} onClose={() => setDismissedNotice(noticeKey)} />
+      )}
     </main>
   );
 }
