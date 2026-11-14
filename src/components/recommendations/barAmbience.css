@@ -15,7 +15,7 @@
   position: absolute;
   width: calc(288px * var(--px));
   height: calc(56px * var(--px));
-  /* Keep source x=128 (between window and bartender) in the middle of a narrow card. */
+  /* Keep source x=128 (window to guest glass) in the middle of a narrow card. */
   left: 50%;
   top: calc(-6px * var(--px));
   transform: translateX(calc(-128px * var(--px)));
@@ -32,19 +32,31 @@
 }
 .pxbar-box { position: absolute; overflow: hidden; }
 
-/* Time of day: every scene layer crossfades; the first appearance after mount is quicker. */
+/* Sky phase: every phase layer crossfades; the first appearance after mount is quicker. */
 .pxbar-time { opacity: 0; transition: opacity 600ms ease; }
 .pxbar-view[data-settled] .pxbar-time, .pxbar-view[data-settled] .pxbar-lamp { transition-duration: 2s; }
-.pxbar-view[data-time="morning"] .pxbar-on-morning,
-.pxbar-view[data-time="day"] .pxbar-on-day,
-.pxbar-view[data-time="evening"] .pxbar-on-evening,
-.pxbar-view[data-time="night"] .pxbar-on-night { opacity: 1; }
+.pxbar-view[data-phase="predawn"] .pxbar-on-predawn,
+.pxbar-view[data-phase="morning"] .pxbar-on-morning,
+.pxbar-view[data-phase="day"] .pxbar-on-day,
+.pxbar-view[data-phase="golden"] .pxbar-on-golden,
+.pxbar-view[data-phase="sunset"] .pxbar-on-sunset,
+.pxbar-view[data-phase="night"] .pxbar-on-night { opacity: 1; }
 /* Indoor light reads strongest at night and weakest at midday. */
 .pxbar-lamp { opacity: 0.7; transition: opacity 600ms ease; }
-.pxbar-view[data-time="morning"] .pxbar-lamp { opacity: 0.6; }
-.pxbar-view[data-time="day"] .pxbar-lamp { opacity: 0.45; }
-.pxbar-view[data-time="evening"] .pxbar-lamp { opacity: 0.85; }
-.pxbar-view[data-time="night"] .pxbar-lamp { opacity: 1; }
+.pxbar-view[data-phase="predawn"] .pxbar-lamp { opacity: 0.95; }
+.pxbar-view[data-phase="morning"] .pxbar-lamp { opacity: 0.6; }
+.pxbar-view[data-phase="day"] .pxbar-lamp { opacity: 0.45; }
+.pxbar-view[data-phase="golden"] .pxbar-lamp { opacity: 0.7; }
+.pxbar-view[data-phase="sunset"] .pxbar-lamp { opacity: 0.85; }
+.pxbar-view[data-phase="night"] .pxbar-lamp { opacity: 1; }
+
+/* Counter state driven by the bartender: the glass he sets down, and the guest glass filling to ~30%. */
+.pxbar-placed { opacity: 0; }
+.pxbar-view[data-glass] .pxbar-placed { opacity: 1; }
+.pxbar-guest { transform: translateX(0); }
+.pxbar-view[data-liquid="1"] .pxbar-guest { transform: translateX(-25%); }
+.pxbar-view[data-liquid="2"] .pxbar-guest { transform: translateX(-50%); }
+.pxbar-view[data-liquid="3"] .pxbar-guest { transform: translateX(-75%); }
 
 @keyframes pxbar-drift { from { transform: translateX(-100%); } to { transform: translateX(50%); } }
 .pxbar-drift { animation: pxbar-drift 70s linear infinite; }
@@ -53,9 +65,7 @@
 .pxbar-twinkle-late { animation-duration: 7s; animation-delay: -2.5s; }
 .pxbar-view[data-paused] * { animation-play-state: paused !important; }
 
-/* 모바일은 바텐더 루프를 한 번만 재생하고 대기 자세에서 멈춘다. */
 @media (max-width: 767px) {
-  .pxbar-bartender { animation-iteration-count: 1; }
   .pxbar-drift { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
