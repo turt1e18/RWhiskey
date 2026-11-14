@@ -1,0 +1,19 @@
+/* 결과 화면 분위기 장식. 바텐더는 잔 닦기 4프레임을 네 번 돈 뒤 1초 쉰다(5초 주기). */
+@keyframes bt-wipe {
+  0%, 20%, 40%, 60%, 80%, 100% { transform: translateX(0); }
+  5%, 25%, 45%, 65% { transform: translateX(-16px); }
+  10%, 30%, 50%, 70% { transform: translateX(-32px); }
+  15%, 35%, 55%, 75% { transform: translateX(-48px); }
+}
+.bt-wipe { animation: bt-wipe 5s step-end infinite; }
+@keyframes amb-drift { from { transform: translateX(-10px); } to { transform: translateX(26px); } }
+.amb-drift { animation: amb-drift 45s linear infinite; }
+@keyframes amb-twinkle { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.25; } }
+.amb-twinkle { animation: amb-twinkle 4s ease-in-out infinite; }
+/* 모바일은 한 주기(5초)만 움직이고 첫 프레임에서 멈춘다. 긴 카드를 읽는 동안 시야를 흔들지 않게. */
+@media (max-width: 767px) {
+  .bt-wipe { animation-iteration-count: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bt-wipe, .amb-drift, .amb-twinkle { animation: none !important; }
+}

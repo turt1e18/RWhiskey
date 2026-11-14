@@ -12,6 +12,7 @@ import WhiskeyTasteFields from "@/components/recommendations/WhiskeyTasteFields"
 import WhiskeyBottleImage from "@/components/recommendations/WhiskeyBottleImage";
 import { useV3Order } from "@/components/recommendations/useV3Order";
 import WhiskeyAiSuggestionCard from "@/components/recommendations/WhiskeyAiSuggestionCard";
+import BarAmbience from "@/components/recommendations/BarAmbience";
 import type { V3Response } from "@/lib/recommendations/v3Contract";
 import { bilingualLabel, countryForCategory, recommendationReasons, whiskeyLabel as facetLabel } from "@/components/recommendations/whiskeyPresentation";
 import { recommendationApi } from "@/api/whiskeyApi";
@@ -547,8 +548,9 @@ export default function VerifiedWhiskeyPreviewPage() {
       {!enabled ? (
         <p className="mx-auto mt-10 max-w-2xl rounded border border-stone-700 bg-[#241b16] p-5 text-sm">현재 검수 기반 추천을 사용할 수 없습니다.</p>
       ) : aiResult && !showForm ? (
-        <section className="mx-auto w-full py-4">
+        <section className="relative mx-auto w-full py-4">
           <h2 ref={resultHeadingRef} tabIndex={-1} className="sr-only">오늘의 AI 추천 결과</h2>
+          <BarAmbience/>
           <WhiskeyAiSuggestionCard key={`${aiResultOwnerUid}:${aiResult.operationId}`} response={aiResult} ownerUid={aiResultOwnerUid}/>
         </section>
       ) : !selected ? (
