@@ -1,19 +1,64 @@
-/* 결과 화면 분위기 장식. 바텐더는 잔 닦기 4프레임을 네 번 돈 뒤 1초 쉰다(5초 주기). */
-@keyframes bt-wipe {
-  0%, 20%, 40%, 60%, 80%, 100% { transform: translateX(0); }
-  5%, 25%, 45%, 65% { transform: translateX(-16px); }
-  10%, 30%, 50%, 70% { transform: translateX(-32px); }
-  15%, 35%, 55%, 75% { transform: translateX(-48px); }
+/* 픽셀 바 장면. 원본 288x56을 정수 배(--px)로만 키워 픽셀 크기가 고르게 유지된다. */
+.pxbar-view {
+  --px: 2;
+  position: relative;
+  overflow: hidden;
+  /* Below 1024px the top 6 source rows (ceiling) are cropped: 50 rows x 2 = 100px. */
+  height: calc(50px * var(--px));
+  /* The wall fades into the page at the top and sides so the scene has no hard edge. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, transparent, #000 18%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, transparent, #000 18%);
+  mask-composite: intersect;
 }
-.bt-wipe { animation: bt-wipe 5s step-end infinite; }
-@keyframes amb-drift { from { transform: translateX(-10px); } to { transform: translateX(26px); } }
-.amb-drift { animation: amb-drift 45s linear infinite; }
-@keyframes amb-twinkle { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.25; } }
-.amb-twinkle { animation: amb-twinkle 4s ease-in-out infinite; }
-/* 모바일은 한 주기(5초)만 움직이고 첫 프레임에서 멈춘다. 긴 카드를 읽는 동안 시야를 흔들지 않게. */
+.pxbar-scene {
+  position: absolute;
+  width: calc(288px * var(--px));
+  height: calc(56px * var(--px));
+  /* Keep source x=128 (between window and bartender) in the middle of a narrow card. */
+  left: 50%;
+  top: calc(-6px * var(--px));
+  transform: translateX(calc(-128px * var(--px)));
+}
+@media (min-width: 1024px) {
+  .pxbar-view { --px: 3; height: calc(56px * var(--px)); }
+  .pxbar-scene { left: 0; top: 0; transform: none; }
+}
+.pxbar-layer {
+  position: absolute;
+  max-width: none;
+  height: auto;
+  image-rendering: pixelated;
+}
+.pxbar-box { position: absolute; overflow: hidden; }
+
+/* Time of day: every scene layer crossfades; the first appearance after mount is quicker. */
+.pxbar-time { opacity: 0; transition: opacity 600ms ease; }
+.pxbar-view[data-settled] .pxbar-time, .pxbar-view[data-settled] .pxbar-lamp { transition-duration: 2s; }
+.pxbar-view[data-time="morning"] .pxbar-on-morning,
+.pxbar-view[data-time="day"] .pxbar-on-day,
+.pxbar-view[data-time="evening"] .pxbar-on-evening,
+.pxbar-view[data-time="night"] .pxbar-on-night { opacity: 1; }
+/* Indoor light reads strongest at night and weakest at midday. */
+.pxbar-lamp { opacity: 0.7; transition: opacity 600ms ease; }
+.pxbar-view[data-time="morning"] .pxbar-lamp { opacity: 0.6; }
+.pxbar-view[data-time="day"] .pxbar-lamp { opacity: 0.45; }
+.pxbar-view[data-time="evening"] .pxbar-lamp { opacity: 0.85; }
+.pxbar-view[data-time="night"] .pxbar-lamp { opacity: 1; }
+
+@keyframes pxbar-drift { from { transform: translateX(-100%); } to { transform: translateX(50%); } }
+.pxbar-drift { animation: pxbar-drift 70s linear infinite; }
+@keyframes pxbar-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.pxbar-twinkle { animation: pxbar-twinkle 5s ease-in-out infinite; }
+.pxbar-twinkle-late { animation-duration: 7s; animation-delay: -2.5s; }
+.pxbar-view[data-paused] * { animation-play-state: paused !important; }
+
+/* 모바일은 바텐더 루프를 한 번만 재생하고 대기 자세에서 멈춘다. */
 @media (max-width: 767px) {
-  .bt-wipe { animation-iteration-count: 1; }
+  .pxbar-bartender { animation-iteration-count: 1; }
+  .pxbar-drift { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bt-wipe, .amb-drift, .amb-twinkle { animation: none !important; }
+  .pxbar-bartender, .pxbar-drift, .pxbar-twinkle { animation: none !important; }
+  .pxbar-time, .pxbar-lamp { transition: none !important; }
 }

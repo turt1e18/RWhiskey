@@ -1,21 +1,22 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import BarAmbience, { PixelBartender, TimeWindow } from '@/components/recommendations/BarAmbience';
+import BarAmbience from '@/components/recommendations/BarAmbience';
 
-// Enlarged preview of the result-screen ambience; the page renders these at 54-108px.
+// The real result-screen band at each time of day, plus the bartender sheet enlarged frame by frame.
 function Preview() {
-  return <div className="flex min-h-screen flex-col items-center gap-10 bg-[#1a120d] p-10 text-stone-300">
-    <div className="w-full">
-      <BarAmbience/>
-      <div className="mx-auto h-24 w-full max-w-md rounded-sm border border-[#4a3728] bg-[#e5d5b7] lg:max-w-[864px]"/>
-    </div>
-    <PixelBartender className="h-[360px] w-[320px]"/>
-    <div className="flex flex-wrap justify-center gap-6">
-      {(['DAWN', 'DAY', 'SUNSET', 'NIGHT'] as const).map(t => <figure key={t} className="text-center text-xs">
-        <TimeWindow time={t} className="h-[200px] w-[240px]"/><figcaption className="mt-2">{t}</figcaption></figure>)}
-    </div>
+  return <div className="min-h-screen space-y-8 bg-[#1a120d] py-8 text-xs text-stone-300">
+    {(['MORNING', 'DAY', 'EVENING', 'NIGHT'] as const).map(t => <figure key={t}>
+      <figcaption className="mb-2 text-center">{t}</figcaption>
+      <BarAmbience time={t}/>
+      <div className="mx-auto h-16 w-full max-w-md rounded-sm border border-[#4a3728] bg-[#e5d5b7] lg:max-w-[864px]"/>
+    </figure>)}
+    <figure className="px-4">
+      <figcaption className="mb-2 text-center">바텐더 13프레임 (P01–P12, B01) · 6배</figcaption>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/pixel-bar/bartender.png" alt="" className="mx-auto w-[3120px] max-w-none" style={{ imageRendering: 'pixelated' }}/>
+    </figure>
   </div>;
 }
 
-const meta = { id: 'whiskey-bar-ambience', title: '위스키/결과 화면 분위기 장식', component: Preview } satisfies Meta<typeof Preview>;
+const meta = { id: 'whiskey-bar-ambience', title: '위스키/결과 화면 바 장면', component: Preview, parameters: { layout: 'fullscreen' } } satisfies Meta<typeof Preview>;
 export default meta;
-export const Enlarged: StoryObj<typeof meta> = { name: '확대 보기 · 바텐더와 시간대별 창문' };
+export const AllTimes: StoryObj<typeof meta> = { name: '시간대별 장면과 바텐더 프레임' };
