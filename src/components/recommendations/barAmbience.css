@@ -1,0 +1,90 @@
+/* 픽셀 바 장면. 원본 288x56을 정수 배(--px)로만 키워 픽셀 크기가 고르게 유지된다. */
+.pxbar-view {
+  --px: 2;
+  position: relative;
+  overflow: hidden;
+  /* Below 1024px the top 6 source rows (ceiling) are cropped: 50 rows x 2 = 100px. */
+  height: calc(50px * var(--px));
+  /* The wall fades into the page at the top and sides so the scene has no hard edge. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, transparent, #000 18%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, transparent, #000 18%);
+  mask-composite: intersect;
+}
+.pxbar-scene {
+  position: absolute;
+  width: calc(288px * var(--px));
+  height: calc(56px * var(--px));
+  /* Keep source x=128 (window to guest glass) in the middle of a narrow card. */
+  left: 50%;
+  top: calc(-6px * var(--px));
+  transform: translateX(calc(-128px * var(--px)));
+}
+@media (min-width: 1024px) {
+  .pxbar-view { --px: 3; height: calc(56px * var(--px)); }
+  .pxbar-scene { left: 0; top: 0; transform: none; }
+}
+.pxbar-layer {
+  position: absolute;
+  max-width: none;
+  height: auto;
+  image-rendering: pixelated;
+}
+.pxbar-box { position: absolute; overflow: hidden; }
+
+/* Sky phase: every phase layer crossfades; the first appearance after mount is quicker. */
+.pxbar-time { opacity: 0; transition: opacity 600ms ease; }
+.pxbar-view[data-settled] .pxbar-time, .pxbar-view[data-settled] .pxbar-lamp { transition-duration: 2s; }
+.pxbar-view[data-phase="predawn"] .pxbar-on-predawn,
+.pxbar-view[data-phase="morning"] .pxbar-on-morning,
+.pxbar-view[data-phase="day"] .pxbar-on-day,
+.pxbar-view[data-phase="golden"] .pxbar-on-golden,
+.pxbar-view[data-phase="sunset"] .pxbar-on-sunset,
+.pxbar-view[data-phase="night"] .pxbar-on-night { opacity: 1; }
+/* Indoor light reads strongest at night and weakest at midday. */
+.pxbar-lamp { opacity: 0.7; transition: opacity 600ms ease; }
+.pxbar-view[data-phase="predawn"] .pxbar-lamp { opacity: 0.95; }
+.pxbar-view[data-phase="morning"] .pxbar-lamp { opacity: 0.6; }
+.pxbar-view[data-phase="day"] .pxbar-lamp { opacity: 0.45; }
+.pxbar-view[data-phase="golden"] .pxbar-lamp { opacity: 0.7; }
+.pxbar-view[data-phase="sunset"] .pxbar-lamp { opacity: 0.85; }
+.pxbar-view[data-phase="night"] .pxbar-lamp { opacity: 1; }
+
+/* Counter state driven by the bartender: the glass he sets down, and the guest glass filling to ~30%. */
+.pxbar-placed { opacity: 0; }
+.pxbar-view[data-glass] .pxbar-placed { opacity: 1; }
+.pxbar-guest { transform: translateX(0); }
+.pxbar-view[data-liquid="1"] .pxbar-guest { transform: translateX(-25%); }
+.pxbar-view[data-liquid="2"] .pxbar-guest { transform: translateX(-50%); }
+.pxbar-view[data-liquid="3"] .pxbar-guest { transform: translateX(-75%); }
+
+/* Ice bucket appears once he sets it down; a glint crosses the poured whisky now and then. */
+.pxbar-bucket { opacity: 0; }
+.pxbar-view[data-bucket] .pxbar-bucket { opacity: 1; }
+.pxbar-glint { opacity: 0; }
+@keyframes pxbar-glint { 0%, 88%, 100% { opacity: 0; } 92% { opacity: 1; } 96% { opacity: 0.4; } }
+.pxbar-view:not([data-liquid="0"]) .pxbar-glint { animation: pxbar-glint 7s linear infinite; }
+
+/* Seasons in the window. */
+.pxbar-season { opacity: 0; transition: opacity 600ms ease; }
+.pxbar-view[data-season="winter"] .pxbar-in-winter,
+.pxbar-view[data-season="spring"] .pxbar-in-spring { opacity: 1; }
+@keyframes pxbar-fall { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.pxbar-fall { animation: pxbar-fall 16s steps(26) infinite; }
+@keyframes pxbar-drift-down { from { transform: translate(-6%, -50%); } to { transform: translate(6%, 0); } }
+.pxbar-drift-down { animation: pxbar-drift-down 22s steps(26) infinite; }
+
+@keyframes pxbar-drift { from { transform: translateX(-100%); } to { transform: translateX(50%); } }
+.pxbar-drift { animation: pxbar-drift 70s linear infinite; }
+@keyframes pxbar-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.pxbar-twinkle { animation: pxbar-twinkle 5s ease-in-out infinite; }
+.pxbar-twinkle-late { animation-duration: 7s; animation-delay: -2.5s; }
+.pxbar-view[data-paused] * { animation-play-state: paused !important; }
+
+@media (max-width: 767px) {
+  .pxbar-drift, .pxbar-fall, .pxbar-drift-down { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pxbar-bartender, .pxbar-drift, .pxbar-twinkle, .pxbar-fall, .pxbar-drift-down, .pxbar-glint { animation: none !important; }
+  .pxbar-time, .pxbar-lamp, .pxbar-season { transition: none !important; }
+}

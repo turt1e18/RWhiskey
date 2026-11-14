@@ -10,7 +10,7 @@ const appTailwind = loadConfig(resolve(root, 'tailwind.config.ts'));
 
 const config: StorybookConfig = {
   stories: ['./stories/**/*.stories.@(ts|tsx)'],
-  staticDirs: [{ from: './assets', to: '/storybook-assets' }],
+  staticDirs: [{ from: './assets', to: '/storybook-assets' }, { from: '../public/pixel-bar', to: '/pixel-bar' }],
   framework: { name: '@storybook/nextjs-vite', options: {} },
   core: { disableTelemetry: true },
   env: () => ({}),
