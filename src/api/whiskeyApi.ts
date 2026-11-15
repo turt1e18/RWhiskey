@@ -11,6 +11,8 @@ import {
   NoteReviewRequest,
   TokenStatusResponse,
   CocktailSaveRequest,
+  CocktailFeedback,
+  CocktailImageCredit,
   WhiskeyCatalogFacetsResponse,
   WhiskeyCandidateRequest,
   WhiskeyVerifiedRecommendationResponse,
@@ -234,9 +236,20 @@ export const cocktailApi = {
    * 특정 칵테일 추천 결과 상세 조회
    */
   getDetail: (oid: number) => {
-    return apiClient<CocktailSaveRequest & { orderDate: string }> (`/api/cocktails/${oid}`, {
+    return apiClient<CocktailSaveRequest & { orderDate: string; imageCredit?: CocktailImageCredit | null }> (`/api/cocktails/${oid}`, {
       method: 'GET',
     });
+  },
+  /** 결과에 대한 사용자 반응 저장(결과당 한 건, 다시 보내면 덮어씀) */
+  putFeedback: (oid: number, data: CocktailFeedback) => {
+    return apiClient<CocktailFeedback>(`/api/cocktails/${oid}/feedback`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  /** 저장해 둔 반응 조회(없으면 null) */
+  getFeedback: (oid: number) => {
+    return apiClient<CocktailFeedback | null>(`/api/cocktails/${oid}/feedback`, { method: 'GET', emptyBodyAsNull: true });
   },
   /**
    * 칵테일 추천 결과 삭제

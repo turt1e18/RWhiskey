@@ -5,23 +5,23 @@ import BeforeScreen from "./_components/Before";
 import AfterScreen from "./_components/After";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { CocktailRecommendationRequest } from "@/type/CocktailInterface";
+import { takeCocktailDraft } from "@/lib/cocktailDraft";
 import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
+
+const INITIAL_REQUEST: CocktailRecommendationRequest = {
+  experienceLevel: 'beginner',
+  isNonAlcoholic: false,
+  preferredTaste: [],
+  carbonation: null,
+  dislikes: [],
+  currentMood: "",
+  baseSpirit: "상관없음"
+};
 
 export default function CocktailScreen() {
   const [screenState, setScreenState] = useState(0);
-  
-  // 새로운 인터페이스를 따르는 초기 상태 설정
-  const [request, setRequest] = useState<CocktailRecommendationRequest>({
-    experienceLevel: 'beginner',
-    isNonAlcoholic: false,
-    preferredTaste: [],
-    carbonation: false,
-    dislikes: [],
-    currentMood: "",
-    baseSpirit: "상관없음"
-  });
-
-  const [imRich, setImRich] = useState(false);
+  const [request, setRequest] = useState<CocktailRecommendationRequest>(INITIAL_REQUEST);
+  const [customBottle, setCustomBottle] = useState("");
   // 통합 데이터를 가져오는 Promise를 저장
   const [dataPromise, setDataPromise] = useState<Promise<CocktailDataInterface> | null>(null);
 
@@ -32,8 +32,8 @@ export default function CocktailScreen() {
           <BeforeScreen
             request={request}
             setRequest={setRequest}
-            imRich={imRich}
-            setImRich={setImRich}
+            customBottle={customBottle}
+            setCustomBottle={setCustomBottle}
             setDataPromise={setDataPromise}
             setSwitchState={setScreenState}
           />
@@ -49,9 +49,16 @@ export default function CocktailScreen() {
           >
             {dataPromise && (
               <AfterScreen
-                setSwitchState={setScreenState}
+                onEdit={() => setScreenState(0)}
+                onReset={() => {
+                  setRequest(INITIAL_REQUEST);
+                  setCustomBottle("");
+                  setDataPromise(null);
+                  setScreenState(0);
+                }}
                 dataPromise={dataPromise}
                 experienceLevel={request.experienceLevel}
+                dislikes={request.dislikes}
               />
             )}
           </Suspense>
@@ -61,21 +68,13 @@ export default function CocktailScreen() {
     }
   };
 
-  // 뒤로가기 리셋 이벤트
+  // 로그인하러 다녀온 경우 맡겨 둔 주문서를 되돌린다.
   useEffect(() => {
-    if (screenState === 0 && dataPromise !== null) {
-      setRequest({
-        experienceLevel: 'beginner',
-        isNonAlcoholic: false,
-        preferredTaste: [],
-        carbonation: false,
-        dislikes: [],
-        currentMood: "",
-        baseSpirit: "상관없음"
-      });
-      setDataPromise(null);
-    }
-  }, [screenState, dataPromise]);
+    const draft = takeCocktailDraft();
+    if (!draft) return;
+    setRequest(draft.request);
+    setCustomBottle(draft.customBottle);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1a120d] py-8 overflow-x-hidden [scrollbar-gutter:stable]">

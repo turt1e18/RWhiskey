@@ -269,6 +269,9 @@ export interface GeminiWhiskyResponse {
   styleName: string;
 }
 
+/** 검수된 레시피 사진과 그 저작자·라이선스(카탈로그 경로). 사진을 보여 줄 때 함께 표시해야 한다. */
+export interface CocktailImageCredit { url: string; sourceUrl: string; author: string; license: string }
+
 export interface GeminiCocktailResponse {
   cocktailName: string;
   baseSpirit: string;
@@ -278,6 +281,12 @@ export interface GeminiCocktailResponse {
   tastingNote: string;
   checkList: string[];
   method: string[];
+  // 카탈로그 경로(기능 플래그)에서만 채워진다
+  cocktailId?: number;
+  cocktailNameEn?: string | null;
+  image?: CocktailImageCredit | null;
+  relaxed?: string[];
+  unverifiedDislikes?: string[];
 }
 
 /**
@@ -287,7 +296,7 @@ export interface CocktailSaveRequest {
   experienceLevel: string;
   isNonAlcoholic: boolean;
   preferredTaste: string[];
-  carbonation: boolean;
+  carbonation: boolean | null;
   dislikes: string[];
   currentMood: string;
   requestBaseSpirit: string;
@@ -300,6 +309,7 @@ export interface CocktailSaveRequest {
   images: string[];
   checkList: string[];
   method: string[];
+  cocktailId?: number;
 }
 
 /**
@@ -352,4 +362,11 @@ export interface TokenStatusResponse {
   dailyLimit: number;
   usedCount: number;
   remaining: number;
+}
+
+/** 칵테일 결과 피드백 (PUT/GET /api/cocktails/{oid}/feedback) */
+export interface CocktailFeedback {
+  sentiment: 'LIKE' | 'DISLIKE';
+  reason: 'NONE' | 'WRONG_RECIPE' | 'ALLERGEN_INCLUDED' | 'TASTE' | 'OTHER';
+  comment?: string | null;
 }

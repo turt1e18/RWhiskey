@@ -1,3 +1,5 @@
+import type { CocktailImageCredit } from './ApiInterface';
+
 export interface CocktailDataInterface {
   oid?: number;
   cocktailName: string;
@@ -9,4 +11,7 @@ export interface CocktailDataInterface {
   images: string[];
   checkList: string[];
   method: string[];
+  imageCredit?: CocktailImageCredit | null;
+  relaxed?: string[];
+  unverifiedDislikes?: string[];
 }

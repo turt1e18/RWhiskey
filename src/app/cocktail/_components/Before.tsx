@@ -1,5 +1,6 @@
 "use client";
-import { recommendationErrorMessage } from "@/lib/userFacingError";
+import { recommendationErrorMessage, isLoginRequiredError, DAILY_LIMIT_MESSAGE } from "@/lib/userFacingError";
+import { saveCocktailDraft } from "@/lib/cocktailDraft";
 import { useDialogFocus } from "@/lib/useDialogFocus";
 import { useState, useMemo, Dispatch, SetStateAction } from "react";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
@@ -18,19 +19,19 @@ interface ModalConfig {
 interface BeforeScreenProps {
   request: CocktailRecommendationRequest;
   setRequest: Dispatch<SetStateAction<CocktailRecommendationRequest>>;
-  imRich: boolean;
-  setImRich: Dispatch<SetStateAction<boolean>>;
+  customBottle: string;
+  setCustomBottle: Dispatch<SetStateAction<string>>;
   setDataPromise: Dispatch<SetStateAction<Promise<CocktailDataInterface> | null>>;
   setSwitchState: Dispatch<SetStateAction<number>>;
 }
 
 export default function BeforeScreen(props: BeforeScreenProps) {
-  const { request, setRequest, imRich, setImRich, setDataPromise, setSwitchState } = props;
+  const { request, setRequest, customBottle, setCustomBottle, setDataPromise, setSwitchState } = props;
   const { isAuthenticated, isInitialized } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [dislikeInput, setDislikeInput] = useState("");
-  const [customBottle, setCustomBottle] = useState("");
+  const [recError, setRecError] = useState<{ message: string; loginRequired: boolean } | null>(null);
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
     show: false,
     title: "",
@@ -54,10 +55,10 @@ export default function BeforeScreen(props: BeforeScreenProps) {
     "탄닌감 (Tannic)"
   ];
   const baseSpiritOptions = ["진", "보드카", "럼", "데킬라", "위스키", "브랜디", "리큐르", "상관없음"];
-  const commonDislikes = ["민트", "오이", "계란 흰자", "시나몬", "고수", "올리브"];
+  const commonDislikes = ["민트", "오이", "계란 흰자", "시나몬", "고수", "올리브", "견과류", "유제품", "코코넛"];
 
   // 기주 선택은 경험자·홈바에게만 보이므로, 보이지 않을 때 번호가 비지 않게 센다.
-  const hasBase = request.experienceLevel === 'experienced' || request.experienceLevel === 'home_bar';
+  const hasBase = (request.experienceLevel === 'experienced' || request.experienceLevel === 'home_bar') && !request.isNonAlcoholic;
   const num = (n: number) => String(hasBase || n < 4 ? n : n - 1).padStart(2, '0') + '.';
 
   const todayStr = useMemo(() => {
@@ -119,16 +120,6 @@ export default function BeforeScreen(props: BeforeScreenProps) {
       return;
     }
 
-    // 유효성 검사: 바텐더 메모 (필수 1자 이상)
-    if (!request.currentMood || request.currentMood.trim().length === 0) {
-      setModalConfig({
-        show: true,
-        title: "작성 요청",
-        message: "바텐더가 참고할 수 있도록\n오늘의 기분이나 요청 사항을\n한 글자 이상 작성해 주세요."
-      });
-      return;
-    }
-
     // 유효성 검사: 홈바 기타 기주 선택 시 보틀명 (필수)
     if (request.experienceLevel === 'home_bar' && request.baseSpirit === "기타(바틀지정)") {
       if (!customBottle || customBottle.trim().length === 0) {
@@ -141,6 +132,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
       }
     }
 
+    setRecError(null);
     setLoading(true);
     try {
       const { getCocktailRecommendation } = await import("@/api/recommendationService");
@@ -148,11 +140,11 @@ export default function BeforeScreen(props: BeforeScreenProps) {
       // 기주 정보 보정
       const finalRequest = {
         ...request,
-        baseSpirit: request.baseSpirit === "기타(바틀지정)" ? `기타(${customBottle})` : request.baseSpirit
+        baseSpirit: request.isNonAlcoholic ? "상관없음" : request.baseSpirit === "기타(바틀지정)" ? `기타(${customBottle})` : request.baseSpirit
       };
 
       // 실제 API 호출 (트랜잭션 포함: 토큰 차감 -> Gemini -> 이미지 검색 -> 저장)
-      const res = await getCocktailRecommendation(finalRequest, imRich);
+      const res = await getCocktailRecommendation(finalRequest);
       
       // UI 호환성을 위한 데이터 구성 (서비스에서 이미 정제되어 반환됨)
       const formattedData = {
@@ -169,16 +161,19 @@ export default function BeforeScreen(props: BeforeScreenProps) {
       setSwitchState(1);
     } catch (err: any) {
       console.error("Recommendation Error:", err);
-      alert(recommendationErrorMessage(err));
+      setRecError({ message: recommendationErrorMessage(err), loginRequired: isLoginRequiredError(err) });
     } finally {
       setLoading(false);
     }
   };
 
+  const saveDraft = () => saveCocktailDraft({ request, customBottle });
+
   const handleModalConfirm = () => {
     setModalConfig(prev => ({ ...prev, show: false }));
 
     if (modalConfig.action === "login") {
+      saveDraft();
       router.push("/login");
     }
   };
@@ -254,14 +249,14 @@ export default function BeforeScreen(props: BeforeScreenProps) {
             <div className="space-y-4 border-l-2 border-amber-300/20 pl-6">
               <div className="space-y-1">
                 <p className="text-white text-sm font-medium">1. 숙련도 선택</p>
-                <p className="text-xs text-stone-500">입문자부터 전문가까지 맞춤형 레시피를 제공합니다.</p>
+                <p className="text-xs text-stone-500">집에서 직접 만들어 보고 싶다면 “홈바”를 고르세요. 재료와 만드는 순서까지 알려 드려요.</p>
               </div>
               <div className="space-y-1">
                 <p className="text-white text-sm font-medium">2. 세밀한 맛 조절</p>
                 <p className="text-xs text-stone-500">단맛, 신맛, 탄산 유무 등 세세한 취향을 반영합니다.</p>
               </div>
               <div className="space-y-1">
-                <p className="text-white text-sm font-medium">3. 기주 지정 (경험자)</p>
+                <p className="text-white text-sm font-medium">3. 기주 지정 (경험자·홈바)</p>
                 <p className="text-xs text-stone-500">선호하는 베이스 술이 있다면 직접 지정할 수 있습니다.</p>
               </div>
             </div>
@@ -348,7 +343,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               </div>
 
               {/* 3. 기주 선택 (경험자/홈바 전용) */}
-              {(request.experienceLevel === 'experienced' || request.experienceLevel === 'home_bar') && (
+              {hasBase && (
                 <section className="animate-in fade-in slide-in-from-top-4 duration-500 font-sans border-t border-[#4a3728]/10 pt-6">
                   <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">03.</span> 베이스 기주 지정
@@ -389,12 +384,17 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                         type="text"
                         value={customBottle}
                         onChange={(e) => setCustomBottle(e.target.value)}
+                        aria-label="기주로 쓸 보틀명"
                         placeholder="기주로 선택할 명확한 보틀명을 입력해주세요."
                         className="w-full bg-transparent border-b border-dashed border-[#4a3728]/45 px-0 py-1 text-xs text-stone-800 outline-none placeholder:text-stone-400 font-sans"
                       />
                     </div>
                   )}
                 </section>
+              )}
+
+              {request.isNonAlcoholic && request.experienceLevel !== 'beginner' && (
+                <p role="status" className="border-t border-[#4a3728]/10 pt-6 text-xs text-stone-600">무알콜 칵테일은 기주를 정하지 않고 만들어요.</p>
               )}
 
               {/* 4. 맛 선호 */}
@@ -428,7 +428,8 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                 <div className="flex gap-8 font-sans">
                   {[
                     { label: "탄산 있음 (Sparkling)", value: true },
-                    { label: "탄산 없음 (Still)", value: false }
+                    { label: "탄산 없음 (Still)", value: false },
+                    { label: "상관없음 (Any)", value: null }
                   ].map((opt) => (
                     <button
                       key={String(opt.value)}
@@ -481,13 +482,15 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                     value={dislikeInput}
                     onChange={(e) => setDislikeInput(e.target.value)}
                     onKeyDown={addCustomDislike}
+                    aria-label="그 외 기피 재료 직접 입력"
                     placeholder="그 외 기피하는 재료가 있다면 입력 후 엔터..."
                     className="w-full bg-transparent border-b border-dashed border-[#4a3728]/45 px-0 py-1 text-xs text-stone-800 outline-none placeholder:text-stone-400 font-sans"
                   />
+                  <p className="mt-1 text-xs text-stone-500 font-sans">위 버튼은 재료 목록으로 확실히 걸러 드려요. 직접 입력한 재료는 확인하지 못할 수 있어요.</p>
                   <div className="flex flex-wrap gap-2 mt-2 font-sans">
                     {request.dislikes.filter(d => !commonDislikes.includes(d)).map(d => (
                        <span key={d} className="px-2 py-0.5 bg-red-800/10 text-red-800 border border-red-800/20 text-xs font-bold rounded flex items-center gap-1 font-sans">
-                         {d} <button onClick={() => toggleArrayItem('dislikes', d)} className="font-sans">✕</button>
+                         {d} <button type="button" onClick={() => toggleArrayItem('dislikes', d)} aria-label={`${d} 제외 취소`} className="inline-flex min-h-11 min-w-11 items-center justify-center font-sans">✕</button>
                        </span>
                     ))}
                   </div>
@@ -498,39 +501,19 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               <section className="font-sans border-t border-[#4a3728]/10 pt-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
-                    <span className="text-red-800 text-xs font-sans">{num(7)}</span> 바텐더에게 남기는 메모 <span className="text-red-800 text-xs font-normal">(필수)</span>
+                    <span className="text-red-800 text-xs font-sans">{num(7)}</span> 바텐더에게 남기는 메모 <span className="text-stone-500 text-xs font-normal">(선택)</span>
                   </h3>
                   <span className="text-xs text-stone-500 font-medium font-sans">{request.currentMood.length} / 100</span>
                 </div>
                 <textarea
                   className="w-full bg-transparent border-none px-0 py-1 text-sm leading-relaxed text-[#2d2017] outline-none placeholder:text-stone-400 resize-none min-h-[100px] font-medium font-sans"
                   placeholder="오늘의 기분, 날씨, 혹은 바텐더가 참고했으면 하는 특별한 요청 사항을 자유롭게 적어주세요..."
-                  aria-required="true"
+                  aria-label="바텐더에게 남기는 메모 (선택)"
                   value={request.currentMood}
                   maxLength={100}
                   onChange={(e) => setRequest(prev => ({ ...prev, currentMood: e.target.value }))}
                 />
               </section>
-
-              {/* 7. Flex 옵션 */}
-              <div className="flex items-start gap-4 p-4 bg-white/40 border border-[#4a3728]/10 rounded font-sans">
-                <div 
-                  onClick={() => setImRich(!imRich)}
-                  className={`mt-1 min-w-[18px] h-[18px] border border-[#4a3728] flex items-center justify-center cursor-pointer transition-all ${imRich ? 'bg-[#4a3728]' : 'bg-transparent'}`}
-                >
-                  {imRich && (
-                    <svg className="w-3.5 h-3.5 text-[#efe2c9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
-                    </svg>
-                  )}
-                </div>
-                <div className="cursor-pointer select-none font-sans" onClick={() => setImRich(!imRich)}>
-                  <p className="text-sm font-bold text-stone-900 font-sans">오늘의 Flex</p>
-                  <p className="text-xs text-stone-600 leading-snug mt-1 font-sans">
-                    평소보다 고급스러운 기주나 구하기 힘든 부재료를 활용한 프리미엄 칵테일 위주로 추천해 드립니다.
-                  </p>
-                </div>
-              </div>
             </div>
 
             <div className="mt-8 pt-6 border-t border-[#4a3728]/25 text-center font-sans">
@@ -538,7 +521,20 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                 ⚠️ 본 추천은 AI 분석에 기반한 참고 정보입니다. 실제 상황과 다를 수 있으니 참고용으로 이용해 주세요.
               </div>
               {!isAuthenticated && isInitialized && (
-                <p role="status" className="mb-3 text-sm text-stone-700">로그인하면 추천을 받을 수 있어요. <a href="/login" className="inline-flex min-h-11 items-center font-semibold underline">로그인하러 가기</a></p>
+                <p role="status" className="mb-3 text-sm text-stone-700">로그인하면 추천을 받을 수 있어요. <a href="/login" onClick={saveDraft} className="inline-flex min-h-11 items-center font-semibold underline">로그인하러 가기</a></p>
+              )}
+              {recError && (
+                <div role="alert" className="mb-3 rounded border border-red-800/30 bg-red-800/5 p-3 text-left text-sm text-stone-800">
+                  <p>{recError.message}</p>
+                  <p className="mt-1 text-xs text-stone-600">{recError.loginRequired ? "로그인하고 돌아오면 고르신 조건이 다시 채워져요." : "적어 두신 내용은 그대로 있어요."}</p>
+                  {recError.loginRequired ? (
+                    <a href="/login" onClick={saveDraft} className="mt-2 inline-flex min-h-11 items-center font-semibold underline">로그인하러 가기</a>
+                  ) : recError.message === DAILY_LIMIT_MESSAGE ? (
+                    <p className="mt-2 text-xs text-stone-600">내일 다시 이용할 수 있어요.</p>
+                  ) : (
+                    <button type="button" onClick={startRecommendation} className="mt-2 inline-flex min-h-11 items-center font-semibold underline">다시 시도</button>
+                  )}
+                </div>
               )}
               <button
                 onClick={startRecommendation}

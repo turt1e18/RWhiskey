@@ -13,11 +13,20 @@ export function loginErrorMessage(error: unknown): string {
   return "서버에 연결하지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.";
 }
 
+export const DAILY_LIMIT_MESSAGE = "오늘 사용할 수 있는 추천 횟수를 모두 사용했어요.";
+export const LOGIN_REQUIRED_MESSAGE = "로그인이 필요해요. 다시 로그인한 뒤 이용해 주세요.";
+
+/** 로그인이 풀려서 생긴 실패인지(401/403). 이때는 재시도 대신 로그인으로 안내한다. */
+export function isLoginRequiredError(error: unknown): boolean {
+  if (error instanceof ApiResponseError) return error.status === 401 || error.status === 403;
+  return error instanceof Error && error.message === LOGIN_REQUIRED_MESSAGE;
+}
+
 /** 추천 실패 문구. 서버·라이브러리 원문("Failed to fetch", "API Error: 500" 등)은 보여 주지 않는다. */
 export function recommendationErrorMessage(error: unknown): string {
   const generic = "추천을 가져오는 중 문제가 생겼어요. 잠시 뒤에 다시 시도해 주세요.";
   if (error instanceof ApiResponseError) {
-    if (error.status === 401 || error.status === 403) return "로그인이 필요해요. 다시 로그인한 뒤 이용해 주세요.";
+    if (error.status === 401 || error.status === 403) return LOGIN_REQUIRED_MESSAGE;
     if (error.status === 429) return "요청이 너무 잦아요. 잠시 뒤에 다시 시도해 주세요.";
     return generic;
   }

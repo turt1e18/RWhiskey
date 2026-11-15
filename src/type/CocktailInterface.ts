@@ -6,7 +6,7 @@ export interface CocktailRecommendationRequest {
   experienceLevel: ExperienceLevel;
   isNonAlcoholic: boolean;        // 무알콜 여부 추가
   preferredTaste: string[];      // 다중 선택 (예: ["달콤한 맛", "상큼한 맛"])
-  carbonation: boolean;          // 탄산 유무
+  carbonation: boolean | null;   // 탄산 유무 (null = 상관없음)
   dislikes: string[];            // 기피 재료 (예: ["민트", "계란 흰자"])
   currentMood: string;           // 현재 기분 (자유 텍스트)
   baseSpirit: string;            // 기주 (주로 experienced 레벨에서 선택적으로 사용)
