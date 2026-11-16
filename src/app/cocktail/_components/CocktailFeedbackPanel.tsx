@@ -51,8 +51,8 @@ export default function CocktailFeedbackPanel({ oid }: { oid: number }) {
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <span>이 추천은 어땠나요?</span>
-          <button type="button" className={btn} disabled={busy} onClick={() => send({ sentiment: "LIKE", reason: "NONE" })}>👍 좋아요</button>
-          <button type="button" className={btn} disabled={busy} aria-expanded={picking} onClick={() => setPicking(true)}>👎 문제가 있어요</button>
+          <button type="button" className={btn} disabled={busy} onClick={() => send({ sentiment: "LIKE", reason: "NONE" })}>좋았어요</button>
+          <button type="button" className={btn} disabled={busy} aria-expanded={picking} onClick={() => setPicking(true)}>문제가 있어요</button>
         </div>
       )}
       {picking && (
@@ -75,8 +75,8 @@ export default function CocktailFeedbackPanel({ oid }: { oid: number }) {
         </fieldset>
       )}
       {error && <p role="alert" className="mt-2 text-red-300">{error}</p>}
-      <p className="mt-3 text-stone-500">
-        이 결과는 <Link href={`/cocktail/result/${oid}`} className="inline-flex min-h-11 items-center underline">/cocktail/result/{oid}</Link> 에서 다시 볼 수 있어요.
+      <p className="mt-3 text-stone-400">
+        내 추천 결과는 <Link href={`/cocktail/result/${oid}`} className="inline-flex min-h-11 items-center underline">이 링크</Link>로 다시 열 수 있어요.
       </p>
     </section>
   );

@@ -7,10 +7,11 @@ import AfterScreen from "../../_components/After";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { cocktailApi } from "@/api/whiskeyApi";
 import { isLoginRequiredError } from "@/lib/userFacingError";
+import { saveCocktailDraft } from "@/lib/cocktailDraft";
 import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
-import type { ExperienceLevel } from "@/type/CocktailInterface";
+import type { CocktailRecommendationRequest, ExperienceLevel } from "@/type/CocktailInterface";
 
-type Loaded = { data: CocktailDataInterface; level: ExperienceLevel; dislikes: string[] };
+type Loaded = { data: CocktailDataInterface; level: ExperienceLevel; dislikes: string[]; draft: { request: CocktailRecommendationRequest; customBottle: string } };
 
 /** 저장된 결과를 주소로 다시 연다(본인 결과만). */
 export default function CocktailResultPage({ params }: { params: Promise<{ oid: string }> }) {
@@ -29,10 +30,11 @@ export default function CocktailResultPage({ params }: { params: Promise<{ oid: 
         data: {
           oid, cocktailName: d.cocktailName, baseSpirit: d.responseBaseSpirit, abv: d.abv, foodName: d.foodName,
           pairingNote: d.pairingNote, bartenderWord: d.bartenderWord ?? undefined,
-          images: d.images ?? [], checkList: d.checkList ?? [], method: d.method ?? [], imageCredit: d.imageCredit ?? null,
+          orderDate: d.orderDate, images: d.images ?? [], checkList: d.checkList ?? [], method: d.method ?? [], imageCredit: d.imageCredit ?? null,
         },
         level: (d.experienceLevel as ExperienceLevel) ?? "beginner",
         dislikes: d.dislikes ?? [],
+        draft: toDraft(d),
       });
     }).catch((e) => {
       if (!alive) return;
@@ -59,16 +61,38 @@ export default function CocktailResultPage({ params }: { params: Promise<{ oid: 
     return <div className="min-h-screen bg-[#1a120d] flex items-center justify-center"><WhiskeyLoader /></div>;
   }
   return (
-    <ResolvedResult loaded={loaded} onLeave={() => router.push("/cocktail")} />
+    <ResolvedResult
+      loaded={loaded}
+      onEdit={() => { saveCocktailDraft(loaded.draft); router.push("/cocktail"); }}
+      onReset={() => router.push("/cocktail")}
+    />
   );
 }
 
-function ResolvedResult({ loaded, onLeave }: { loaded: Loaded; onLeave: () => void }) {
+/** 저장된 요청 조건을 주문서 입력으로 되돌린다. 알 수 없는 값은 기본값으로 둔다. */
+function toDraft(d: Awaited<ReturnType<typeof cocktailApi.getDetail>>) {
+  const level: ExperienceLevel = d.experienceLevel === "experienced" || d.experienceLevel === "home_bar" ? d.experienceLevel : "beginner";
+  const custom = /^기타\((.*)\)$/.exec(d.requestBaseSpirit ?? "");
+  return {
+    request: {
+      experienceLevel: level,
+      isNonAlcoholic: !!d.isNonAlcoholic,
+      preferredTaste: d.preferredTaste ?? [],
+      carbonation: d.carbonation ?? null,
+      dislikes: d.dislikes ?? [],
+      currentMood: d.currentMood ?? "",
+      baseSpirit: custom ? "기타(바틀지정)" : d.requestBaseSpirit || "상관없음",
+    },
+    customBottle: custom?.[1] ?? "",
+  };
+}
+
+function ResolvedResult({ loaded, onEdit, onReset }: { loaded: Loaded; onEdit: () => void; onReset: () => void }) {
   // AfterScreen은 use(Promise)로 읽으므로 이미 채워진 약속을 한 번만 만들어 넘긴다.
   const [promise] = useState(() => Promise.resolve(loaded.data));
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#1a120d] flex items-center justify-center"><WhiskeyLoader /></div>}>
-      <AfterScreen onEdit={onLeave} onReset={onLeave} dataPromise={promise} experienceLevel={loaded.level} dislikes={loaded.dislikes} />
+      <AfterScreen onEdit={onEdit} onReset={onReset} dataPromise={promise} experienceLevel={loaded.level} dislikes={loaded.dislikes} />
     </Suspense>
   );
 }

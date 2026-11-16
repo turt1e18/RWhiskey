@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import BeforeScreen from "./_components/Before";
 import AfterScreen from "./_components/After";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
+import { cocktailLoadingMessages } from "./_components/cocktailLoadingMessages";
 import { CocktailRecommendationRequest } from "@/type/CocktailInterface";
 import { takeCocktailDraft } from "@/lib/cocktailDraft";
 import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
@@ -43,7 +44,7 @@ export default function CocktailScreen() {
           <Suspense
             fallback={
               <div className="flex flex-col items-center justify-center my-12 px-4 h-[60vh]">
-                <WhiskeyLoader />
+                <WhiskeyLoader messages={cocktailLoadingMessages} />
               </div>
             }
           >
