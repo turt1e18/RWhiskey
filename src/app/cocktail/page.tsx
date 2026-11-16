@@ -7,6 +7,8 @@ import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { cocktailLoadingMessages } from "./_components/cocktailLoadingMessages";
 import { CocktailRecommendationRequest } from "@/type/CocktailInterface";
 import { takeCocktailDraft } from "@/lib/cocktailDraft";
+import { recommendationErrorMessage } from "@/lib/userFacingError";
+import { runRecommendation } from "./_components/runRecommendation";
 import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
 
 const INITIAL_REQUEST: CocktailRecommendationRequest = {
@@ -16,7 +18,8 @@ const INITIAL_REQUEST: CocktailRecommendationRequest = {
   carbonation: null,
   dislikes: [],
   currentMood: "",
-  baseSpirit: "상관없음"
+  baseSpirit: "상관없음",
+  strength: "light"
 };
 
 export default function CocktailScreen() {
@@ -25,6 +28,24 @@ export default function CocktailScreen() {
   const [customBottle, setCustomBottle] = useState("");
   // 통합 데이터를 가져오는 Promise를 저장
   const [dataPromise, setDataPromise] = useState<Promise<CocktailDataInterface> | null>(null);
+  // "다른 한 잔": 이미 보여 준 레시피 id와 진행 상태. 주문서로 돌아가면 비운다.
+  const [shown, setShown] = useState<number[]>([]);
+  const [another, setAnother] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null });
+
+  const requestAnother = async () => {
+    if (!dataPromise || another.busy) return;
+    setAnother({ busy: true, error: null });
+    try {
+      const current = await dataPromise;
+      const ids = current.cocktailId != null ? [...new Set([...shown, current.cocktailId])] : shown;
+      const next = await runRecommendation(request, customBottle, ids);
+      setShown(ids);
+      setDataPromise(Promise.resolve(next));
+      setAnother({ busy: false, error: null });
+    } catch (e) {
+      setAnother({ busy: false, error: recommendationErrorMessage(e) });
+    }
+  };
 
   const switchScreen = () => {
     switch (screenState) {
@@ -48,13 +69,18 @@ export default function CocktailScreen() {
               </div>
             }
           >
-            {dataPromise && (
+            {dataPromise && another.busy && <WhiskeyLoader messages={cocktailLoadingMessages} />}
+            {dataPromise && !another.busy && (
               <AfterScreen
-                onEdit={() => setScreenState(0)}
+                onEdit={() => { setShown([]); setAnother({ busy: false, error: null }); setScreenState(0); }}
+                onAnother={requestAnother}
+                anotherError={another.error}
                 onReset={() => {
                   setRequest(INITIAL_REQUEST);
                   setCustomBottle("");
                   setDataPromise(null);
+                  setShown([]);
+                  setAnother({ busy: false, error: null });
                   setScreenState(0);
                 }}
                 dataPromise={dataPromise}

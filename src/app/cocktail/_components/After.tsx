@@ -16,10 +16,13 @@ interface AfterScreenProps {
   dataPromise: Promise<CocktailDataInterface>;
   experienceLevel: ExperienceLevel;
   dislikes: string[];
+  /** 주문서에서 막 받은 결과에서만 넘긴다(저장된 결과 다시 보기에서는 없다). */
+  onAnother?: () => void;
+  anotherError?: string | null;
 }
 
 export default function AfterScreen(props: AfterScreenProps) {
-  const { onEdit, onReset, dataPromise, experienceLevel, dislikes } = props;
+  const { onEdit, onReset, dataPromise, experienceLevel, dislikes, onAnother, anotherError } = props;
   const resultData = use(dataPromise);
 
   // 저장된 결과는 주문한 날짜(orderDate), 방금 받은 결과는 오늘 날짜를 찍는다.
@@ -109,7 +112,7 @@ export default function AfterScreen(props: AfterScreenProps) {
                 ? `기피 재료(${dislikes.join("·")})는 빼고 추천했지만 AI 결과라 완벽하지 않을 수 있어요. 알레르기가 있다면 주문 전에 바텐더에게 꼭 확인해 주세요.`
                 : "AI가 고른 추천이에요. 알레르기가 있다면 주문 전에 바텐더에게 꼭 확인해 주세요."}</li>
               {resultData?.relaxed && resultData.relaxed.length > 0 && (
-                <li>딱 맞는 칵테일이 없어 {resultData.relaxed.map((k) => ({ TASTE: "맛", BASE_SPIRIT: "기주", CARBONATION: "탄산" } as Record<string, string>)[k] ?? k).join("·")} 조건을 조금 넓혀 골랐어요.</li>
+                <li>딱 맞는 칵테일이 없어 {resultData.relaxed.map((k) => ({ TASTE: "맛", BASE_SPIRIT: "기주", CARBONATION: "탄산", STRENGTH: "도수" } as Record<string, string>)[k] ?? k).join("·")} 조건을 조금 넓혀 골랐어요.</li>
               )}
               {resultData?.unverifiedDislikes && resultData.unverifiedDislikes.length > 0 && (
                 <li>직접 적어 주신 기피 재료({resultData.unverifiedDislikes.join("·")})는 재료 목록으로 확인하지 못했어요. 주문하기 전에 꼭 직접 확인해 주세요.</li>
@@ -154,10 +157,25 @@ export default function AfterScreen(props: AfterScreenProps) {
             </div>
           )}
 
+          {experienceLevel !== "home_bar" && resultData?.cocktailName && (
+            <p className="w-full border-t border-[#4a3728]/25 pt-4 mb-6 text-left text-xs leading-relaxed text-stone-800">
+              바에서는 “{resultData.cocktailName} 부탁드려요”라고 말하면 돼요. 덜 달게, 더 가볍게처럼 원하는 점을 덧붙여도 좋아요.
+            </p>
+          )}
+
           <div className="w-full text-center pt-4 border-t border-[#4a3728]/25 mt-4">
             <span className="text-xs tracking-widest font-bold text-stone-600 uppercase italic">R-Whiskey Selection</span>
           </div>
         </article>
+        {onAnother && resultData?.cocktailId != null && (
+          <div className="mt-6 flex w-full max-w-md flex-col items-center gap-2 px-2 text-xs text-stone-300">
+            <button type="button" onClick={onAnother} className="min-h-11 w-full rounded border border-[#e5d5b7]/60 px-3 text-sm font-bold text-[#e5d5b7] transition-colors hover:bg-[#e5d5b7]/10">
+              다른 한 잔 부탁해요
+            </button>
+            <p>오늘 받을 수 있는 추천 횟수가 1회 줄어요. 같은 조건에서 다른 칵테일을 골라요.</p>
+            {anotherError && <p role="alert" className="text-red-300">{anotherError}</p>}
+          </div>
+        )}
         {resultData?.oid ? <CocktailFeedbackPanel oid={resultData.oid} /> : null}
       </main>
     </div>

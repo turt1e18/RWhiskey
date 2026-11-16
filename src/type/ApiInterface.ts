@@ -367,6 +367,6 @@ export interface TokenStatusResponse {
 /** 칵테일 결과 피드백 (PUT/GET /api/cocktails/{oid}/feedback) */
 export interface CocktailFeedback {
   sentiment: 'LIKE' | 'DISLIKE';
-  reason: 'NONE' | 'WRONG_RECIPE' | 'ALLERGEN_INCLUDED' | 'TASTE' | 'OTHER';
+  reason: 'NONE' | 'WRONG_RECIPE' | 'ALLERGEN_INCLUDED' | 'TASTE' | 'OTHER' | 'TOO_STRONG' | 'HARD_TO_FIND' | 'GOOD_TASTE' | 'HELPFUL';
   comment?: string | null;
 }

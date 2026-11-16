@@ -2,10 +2,11 @@
 import { recommendationErrorMessage, isLoginRequiredError, DAILY_LIMIT_MESSAGE } from "@/lib/userFacingError";
 import { saveCocktailDraft } from "@/lib/cocktailDraft";
 import { useDialogFocus } from "@/lib/useDialogFocus";
-import { useState, useMemo, Dispatch, SetStateAction } from "react";
+import { useState, useMemo, useEffect, Dispatch, SetStateAction } from "react";
 import { cocktailLoadingMessages } from "./cocktailLoadingMessages";
+import { runRecommendation } from "./runRecommendation";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
-import { CocktailRecommendationRequest, ExperienceLevel } from "@/type/CocktailInterface";
+import { CocktailRecommendationRequest, CocktailStrength } from "@/type/CocktailInterface";
 import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
@@ -40,10 +41,11 @@ export default function BeforeScreen(props: BeforeScreenProps) {
   });
 
   // 옵션 데이터 정의
-  const experienceOptions: { label: string; value: ExperienceLevel }[] = [
-    { label: "입문자 (Beginner)", value: "beginner" },
-    { label: "경험자 (Experienced)", value: "experienced" },
-    { label: "홈바 (Home Bar)", value: "home_bar" },
+  const strengthOptions: { label: string; hint: string; value: CocktailStrength | null }[] = [
+    { label: "가볍게", hint: "12% 이하", value: "light" },
+    { label: "적당히", hint: "13~22%", value: "medium" },
+    { label: "진하게", hint: "22% 초과", value: "strong" },
+    { label: "상관없어요", hint: "", value: null },
   ];
 
   const tasteOptions = [
@@ -60,7 +62,18 @@ export default function BeforeScreen(props: BeforeScreenProps) {
 
   // 기주 선택은 무알콜일 때만 숨으므로, 보이지 않을 때 번호가 비지 않게 센다.
   const hasBase = !request.isNonAlcoholic;
-  const num = (n: number) => String(hasBase || n < 4 ? n : n - 1).padStart(2, '0') + '.';
+  // 도수·기주 선택은 무알콜이 아닐 때만 보인다. 앞의 세 칸(경험·장소·알코올)을 빼고 센다.
+  const num = (n: number) => String(n + (hasBase ? 2 : 0)).padStart(2, '0') + '.';
+
+  // 경험은 바에서 주문할 때만 저장값(beginner/experienced)에 반영된다. 집에서 만들면 home_bar로 저장된다.
+  const [tried, setTried] = useState(request.experienceLevel === 'experienced');
+  useEffect(() => { if (request.experienceLevel !== 'home_bar') setTried(request.experienceLevel === 'experienced'); }, [request.experienceLevel]);
+  const atHome = request.experienceLevel === 'home_bar';
+  const chooseExperience = (didTry: boolean) => {
+    setTried(didTry);
+    setRequest(prev => ({ ...prev, experienceLevel: prev.experienceLevel === 'home_bar' ? 'home_bar' : didTry ? 'experienced' : 'beginner' }));
+  };
+  const choosePlace = (home: boolean) => setRequest(prev => ({ ...prev, experienceLevel: home ? 'home_bar' : tried ? 'experienced' : 'beginner' }));
 
   const todayStr = useMemo(() => {
     const d = new Date();
@@ -136,27 +149,8 @@ export default function BeforeScreen(props: BeforeScreenProps) {
     setRecError(null);
     setLoading(true);
     try {
-      const { getCocktailRecommendation } = await import("@/api/recommendationService");
-      
-      // 기주 정보 보정: 화면에 보이지 않는 기주 선택(입문자로 바꿨거나 무알콜)은 보내지 않는다.
-      const finalRequest = {
-        ...request,
-        baseSpirit: !hasBase ? "상관없음" : request.baseSpirit === "기타(바틀지정)" ? (request.experienceLevel === 'home_bar' ? `기타(${customBottle})` : "상관없음") : request.baseSpirit
-      };
-
       // 실제 API 호출 (트랜잭션 포함: 토큰 차감 -> Gemini -> 이미지 검색 -> 저장)
-      const res = await getCocktailRecommendation(finalRequest);
-      
-      // UI 호환성을 위한 데이터 구성 (서비스에서 이미 정제되어 반환됨)
-      const formattedData = {
-        oid: res.savedOid,
-        ...res.aiResult,
-        // UI 필드 매핑 (Whisky 스펙과 통일 - AfterScreen 호환용)
-        foodName: res.aiResult.foodPairing,
-        pairingNote: res.aiResult.tastingNote,
-        bartenderWord: res.aiResult.bartenderMessage,
-        images: res.aiResult.images // 서비스에서 이미지가 포함된 결과를 반환하도록 수정 예정
-      };
+      const formattedData = await runRecommendation(request, customBottle);
 
       setDataPromise(Promise.resolve(formattedData));
       setSwitchState(1);
@@ -247,18 +241,17 @@ export default function BeforeScreen(props: BeforeScreenProps) {
             </div>
             
             <p className="max-w-md text-sm leading-relaxed text-stone-400">
-              당신의 숙련도와 선호하는 맛, 그리고 피하고 싶은 재료를 알려주세요. 
-              오늘의 기분에 딱 맞는 최적의 한 잔을 조주해 드립니다.
+              경험, 맛, 도수, 피하고 싶은 재료를 알려 주세요. 조건에 맞는 칵테일을 골라 드려요.
             </p>
 
             <div className="hidden space-y-4 border-l-2 border-amber-300/20 pl-6 lg:block">
               <div className="space-y-1">
-                <p className="text-white text-sm font-medium">1. 숙련도 선택</p>
-                <p className="text-xs text-stone-400">집에서 직접 만들어 보고 싶다면 “홈바”를 고르세요. 재료와 만드는 순서까지 알려 드려요.</p>
+                <p className="text-white text-sm font-medium">1. 경험과 장소</p>
+                <p className="text-xs text-stone-400">집에서 만들 거라면 “집에서 만들래요”를 고르세요. 재료와 만드는 순서가 함께 나와요.</p>
               </div>
               <div className="space-y-1">
-                <p className="text-white text-sm font-medium">2. 세밀한 맛 조절</p>
-                <p className="text-xs text-stone-400">단맛, 신맛, 탄산 유무 등 세세한 취향을 반영합니다.</p>
+                <p className="text-white text-sm font-medium">2. 맛, 탄산, 도수</p>
+                <p className="text-xs text-stone-400">고른 조건으로 칵테일을 좁혀요. 맞는 게 없으면 조건을 조금 넓혀요.</p>
               </div>
               <div className="space-y-1">
                 <p className="text-white text-sm font-medium">3. 기주 고르기</p>
@@ -285,71 +278,53 @@ export default function BeforeScreen(props: BeforeScreenProps) {
 
             <div className="flex-1 space-y-8 font-sans">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
-                {/* 1. 사용자 레벨 */}
                 <section className="font-sans">
                   <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
-                    <span className="text-red-800 text-xs font-sans">01.</span> 유저 숙련도
+                    <span className="text-red-800 text-xs font-sans">01.</span> 칵테일 경험
                   </h3>
                   <div className="flex flex-col gap-2 font-sans">
-                    {experienceOptions.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setRequest(prev => ({ ...prev, experienceLevel: opt.value }))}
-                        aria-pressed={request.experienceLevel === opt.value}
-                        className="flex min-h-11 items-center gap-3 p-2 border border-[#4a3728]/30 rounded hover:bg-[#4a3728]/5 transition-colors group font-sans"
-                      >
-                        <div className={`w-3.5 h-3.5 border border-[#4a3728] flex items-center justify-center transition-all ${request.experienceLevel === opt.value ? 'bg-[#4a3728]' : 'bg-transparent'}`}>
-                          {request.experienceLevel === opt.value && (
-                            <svg className="w-2.5 h-2.5 text-[#efe2c9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
-                            </svg>
-                          )}
-                        </div>
-                        <span className={`text-xs ${request.experienceLevel === opt.value ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
-                          {opt.label.split(' (')[0]}
-                        </span>
-                      </button>
-                    ))}
+                    <ChoiceButton selected={!tried} onClick={() => chooseExperience(false)} label="처음이에요" />
+                    <ChoiceButton selected={tried} onClick={() => chooseExperience(true)} label="마셔 본 적 있어요" />
                   </div>
                 </section>
-
-                {/* 2. 무알콜 여부 */}
                 <section className="font-sans">
                   <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
-                    <span className="text-red-800 text-xs font-sans">02.</span> 무알콜 여부
+                    <span className="text-red-800 text-xs font-sans">02.</span> 어디서 즐기실 건가요?
                   </h3>
                   <div className="flex flex-col gap-2 font-sans">
-                    {[
-                      { label: "예 (Non-Alcoholic)", value: true },
-                      { label: "아니오 (Alcoholic)", value: false }
-                    ].map((opt) => (
-                      <button
-                        key={String(opt.value)}
-                        onClick={() => setRequest(prev => ({ ...prev, isNonAlcoholic: opt.value }))}
-                        aria-pressed={request.isNonAlcoholic === opt.value}
-                        className="flex min-h-11 items-center gap-3 p-2 border border-[#4a3728]/30 rounded hover:bg-[#4a3728]/5 transition-colors group font-sans"
-                      >
-                        <div className={`w-3.5 h-3.5 border border-[#4a3728] flex items-center justify-center transition-all ${request.isNonAlcoholic === opt.value ? 'bg-[#4a3728]' : 'bg-transparent'}`}>
-                          {request.isNonAlcoholic === opt.value && (
-                            <svg className="w-2.5 h-2.5 text-[#efe2c9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
-                            </svg>
-                          )}
-                        </div>
-                        <span className={`text-xs ${request.isNonAlcoholic === opt.value ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
-                          {opt.label.split(' (')[0]}
-                        </span>
-                      </button>
-                    ))}
+                    <ChoiceButton selected={!atHome} onClick={() => choosePlace(false)} label="바에서 주문할래요" />
+                    <ChoiceButton selected={atHome} onClick={() => choosePlace(true)} label="집에서 만들래요" hint="재료와 만드는 법까지 알려 드려요" />
                   </div>
                 </section>
+                <section className="font-sans">
+                  <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                    <span className="text-red-800 text-xs font-sans">03.</span> 술을 넣을까요?
+                  </h3>
+                  <div className="flex flex-col gap-2 font-sans">
+                    <ChoiceButton selected={!request.isNonAlcoholic} onClick={() => setRequest(prev => ({ ...prev, isNonAlcoholic: false }))} label="알코올 포함" />
+                    <ChoiceButton selected={request.isNonAlcoholic} onClick={() => setRequest(prev => ({ ...prev, isNonAlcoholic: true }))} label="알코올 없이" />
+                  </div>
+                </section>
+                {hasBase && (
+                  <section className="font-sans">
+                    <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                      <span className="text-red-800 text-xs font-sans">04.</span> 도수는 어느 정도로 할까요?
+                    </h3>
+                    <div className="flex flex-col gap-2 font-sans">
+                      {strengthOptions.map((opt) => (
+                        <ChoiceButton key={String(opt.value)} selected={(request.strength ?? null) === opt.value}
+                          onClick={() => setRequest(prev => ({ ...prev, strength: opt.value }))} label={opt.label} hint={opt.hint} />
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
 
               {/* 3. 기주 선택 (무알콜이면 숨김) */}
               {hasBase && (
                 <section className="animate-in fade-in slide-in-from-top-4 duration-500 font-sans border-t border-[#4a3728]/10 pt-6">
                   <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
-                    <span className="text-red-800 text-xs font-sans">03.</span> 베이스 기주 지정
+                    <span className="text-red-800 text-xs font-sans">05.</span> 베이스 기주 지정
                   </h3>
                   <div className="flex flex-wrap gap-2 font-sans">
                     {baseSpiritOptions.map((spirit) => (
@@ -551,5 +526,24 @@ export default function BeforeScreen(props: BeforeScreenProps) {
         </section>
       </main>
     </div>
+  );
+}
+
+function ChoiceButton({ selected, onClick, label, hint }: { selected: boolean; onClick: () => void; label: string; hint?: string }) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={selected}
+      className="flex min-h-11 items-center gap-3 p-2 border border-[#4a3728]/30 rounded hover:bg-[#4a3728]/5 transition-colors text-left font-sans">
+      <div className={`w-3.5 h-3.5 shrink-0 border border-[#4a3728] flex items-center justify-center transition-all ${selected ? 'bg-[#4a3728]' : 'bg-transparent'}`}>
+        {selected && (
+          <svg className="w-2.5 h-2.5 text-[#efe2c9]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
+          </svg>
+        )}
+      </div>
+      <span className={`text-xs ${selected ? 'font-bold' : 'font-medium'} text-stone-800 font-sans`}>
+        {label}
+        {hint && <span className="block text-xs font-normal text-stone-600">{hint}</span>}
+      </span>
+    </button>
   );
 }

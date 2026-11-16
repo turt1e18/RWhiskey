@@ -16,6 +16,7 @@ import { CocktailRecommendationRequest } from "../type/CocktailInterface";
 async function geminiFailure(res: Response) {
   const code = (await res.json().catch(() => null))?.code;
   if (code === "DAILY_LIMITED") return new Error(DAILY_LIMIT_MESSAGE);
+  if (code === "NO_MORE_COCKTAILS") return new Error("조건에 맞는 다른 칵테일이 더 없어요. 조건을 바꿔 보세요.");
   if (code === "RATE_LIMITED") return new Error("요청이 너무 잦아요. 잠시 뒤에 다시 시도해 주세요.");
   if (res.status === 401 || res.status === 403) return new Error(LOGIN_REQUIRED_MESSAGE);
   return new Error("추천을 가져오는 중 문제가 생겼어요. 잠시 뒤에 다시 시도해 주세요.");

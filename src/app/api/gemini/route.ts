@@ -229,7 +229,8 @@ export async function POST(req: Request) {
         carbonation,
         dislikes = [],
         currentMood,
-        baseSpirit
+        baseSpirit,
+        strength
       } = data;
 
       finalPrompt = `You are a master bartender with 15 years of professional experience working at a premium high-end cocktail bar.
@@ -249,6 +250,7 @@ export async function POST(req: Request) {
 - Taste Preference: ${preferredTaste.join(", ")}
 - Carbonation: ${carbonation === true ? "Must have carbonation (fizz/refreshing)" : carbonation === false ? "No carbonation (smooth texture)" : "No preference (either is fine)"}
 - Dislikes (Strictly Avoid): ${dislikes.length > 0 ? dislikes.join(", ") : "None"}
+- Alcohol Strength: ${isNonAlcoholic ? "n/a" : strength === "light" ? "Light (about 12% ABV or less)" : strength === "medium" ? "Medium (about 13-22% ABV)" : strength === "strong" ? "Strong (above 22% ABV)" : "No preference"}
 - Mood: ${currentMood?.trim() ? currentMood : "(none provided)"}
 
 [LEVEL-SPECIFIC INSTRUCTIONS]
@@ -269,6 +271,8 @@ Return the result STRICTLY adhering to the provided JSON schema. Ensure all gene
       // 카탈로그 경로: 검수된 후보 안에서만 고르게 한다(후보를 못 얻으면 위의 기존 프롬프트로 진행).
       catalogFound = catalogEnabled() ? await fetchCandidates(req, data) : null;
       if (catalogFound) finalPrompt = catalogPrompt(data, catalogFound);
+      // '다른 한 잔': 이미 보여 준 레시피를 빼고 남은 후보가 없으면 자유 생성으로 넘어가지 않고 알린다(횟수는 되돌린다).
+      else if (catalogEnabled() && Array.isArray(data.excludeIds) && data.excludeIds.length > 0) throw new LegacyProviderFailure("NO_MORE_COCKTAILS", 409);
     } else {
       const preClearingData = sanitizeInputKoreanText(data);
       const finalData =

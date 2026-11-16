@@ -9,7 +9,14 @@ const REASONS: { value: CocktailFeedback["reason"]; label: string }[] = [
   { value: "WRONG_RECIPE", label: "재료·레시피가 이상해요" },
   { value: "ALLERGEN_INCLUDED", label: "기피 재료가 들어 있어요" },
   { value: "TASTE", label: "취향과 달라요" },
+  { value: "TOO_STRONG", label: "도수가 생각보다 셌어요" },
+  { value: "HARD_TO_FIND", label: "재료를 구하기 어려워요" },
   { value: "OTHER", label: "기타" },
+];
+
+const LIKE_REASONS: { value: CocktailFeedback["reason"]; label: string }[] = [
+  { value: "GOOD_TASTE", label: "맛이 좋았어요" },
+  { value: "HELPFUL", label: "설명이 도움이 됐어요" },
 ];
 
 /** 결과에 대한 반응을 남긴다. 결과당 한 건이며 다시 고르면 덮어쓴다. */
@@ -47,6 +54,14 @@ export default function CocktailFeedbackPanel({ oid }: { oid: number }) {
         <p role="status">
           {saved.sentiment === "LIKE" ? "마음에 든다고 남겼어요." : "문제가 있다고 남겼어요."}{" "}
           <button type="button" className="underline min-h-11" onClick={() => setPicking(true)}>다시 남기기</button>
+          {saved.sentiment === "LIKE" && saved.reason === "NONE" && (
+            <span className="mt-1 flex flex-wrap items-center gap-2">
+              <span>어떤 점이 좋았나요? (선택)</span>
+              {LIKE_REASONS.map((r) => (
+                <button key={r.value} type="button" className={btn} disabled={busy} onClick={() => send({ sentiment: "LIKE", reason: r.value })}>{r.label}</button>
+              ))}
+            </span>
+          )}
         </p>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
