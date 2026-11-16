@@ -58,7 +58,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
     "스파이시한 (Spicy)", 
     "탄닌감 (Tannic)"
   ];
-  const baseSpiritOptions = ["진", "보드카", "럼", "데킬라", "위스키", "브랜디", "리큐르", "상관없음"];
+  const baseSpiritOptions = ["진", "보드카", "럼", "데킬라", "위스키", "브랜디", "와인", "리큐르", "상관없음"];
   const commonDislikes = ["민트", "오이", "계란 흰자", "시나몬", "고수", "올리브", "견과류", "유제품", "코코넛"];
 
   // 기주 선택은 무알콜일 때만 숨으므로, 보이지 않을 때 번호가 비지 않게 센다.
