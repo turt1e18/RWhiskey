@@ -64,7 +64,6 @@ export default function CocktailResultPage({ params }: { params: Promise<{ oid: 
     <ResolvedResult
       loaded={loaded}
       onEdit={() => { saveCocktailDraft(loaded.draft); router.push("/cocktail"); }}
-      onReset={() => router.push("/cocktail")}
     />
   );
 }
@@ -87,12 +86,12 @@ function toDraft(d: Awaited<ReturnType<typeof cocktailApi.getDetail>>) {
   };
 }
 
-function ResolvedResult({ loaded, onEdit, onReset }: { loaded: Loaded; onEdit: () => void; onReset: () => void }) {
+function ResolvedResult({ loaded, onEdit }: { loaded: Loaded; onEdit: () => void }) {
   // AfterScreen은 use(Promise)로 읽으므로 이미 채워진 약속을 한 번만 만들어 넘긴다.
   const [promise] = useState(() => Promise.resolve(loaded.data));
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#1a120d] flex items-center justify-center"><WhiskeyLoader /></div>}>
-      <AfterScreen onEdit={onEdit} onReset={onReset} dataPromise={promise} experienceLevel={loaded.level} dislikes={loaded.dislikes} />
+      <AfterScreen onEdit={onEdit} dataPromise={promise} experienceLevel={loaded.level} dislikes={loaded.dislikes} />
     </Suspense>
   );
 }

@@ -1,4 +1,4 @@
-import { catalogEnabled, catalogPrompt, catalogSchema, fetchCandidates, fetchRecipe, pickedId, fallbackPick, type CatalogCandidates } from "@/server/cocktailCatalog";
+import { catalogEnabled, catalogPrompt, catalogSchema, fetchCandidates, fetchRecipe, pickedId, fallbackPick, catalogTexts, type CatalogCandidates } from "@/server/cocktailCatalog";
 import { authorizeLegacyProvider, legacyProviderError, LegacyProviderFailure } from "@/server/legacyProviderGuard";
 import { cocktailMismatch } from "@/lib/cocktailValidation";
 import { GoogleGenAI, Type } from "@google/genai";
@@ -322,12 +322,14 @@ ${mainTasteTag ? `Priority Taste: ${mainTasteTag} (This is the most important fa
       const parsed = catalogFound ? (() => { try { return safeJsonParse(resultText); } catch { return null; } })() : safeJsonParse(resultText);
       if (catalogFound) {
         // 고른 id가 후보 밖이거나 Gemini가 실패하면 후보 첫 번째로 대신한다. 레시피를 못 읽으면 내보내지 않는다(횟수는 아래에서 되돌린다).
-        const pick = pickedId(parsed, catalogFound) ?? fallbackPick(catalogFound);
-        const recipe = await fetchRecipe(req, pick.id);
+        const pickId = pickedId(parsed, catalogFound) ?? fallbackPick(catalogFound);
+        const recipe = await fetchRecipe(req, pickId);
         if (!recipe) throw new LegacyProviderFailure("COCKTAIL_MISMATCH", 502);
+        // 고른 이유·맛 노트는 AI가 아니라 검수된 정보로 만든다.
+        const texts = catalogTexts(data, catalogFound.candidates.find((c) => c.id === pickId)!, recipe, catalogFound.relaxed);
         resultText = {
           cocktailId: recipe.id, cocktailName: recipe.nameKo, cocktailNameEn: recipe.nameEn ?? null, image: recipe.image ?? null, baseSpirit: recipe.baseSpirit, abv: recipe.abv,
-          foodPairing: recipe.foodPairing ?? "", bartenderMessage: pick.bartenderMessage, tastingNote: pick.tastingNote,
+          foodPairing: recipe.foodPairing ?? "", bartenderMessage: texts.bartenderMessage, tastingNote: texts.tastingNote,
           checkList: recipe.checkList, method: recipe.method,
           relaxed: catalogFound.relaxed, unverifiedDislikes: catalogFound.unverifiedDislikes,
         };

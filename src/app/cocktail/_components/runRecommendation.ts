@@ -21,6 +21,7 @@ export async function runRecommendation(request: CocktailRecommendationRequest, 
   return {
     oid: res.savedOid,
     ...res.aiResult,
+    aiGenerated: res.aiResult.cocktailId == null,
     foodName: res.aiResult.foodPairing,
     pairingNote: res.aiResult.tastingNote,
     bartenderWord: res.aiResult.bartenderMessage,

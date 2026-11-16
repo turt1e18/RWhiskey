@@ -75,14 +75,6 @@ export default function CocktailScreen() {
                 onEdit={() => { setShown([]); setAnother({ busy: false, error: null }); setScreenState(0); }}
                 onAnother={requestAnother}
                 anotherError={another.error}
-                onReset={() => {
-                  setRequest(INITIAL_REQUEST);
-                  setCustomBottle("");
-                  setDataPromise(null);
-                  setShown([]);
-                  setAnother({ busy: false, error: null });
-                  setScreenState(0);
-                }}
                 dataPromise={dataPromise}
                 experienceLevel={request.experienceLevel}
                 dislikes={request.dislikes}
