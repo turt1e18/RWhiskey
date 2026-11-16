@@ -5,6 +5,7 @@ import { useDialogFocus } from "@/lib/useDialogFocus";
 import { useState, useMemo, useEffect, Dispatch, SetStateAction } from "react";
 import { cocktailLoadingMessages } from "./cocktailLoadingMessages";
 import { runRecommendation } from "./runRecommendation";
+import { useCatalogEnabled } from "./CatalogFlag";
 import WhiskeyLoader from "@/components/WhiskeyLoader";
 import { CocktailRecommendationRequest, CocktailStrength } from "@/type/CocktailInterface";
 import type { CocktailDataInterface } from "@/type/CocktailDataInterface";
@@ -63,7 +64,13 @@ export default function BeforeScreen(props: BeforeScreenProps) {
   // 기주 선택은 무알콜일 때만 숨으므로, 보이지 않을 때 번호가 비지 않게 센다.
   const hasBase = !request.isNonAlcoholic;
   // 도수·기주 선택은 무알콜이 아닐 때만 보인다. 앞의 세 칸(경험·장소·알코올)을 빼고 센다.
-  const num = (n: number) => String(n + (hasBase ? 2 : 0)).padStart(2, '0') + '.';
+  const catalog = useCatalogEnabled();
+  const showStrength = hasBase && catalog;
+  const num = (n: number) => String(n + (hasBase ? 1 : 0) + (showStrength ? 1 : 0)).padStart(2, '0') + '.';
+  // 카탈로그가 꺼진 경로는 도수를 보장하지 못하므로 선택값을 비워 서버가 선호 없음으로 다루게 한다.
+  useEffect(() => {
+    if (!catalog && request.strength) setRequest(prev => ({ ...prev, strength: null }));
+  }, [catalog, request.strength, setRequest]);
 
   // 경험은 바에서 주문할 때만 저장값(beginner/experienced)에 반영된다. 집에서 만들면 home_bar로 저장된다.
   const [tried, setTried] = useState(request.experienceLevel === 'experienced');
@@ -241,7 +248,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
             </div>
             
             <p className="max-w-md text-sm leading-relaxed text-stone-400">
-              경험, 맛, 도수, 피하고 싶은 재료를 알려 주세요. 조건에 맞는 칵테일을 골라 드려요.
+              {catalog ? "경험, 맛, 도수" : "경험, 맛"}, 피하고 싶은 재료를 알려 주세요. 조건에 맞는 칵테일을 골라 드려요.
             </p>
 
             <div className="hidden space-y-4 border-l-2 border-amber-300/20 pl-6 lg:block">
@@ -250,7 +257,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                 <p className="text-xs text-stone-400">집에서 만들 거라면 “집에서 만들래요”를 고르세요. 재료와 만드는 순서가 함께 나와요.</p>
               </div>
               <div className="space-y-1">
-                <p className="text-white text-sm font-medium">2. 맛, 탄산, 도수</p>
+                <p className="text-white text-sm font-medium">2. {catalog ? "맛, 탄산, 도수" : "맛과 탄산"}</p>
                 <p className="text-xs text-stone-400">고른 조건으로 칵테일을 좁혀요. 맞는 게 없으면 조건을 조금 넓혀요.</p>
               </div>
               <div className="space-y-1">
@@ -305,7 +312,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                     <ChoiceButton selected={request.isNonAlcoholic} onClick={() => setRequest(prev => ({ ...prev, isNonAlcoholic: true }))} label="알코올 없이" />
                   </div>
                 </section>
-                {hasBase && (
+                {showStrength && (
                   <section className="font-sans">
                     <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                       <span className="text-red-800 text-xs font-sans">04.</span> 도수는 어느 정도로 할까요?
@@ -324,7 +331,7 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               {hasBase && (
                 <section className="animate-in fade-in slide-in-from-top-4 duration-500 font-sans border-t border-[#4a3728]/10 pt-6">
                   <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
-                    <span className="text-red-800 text-xs font-sans">05.</span> 베이스 기주 지정
+                    <span className="text-red-800 text-xs font-sans">{showStrength ? "05." : "04."}</span> 베이스 기주 지정
                   </h3>
                   <div className="flex flex-wrap gap-2 font-sans">
                     {baseSpiritOptions.map((spirit) => (

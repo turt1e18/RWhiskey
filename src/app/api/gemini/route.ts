@@ -252,13 +252,13 @@ export async function POST(req: Request) {
 - Dislikes (Strictly Avoid): ${dislikes.length > 0 ? dislikes.join(", ") : "None"}
 - Alcohol Strength: ${isNonAlcoholic ? "n/a" : strength === "light" ? "Light (about 12% ABV or less)" : strength === "medium" ? "Medium (about 13-22% ABV)" : strength === "strong" ? "Strong (above 22% ABV)" : "No preference"}
 - Mood: ${currentMood?.trim() ? currentMood : "(none provided)"}
-
+${!isNonAlcoholic && (strength === "light" || strength === "medium" || strength === "strong") ? "- Strength Rule: Choose a cocktail whose typical served ABV falls in the Alcohol Strength range above. In 'bartenderMessage', describe the drink's strength honestly and consistently with that range (never call a drink above 22% ABV light, mild or easy to drink), and mention its approximate ABV.\n" : ""}
 [LEVEL-SPECIFIC INSTRUCTIONS]
 ${
   isNonAlcoholic
     ? "- Guest Level: Non-Alcoholic (논알콜 선호).\n- Direction: Recommend a sophisticated Mocktail (0% ABV). Ensure absolutely no alcohol is included."
     : experienceLevel === "beginner"
-      ? "- Guest Level: Beginner (초보자).\n- Direction: Recommend a popular, easy-to-drink cocktail. Avoid bitter or complex flavors. Explain flavors easily."
+      ? `- Guest Level: Beginner (초보자).\n- Direction: Recommend a popular cocktail with approachable flavors, explained simply. Avoid needlessly bitter or complex ones.${strength === "medium" || strength === "strong" ? " The guest chose a stronger drink on purpose: do NOT call it light, mild or easy on the guest, and mention that it is strong." : ""}`
       : experienceLevel === "experienced"
         ? `- Guest Level: Experienced (경험자).\n- Base Spirit Preference: ${baseSpirit}\n- Direction: Recommend a classic, complex, or deeply flavorful cocktail based on their Base Spirit preference. Actively use bartender jargon.`
         : experienceLevel === "home_bar"
