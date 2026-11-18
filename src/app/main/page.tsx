@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useDialogFocus } from "@/lib/useDialogFocus";
 import RWhiskeyLogo from "./_components/LogoText";
 import MainRouterButton from "./_components/MainRouterButton";
@@ -81,12 +82,12 @@ export default function MainScreen() {
                 <span className="text-sm font-medium text-white/90">
                   <span className="text-[#ffb247] font-bold">{user?.name}</span>님
                 </span>
-                <a
+                <Link
                   href="/notes"
                   className="text-sm font-medium px-5 py-2 rounded-full bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-colors shadow-lg"
                 >
                   내 노트 보기
-                </a>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="text-sm font-medium px-5 py-2 rounded-full bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 transition-colors"
@@ -196,12 +197,12 @@ export default function MainScreen() {
           <div className="mt-auto pt-8 border-t border-white/10">
             {isAuthenticated ? (
               <div className="flex flex-col gap-3">
-                <a
+                <Link
                   href="/notes"
                   className="w-full py-4 rounded-xl bg-white/10 text-white border border-white/20 text-center font-bold"
                 >
                   내 노트 보기
-                </a>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="w-full py-4 rounded-xl bg-white/5 text-white/70 border border-white/10 text-center font-bold"
@@ -469,9 +470,9 @@ export default function MainScreen() {
             </div>
 
             {isAuthenticated ? (
-              <a href="/notes" className="mt-6 inline-flex min-h-11 items-center text-[0.9375rem] font-semibold text-white/80 underline underline-offset-4 hover:text-[#ffb247]">
+              <Link href="/notes" className="mt-6 inline-flex min-h-11 items-center text-[0.9375rem] font-semibold text-white/80 underline underline-offset-4 hover:text-[#ffb247]">
                 내 시음 노트 보기
-              </a>
+              </Link>
             ) : (
               <a href="/login" className="mt-6 inline-flex min-h-11 items-center text-[0.9375rem] font-semibold text-white/80 underline underline-offset-4 hover:text-[#ffb247]">
                 계정이 있다면 로그인
