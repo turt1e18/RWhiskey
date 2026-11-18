@@ -29,6 +29,21 @@ export interface TastingEntry {
 }
 export interface TastingEntryPage { items: TastingEntry[]; nextCursor: string | null }
 
+/** 글쓴이가 비공개로 바꾸거나 지운 글은 available=false이고 entry가 없다. */
+export interface TastingBookmarkItem { entryId: number; bookmarkedAt: string; available: boolean; entry: TastingEntry | null }
+export interface TastingBookmarkPage { items: TastingBookmarkItem[]; nextCursor: string | null }
+
+export type ReportReason = "SPAM" | "INAPPROPRIATE" | "COPYRIGHT" | "PERSONAL_INFO" | "OTHER";
+export const REPORT_REASONS: { key: ReportReason; label: string }[] = [
+  { key: "SPAM", label: "광고·스팸이에요" },
+  { key: "INAPPROPRIATE", label: "불쾌하거나 부적절해요" },
+  { key: "COPYRIGHT", label: "다른 사람의 글·사진을 가져온 것 같아요" },
+  { key: "PERSONAL_INFO", label: "개인정보가 들어 있어요" },
+  { key: "OTHER", label: "그 밖의 문제예요" },
+];
+
+export type EntryAction = "save" | "load" | "delete" | "add" | "bookmark" | "report";
+
 export interface TastingEntryRequest {
   clientKey?: string;
   status: EntryStatus;
@@ -137,12 +152,14 @@ export function clearDraft(store: Store, key: string) {
 export type SaveFailure = { message: string; needsLogin: boolean };
 
 /** 저장·조회 실패를 사용자가 할 수 있는 행동으로 바꾼다. status가 없으면 네트워크 문제다. */
-export function entryFailure(status: number | null, code: string | null, action: "save" | "load" | "delete"): SaveFailure {
+export function entryFailure(status: number | null, code: string | null, action: EntryAction): SaveFailure {
   const kept = action === "save" ? " 쓰던 글은 이 기기에 보관하고 있어요." : "";
   if (status === null) return { message: `연결이 끊겼어요. 네트워크를 확인한 뒤 다시 시도해 주세요.${kept}`, needsLogin: false };
   if (status === 401) return { message: `로그인이 끝났어요. 다시 로그인한 뒤 ${action === "save" ? "저장을 눌러" : "다시 시도해"} 주세요.${kept}`, needsLogin: true };
   if (status === 403) return { message: `요청이 거부됐어요. 페이지를 새로고침한 뒤 다시 시도해 주세요.${kept}`, needsLogin: false };
+  if (status === 404 && (action === "bookmark" || action === "report")) return { message: "이 글은 더 이상 볼 수 없어요. 글쓴이가 비공개로 바꾸거나 지웠을 수 있어요.", needsLogin: false };
   if (status === 404) return { message: "기록을 찾지 못했어요. 이미 지웠거나 다른 계정의 기록일 수 있어요.", needsLogin: false };
+  if (status === 409 && code === "SOURCE_ALREADY_RECORDED") return { message: "이 추천으로 쓴 기록이 이미 있어요. 시음 기록에서 열어 보세요.", needsLogin: false };
   if (status === 429) return { message: code === "DAILY_PUBLISH_LIMIT" ? "오늘은 더 공개할 수 없어요. 내일 다시 시도해 주세요." : "오늘 쓸 수 있는 기록 수를 넘었어요. 내일 다시 시도해 주세요.", needsLogin: false };
   const known: Record<string, string> = {
     WHISKEY_NAME_REQUIRED: "위스키 이름을 적어 주세요.",
@@ -150,11 +167,25 @@ export function entryFailure(status: number | null, code: string | null, action:
     INVALID_TASTING_DATE: "마신 날은 오늘까지만 고를 수 있어요.",
     INVALID_RATING: "점수를 다시 골라 주세요.",
     WISH_CANNOT_BE_RATED_OR_PUBLIC: "마실 목록의 기록에는 점수를 매기거나 공개할 수 없어요.",
+    CANNOT_BOOKMARK_OWN: "내가 쓴 글은 저장할 수 없어요.",
+    CANNOT_REPORT_OWN: "내가 쓴 글은 신고할 수 없어요.",
   };
   if (status === 400 && code && known[code]) return { message: known[code], needsLogin: false };
-  const verb = action === "save" ? "저장하지" : action === "delete" ? "지우지" : "불러오지";
+  const verb = action === "save" ? "저장하지" : action === "delete" ? "지우지" : action === "add" ? "담지" : action === "bookmark" ? "저장하지" : action === "report" ? "신고를 보내지" : "불러오지";
   return { message: `${verb} 못했어요. 잠시 뒤 다시 시도해 주세요.${kept}`, needsLogin: false };
 }
 
 /** "2026-11-17" → "2026.11.17" */
 export const dotDate = (iso: string) => iso.slice(0, 10).replace(/-/g, ".");
+
+const SOURCE_KINDS = ["LEGACY_ORDER", "VERIFIED_RECORD", "AI_OPERATION"] as const;
+
+/** 추천에서 노트를 쓰러 가는 주소. 추천 종류와 식별자를 쿼리로 넘긴다. */
+export const sourceNoteHref = (source: EntrySource) => `/notes/new?source=${source.kind}:${encodeURIComponent(source.ref)}`;
+
+/** ?source=AI_OPERATION:<id> 형태. 알아볼 수 없으면 undefined(추천 없이 쓰는 새 글). */
+export function parseSource(value: string | null): EntrySource | undefined {
+  const [kind, ...rest] = (value ?? "").split(":");
+  const ref = rest.join(":");
+  return (SOURCE_KINDS as readonly string[]).includes(kind) && ref && ref.length <= 40 ? { kind: kind as EntrySource["kind"], ref } : undefined;
+}

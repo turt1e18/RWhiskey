@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronDown, Star } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { describeEntryError, tastingEntryApi } from "@/api/tastingEntryApi";
 import {
@@ -21,36 +22,58 @@ interface Props {
   source?: EntrySource;
   onSaved: (entry: TastingEntry) => void;
   onCancel?: () => void;
+  /** 입력값이 바뀔 때마다 알린다(왼쪽 수첩 면이 같은 값을 보여 주도록). 바뀌지 않는 함수를 넘긴다. */
+  onPreview?: (draft: EntryDraft) => void;
 }
 
 const today = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date());
-const input = "mt-2 min-h-11 w-full rounded border border-[#4a3728]/40 bg-white/50 px-3 py-2 text-base text-[#3e2616] placeholder:text-[#3e2616]/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3e2616]";
+const input = "mt-2 min-h-11 w-full rounded border border-[#3e2616]/60 bg-white/50 px-3 py-2 text-base text-[#3e2616] placeholder:text-[#3e2616]/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3e2616]";
 const label = "block text-sm font-bold";
 const optional = <span className="ml-1 font-normal text-[#3e2616]/70">선택</span>;
 
-const RATING_STEPS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
-
-/** 0.5점 단위 점수. 별 아이콘의 반쪽 버튼(16px)은 손가락으로 누르기 어려워 44px 버튼으로 둔다. 다시 누르면 해제된다. */
+/**
+ * 별을 눌러 고르는 0.5점 단위 점수. 별 하나를 반으로 나눠 왼쪽은 .5점, 오른쪽은 온전한 점수다.
+ * 반쪽도 손가락으로 누를 수 있게 누르는 칸은 별 하나당 48px(반쪽 24px, 좁은 종이 폭 246px에 5개가 들어간다), 보이는 별은 28px, 마우스를 올리면 미리 보여 준다. 같은 점수를 다시 누르면 해제된다.
+ */
 function RatingPicker({ value, onChange }: { value: number | null; onChange: (value: number | null) => void }) {
+  const [hover, setHover] = useState<number | null>(null);
+  const shown = hover ?? value ?? 0;
+  const half = "absolute top-0 z-10 h-full w-1/2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#3e2616]";
   return (
-    <div className="grid w-full grid-cols-5 gap-2">
-      {RATING_STEPS.map((step) => {
-        const on = value === step;
-        return (
-          <button key={step} type="button" aria-pressed={on} aria-label={`${step}점`} onClick={() => onChange(on ? null : step)}
-            className={`min-h-11 rounded border text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3e2616] ${on ? "border-[#3e2616] bg-[#3e2616] font-bold text-[#fdfbf7]" : "border-[#4a3728]/50 bg-white/40"}`}>
-            {step.toFixed(1)}
-          </button>
-        );
-      })}
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1" onMouseLeave={() => setHover(null)}>
+      <div className="flex">
+        {[0, 1, 2, 3, 4].map((index) => {
+          const fill = Math.max(0, Math.min(1, shown - index));
+          return (
+            <span key={index} className="relative inline-block h-12 w-12">
+              {/* 눈에 보이는 별은 28px로 작게, 누르는 칸은 48px로 넉넉하게 둔다. */}
+              <span aria-hidden className="absolute left-[10px] top-[10px] h-7 w-7">
+                <Star width={28} height={28} strokeWidth={1.5} className="absolute inset-0 text-[#3e2616]/35" />
+                <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+                  <Star width={28} height={28} strokeWidth={1.5} className="fill-[#b07d1e] text-[#b07d1e]" />
+                </span>
+              </span>
+              {[index + 0.5, index + 1].map((step, side) => (
+                <button key={step} type="button" aria-pressed={value === step} aria-label={`${step}점`}
+                  onMouseEnter={() => setHover(step)} onClick={() => onChange(value === step ? null : step)}
+                  className={`${half} ${side === 0 ? "left-0" : "right-0"}`} />
+              ))}
+            </span>
+          );
+        })}
+      </div>
+      <p aria-live="polite" className="font-serif text-lg text-[#3e2616]">
+        {value === null ? <span className="text-sm text-[#3e2616]/70">별을 눌러 골라 주세요</span> : `${value.toFixed(1)} / 5.0`}
+      </p>
     </div>
   );
 }
 
 /** 한 줄 메모로 끝낼 수도, 향·맛·여운을 펼쳐 자세히 적을 수도 있는 단일 폼. */
-export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, source, onSaved, onCancel }: Props) {
+export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, source, onSaved, onCancel, onPreview }: Props) {
   const key = draftKey(uid, scope);
   const [draft, setDraft] = useState(initial);
+  useEffect(() => { onPreview?.(draft); }, [draft, onPreview]);
   const [restored, setRestored] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ message: string; needsLogin: boolean } | null>(null);
@@ -80,6 +103,9 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
   const set = <K extends keyof EntryDraft>(field: K, value: EntryDraft[K]) => { setDraft((current) => ({ ...current, [field]: value })); setNotice(null); };
   const wish = draft.status === "WISH";
   const partsUsed = Boolean(draft.nose || draft.palate || draft.finish);
+  // 마지막 글자를 지워도 입력 중에 접히지 않도록 열기만 자동으로 한다.
+  const [partsOpen, setPartsOpen] = useState(partsUsed);
+  useEffect(() => { if (partsUsed) setPartsOpen(true); }, [partsUsed]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -117,9 +143,9 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
 
       <fieldset disabled={busy} className="space-y-6">
         <div>
-          <label htmlFor="note-name" className={label}>위스키 이름</label>
+          <label htmlFor="note-name" id="note-name-label" className={label}>위스키 이름</label>
           {nameLocked ? (
-            <p id="note-name" className="mt-2 break-words text-lg font-bold">{draft.whiskeyName}</p>
+            <p id="note-name" aria-labelledby="note-name-label" className="mt-2 break-words text-lg font-bold">{draft.whiskeyName || "추천받은 위스키"}</p>
           ) : (
             <input id="note-name" value={draft.whiskeyName} onChange={(event) => set("whiskeyName", event.target.value)} maxLength={LIMITS.whiskeyName}
               autoComplete="off" placeholder="예: 글렌피딕 12년" className={input} />
@@ -127,7 +153,7 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
         </div>
 
         <label className="flex min-h-11 items-center gap-3 text-sm">
-          <input type="checkbox" checked={wish} onChange={(event) => set("status", event.target.checked ? "WISH" : "TASTED")} className="h-5 w-5 accent-[#3e2616]" />
+          <input type="checkbox" checked={wish} onChange={(event) => set("status", event.target.checked ? "WISH" : "TASTED")} className="h-5 w-5 rounded shrink-0 appearance-none border-2 border-[#3e2616] bg-white checked:bg-[#3e2616] checked:shadow-[inset_0_0_0_3px_#efe2c9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3e2616]" />
           아직 마시지 않았어요. 마실 목록에 담아 둘게요.
         </label>
 
@@ -145,7 +171,7 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
                   const on = draft.serving === serving;
                   return (
                     <button key={serving} type="button" aria-pressed={on} onClick={() => set("serving", on ? null : serving)}
-                      className={`min-h-11 rounded-full border px-4 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3e2616] ${on ? "border-[#3e2616] bg-[#3e2616] font-bold text-[#fdfbf7]" : "border-[#4a3728]/50 bg-white/40"}`}>
+                      className={`min-h-11 rounded-full border px-4 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3e2616] ${on ? "border-[#3e2616] bg-[#3e2616] font-bold text-[#fdfbf7]" : "border-[#3e2616]/60 bg-white/40"}`}>
                       {SERVING_LABELS[serving]}
                     </button>
                   );
@@ -165,8 +191,15 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
         {!wish && (
           <>
             {/* 이미 적은 내용이 있으면 펼친 채로 시작한다. */}
-            <details open={partsUsed || undefined} className="rounded border border-[#4a3728]/30 bg-white/30 px-4">
-              <summary className="flex min-h-11 cursor-pointer items-center text-sm font-bold">향·맛·여운 나눠 적기{optional}</summary>
+            <details open={partsOpen} onToggle={(event) => setPartsOpen(event.currentTarget.open)} className="group rounded border border-[#3e2616]/60 bg-white/30 px-4">
+              {/* 누르면 펼쳐지는 칸이라는 것이 보이도록 오른쪽에 펼치기/접기 글자와 화살표를 둔다. */}
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold [&::-webkit-details-marker]:hidden">
+                <span>향·맛·여운 나눠 적기{optional}</span>
+                <span className="flex shrink-0 items-center gap-1 text-xs font-normal text-[#3e2616]/80">
+                  {partsOpen ? "접기" : "펼치기"}
+                  <ChevronDown aria-hidden className="h-4 w-4 transition-transform group-open:rotate-180" />
+                </span>
+              </summary>
               <div className="space-y-4 pb-4">
                 {([["nose", "향", "잔에서 처음 올라온 향"], ["palate", "맛", "입 안에서 느껴진 맛"], ["finish", "여운", "삼킨 뒤에 남은 느낌"]] as const).map(([field, name, hint]) => (
                   <div key={field}>
@@ -179,13 +212,25 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
 
             <div role="group" aria-labelledby="note-rating">
               <p id="note-rating" className={label}>내 취향 점수{optional}</p>
-              <p className="mt-1 text-xs leading-5 text-[#3e2616]/70">내 입맛에 얼마나 맞았는지예요. 위스키의 품질 평가가 아니에요.</p>
+              <p className="mt-1 text-xs leading-5 text-[#3e2616]/70">내 입맛에 얼마나 맞았는지예요. 위스키의 품질 평가가 아니에요. 별의 왼쪽을 누르면 반 칸, 오른쪽을 누르면 한 칸이 채워져요.</p>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                 <RatingPicker value={draft.rating} onChange={(value) => set("rating", value)} />
                 {draft.rating !== null && (
                   <button type="button" onClick={() => set("rating", null)} className="min-h-11 text-sm underline underline-offset-4">점수 지우기</button>
                 )}
               </div>
+            </div>
+
+            <div>
+              <label className="flex min-h-11 items-center gap-3 text-sm font-bold">
+                <input type="checkbox" checked={draft.visibility === "PUBLIC"} onChange={(event) => set("visibility", event.target.checked ? "PUBLIC" : "PRIVATE")} aria-describedby="note-public-hint" className="h-5 w-5 rounded shrink-0 appearance-none border-2 border-[#3e2616] bg-white checked:bg-[#3e2616] checked:shadow-[inset_0_0_0_3px_#efe2c9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3e2616]" />
+                라운지에 공개하기
+              </label>
+              <p id="note-public-hint" className="mt-1 text-xs leading-5 text-[#3e2616]/70">
+                {draft.visibility === "PUBLIC"
+                  ? "다른 사람이 위스키 이름, 메모, 향·맛·여운, 점수를 볼 수 있어요. 글쓴이 이름은 보이지 않아요. 이름·연락처 같은 개인정보는 적지 마세요. 언제든 수정에서 비공개로 바꿀 수 있어요."
+                  : "체크하지 않으면 나만 볼 수 있어요."}
+              </p>
             </div>
           </>
         )}
@@ -202,9 +247,9 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
 
       <div className="flex gap-3">
         {onCancel && (
-          <button type="button" disabled={busy} onClick={onCancel} className="min-h-12 flex-1 rounded border border-[#3e2616] px-4 font-bold disabled:opacity-50">취소</button>
+          <button type="button" disabled={busy} onClick={onCancel} className="min-h-12 flex-1 rounded-sm border border-[#3e2616] font-serif tracking-wider px-4 font-bold disabled:opacity-50">취소</button>
         )}
-        <button type="submit" disabled={busy} className="min-h-12 flex-[2] rounded bg-[#3e2616] px-4 font-bold text-[#fdfbf7] disabled:opacity-60">
+        <button type="submit" disabled={busy} className="min-h-12 flex-[2] rounded-sm bg-[#3e2616] font-serif tracking-wider px-4 font-bold text-[#fdfbf7] disabled:opacity-60">
           {busy ? "저장하는 중…" : wish ? "마실 목록에 담기" : "기록 저장"}
         </button>
       </div>

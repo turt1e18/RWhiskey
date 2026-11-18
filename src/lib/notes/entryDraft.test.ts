@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clearDraft, draftFromEntry, draftKey, draftProblem, emptyDraft, entryFailure, loadDraft, sameDraft, saveDraft, toRequest, type TastingEntry } from './entryDraft';
+import { REPORT_REASONS, clearDraft, draftFromEntry, parseSource, sourceNoteHref, draftKey, draftProblem, emptyDraft, entryFailure, loadDraft, sameDraft, saveDraft, toRequest, type TastingEntry } from './entryDraft';
 
 const memory = () => { const data = new Map<string, string>(); return {
   getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => void data.set(key, value), removeItem: (key: string) => void data.delete(key), data }; };
@@ -71,5 +71,33 @@ test('실패 안내는 할 일을 말하고 서버 원문을 보여 주지 않�
   assert.match(entryFailure(400, 'INVALID_TASTING_DATE', 'save').message, /오늘까지/);
   assert.match(entryFailure(400, 'SOMETHING_NEW', 'save').message, /저장하지 못했어요/);
   assert.match(entryFailure(500, null, 'delete').message, /지우지 못했어요/);
+  // 마실 목록 담기는 쓰던 글을 보관하지 않으므로 보관 안내를 하지 않는다
+  for (const status of [null, 401, 500]) assert.doesNotMatch(entryFailure(status, null, 'add').message, /보관|저장/);
+  assert.match(entryFailure(500, null, 'add').message, /담지 못했어요/);
   for (const status of [null, 400, 401, 403, 404, 429, 500]) assert.doesNotMatch(entryFailure(status, 'X', 'save').message, /API|Error|fetch|\d{3}/);
+});
+
+test('저장·신고 실패 안내는 글이 사라진 경우와 내 글을 구분한다', () => {
+  for (const action of ['bookmark', 'report'] as const) assert.match(entryFailure(404, null, action).message, /비공개|지웠/);
+  assert.match(entryFailure(400, 'CANNOT_BOOKMARK_OWN', 'bookmark').message, /내가 쓴 글/);
+  assert.match(entryFailure(500, null, 'bookmark').message, /저장하지 못했어요/);
+  assert.match(entryFailure(500, null, 'report').message, /신고를 보내지 못했어요/);
+  for (const status of [null, 401, 500]) assert.doesNotMatch(entryFailure(status, null, 'report').message, /보관/);
+  assert.deepEqual(REPORT_REASONS.map((item) => item.key), ['SPAM', 'INAPPROPRIATE', 'COPYRIGHT', 'PERSONAL_INFO', 'OTHER']);
+});
+
+test('같은 추천으로 이미 쓴 기록이 있으면 시음 기록에서 열라고 안내한다', () => {
+  const failure = entryFailure(409, 'SOURCE_ALREADY_RECORDED', 'save');
+  assert.match(failure.message, /이미 있어요/);
+  assert.equal(failure.needsLogin, false);
+});
+
+test('추천에서 노트를 쓰는 주소는 왕복하고 알 수 없는 값은 새 글로 본다', () => {
+  const uuid = '3f2c9a60-6b7e-4f0a-9a43-0d2a7a1c9b11';
+  const href = sourceNoteHref({ kind: 'AI_OPERATION', ref: uuid });
+  assert.equal(href, `/notes/new?source=AI_OPERATION:${uuid}`);
+  assert.deepEqual(parseSource(new URL(href, 'http://x').searchParams.get('source')), { kind: 'AI_OPERATION', ref: uuid });
+  assert.deepEqual(parseSource('VERIFIED_RECORD:12'), { kind: 'VERIFIED_RECORD', ref: '12' });
+  for (const bad of [null, '', 'PERSONAL:1', 'AI_OPERATION', 'AI_OPERATION:', 'DROP:1', 'AI_OPERATION:' + 'x'.repeat(41)]) assert.equal(parseSource(bad), undefined, String(bad));
+  assert.equal(sourceNoteHref({ kind: 'LEGACY_ORDER', ref: 'a b&c' }), '/notes/new?source=LEGACY_ORDER:a%20b%26c');
 });

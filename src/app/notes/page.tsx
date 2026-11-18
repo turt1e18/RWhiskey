@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { ScrapbookView } from "./_components/ScrapbookView";
@@ -20,11 +20,18 @@ import VerifiedNotesList from "@/components/recommendations/VerifiedNotesList";
 import AiRecommendationsList from "@/components/recommendations/AiRecommendationsList";
 import { NoteResponse, NoteReviewRequest } from "@/type/ApiInterface";
 import "./notes.css";
+import { NOTES_V2 } from "@/lib/notes/flag";
+import { NotesMenu, type NotesSection } from "./_components/NotesMenu";
+import { useFrameIntro } from "./_components/useFrameIntro";
 
 type View = "notes" | "lounge" | "scrapbook";
 type NoteMode = "list" | "review";
 
 export default function MyNotesPage() {
+  return <Suspense fallback={null}><MyNotesInner /></Suspense>;
+}
+
+function MyNotesInner() {
   const { isAuthenticated, isInitialized } = useAuthStore();
   const router = useRouter();
 
@@ -34,12 +41,12 @@ export default function MyNotesPage() {
   const [loungeNotesData, setLoungeNotesData] = useState<LoungeNoteInterface[]>([]);
   const [selected, setSelected] = useState<TastingNoteEntryInterface | null>(null);
 
-  // 추천 기록 목록이 둘이라, 둘 다 불러온 뒤 전체가 비었을 때만 빈 상태 안내를 한 번 보여 준다.
+  // 처음 화면은 목차이고, 항목마다 ?section= 으로 따로 화면을 연다(뒤로 가기·주소 공유가 된다).
   const v2Enabled = process.env.NEXT_PUBLIC_WHISKEY_V2_ENABLED === "true";
-  const [verifiedCount, setVerifiedCount] = useState<number | null>(null);
-  const [aiCount, setAiCount] = useState<number | null>(null);
-  const recordsLoaded = aiCount !== null && (!v2Enabled || verifiedCount !== null);
-  const noRecords = recordsLoaded && aiCount === 0 && (!v2Enabled || verifiedCount === 0);
+  const intro = useFrameIntro();
+  const requested = useSearchParams().get("section");
+  const section: NotesSection | null =
+    requested === "ai" || requested === "sheet" || (requested === "verified" && v2Enabled) || (requested === "recommended" && NOTES_V2) ? requested : null;
 
   // 스크랩된 라운지 노트 ID 관리
   const [scrappedIds, setScrappedIds] = useState<string[]>([]);
@@ -158,6 +165,9 @@ export default function MyNotesPage() {
     }
   };
 
+  // 다른 화면으로 옮기면 열려 있던 평가 화면을 닫는다.
+  useEffect(() => { setMode("list"); setSelected(null); }, [section]);
+
   if (!isInitialized || !isAuthenticated) {
     return null;
   }
@@ -239,7 +249,7 @@ export default function MyNotesPage() {
         {view === "notes" ? (
           <motion.div
             key="desk"
-            initial={{ opacity: 0 }}
+            initial={intro ? { opacity: 0 } : false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
@@ -247,14 +257,15 @@ export default function MyNotesPage() {
           >
             <motion.div
               key="mynote"
-              initial={{ opacity: 0, x: -30 }}
+              initial={intro ? { opacity: 0, x: -30 } : false}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 30 }}
               transition={{ duration: 0.45, ease: "easeOut" }}
               className="relative w-full flex justify-center"
             >
               <div className="relative w-[min(1200px,95vw)]">
-                <Bookmark label="스크랩북" onClick={() => setView("scrapbook")} />
+                {/* 새 시음 노트(스위치 켬)에서는 목차의 "라운지에서 만난 한 잔"이 같은 곳이라 책갈피를 두지 않는다. */}
+                {!NOTES_V2 && <Bookmark label="스크랩북" onClick={() => setView("scrapbook")} />}
                 <DiaryFrame
                   rightId="paper-right"
                   left={
@@ -269,19 +280,27 @@ export default function MyNotesPage() {
                     {mode === "list" && <HelpGuide parentView={view} />}
                     <AnimatePresence mode="wait">                        {mode === "list" || !selected ? (
                           <motion.div
-                            key="list"
+                            key={`list-${section ?? "menu"}`}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ duration: 0.35 }}
                             className="h-full"
                           >
-                            {v2Enabled && <VerifiedNotesList onCount={setVerifiedCount} showEmpty={noRecords} />}
-                            <AiRecommendationsList onCount={setAiCount} showEmpty={noRecords && !v2Enabled} />
-                            <PersonalListView
-                              whiskies={whiskies}
-                              onSelect={handleSelect}
-                            />
+                            {section === null ? (
+                              <NotesMenu verified={v2Enabled} entries={NOTES_V2} />
+                            ) : (
+                              <div className="flex h-full flex-col">
+                                <div className="scrollbar-soft fade-bottom-paper min-h-0 pb-6 md:max-h-[calc(100dvh-8.5rem-6rem-0.5rem)] md:overflow-y-auto md:pr-2">
+                                  {section === "verified" && <VerifiedNotesList fill />}
+                                  {section === "ai" && <AiRecommendationsList fill />}
+                                  {section === "recommended" && (
+                                    <AiRecommendationsList fill heading="추천으로 만난 한 잔" />
+                                  )}
+                                  {section === "sheet" && <PersonalListView whiskies={whiskies} onSelect={handleSelect} />}
+                                </div>
+                              </div>
+                            )}
                           </motion.div>
                         ) : (
                           <motion.div
@@ -292,11 +311,14 @@ export default function MyNotesPage() {
                             transition={{ duration: 0.35 }}
                             className="h-full"
                           >
-                            <ReviewView
-                              whisky={selected}
-                              onBack={handleBack}
-                              onSubmit={handleSubmit}
-                            />
+                            {/* 높이를 정해 두면 ReviewView가 원래 의도한 대로 양식 영역만 안쪽에서 스크롤한다. */}
+                            <div className="md:h-[calc(100dvh-8.5rem-6rem)]">
+                              <ReviewView
+                                whisky={selected}
+                                onBack={handleBack}
+                                onSubmit={handleSubmit}
+                              />
+                            </div>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -352,15 +374,16 @@ export default function MyNotesPage() {
 
       {/* 홈으로 돌아가기 버튼 (좌측 상단으로 이동) */}
       <button
-        onClick={() => router.push("/main")}
+        onClick={() => router.push(section !== null && view === "notes" ? "/notes" : "/main")}
         className="absolute top-6 left-6 z-50 px-4 py-2 bg-black/40 border border-white/10 rounded-full text-white/80 text-sm hover:bg-black/60 transition-all backdrop-blur-sm"
       >
-        ← 메인으로
+        {section !== null && view === "notes" ? "← 테이스팅 노트" : "← 메인으로"}
       </button>
 
       <TopNav
         view={view}
         onChange={(v) => {
+          if (NOTES_V2 && v === "lounge") { router.push("/notes/lounge"); return; }
           setView(v);
           if (v === "notes" && mode !== "review") setMode("list");
         }}

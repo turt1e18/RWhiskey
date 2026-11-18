@@ -7,7 +7,7 @@ import type { WhiskeyHistoryItem } from "@/api/whiskeyV3Api";
 import { ApiResponseError } from "@/api/apiClient";
 import type { WhiskeySavedRecommendation, WhiskeyTastingNoteSummary } from "@/type/ApiInterface";
 // onCount: 목록에 보일 기록 수(불러오기 실패는 null). showEmpty: 빈 상태 안내를 이 목록이 보일지 페이지가 정한다.
-export default function VerifiedNotesList({ onCount, showEmpty = true }: { onCount?: (count: number | null) => void; showEmpty?: boolean }) {
+export default function VerifiedNotesList({ onCount, showEmpty = true, fill = false }: { onCount?: (count: number | null) => void; showEmpty?: boolean; fill?: boolean }) {
   const [records, setRecords] = useState<WhiskeySavedRecommendation[]>([]);
   const [notes, setNotes] = useState<WhiskeyTastingNoteSummary[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -37,7 +37,7 @@ export default function VerifiedNotesList({ onCount, showEmpty = true }: { onCou
     {loading && <p role="status" className="mt-3 text-sm">불러오는 중…</p>}
     {status && <p role="status" className="mt-3 text-sm">{status} {authExpired ? <Link href="/login" className="underline">다시 로그인</Link> : <button className="underline" onClick={() => setReload(reload + 1)}>다시 불러오기</button>}</p>}
     {!loading && !status && records.length === 0 && older.length === 0 && showEmpty && <p className="mt-3 text-sm">아직 추천 기록이 없어요. <Link href="/mood/verified" className="underline">한 잔 추천받기</Link></p>}
-    <ul className="mt-3 max-h-56 overflow-y-auto overscroll-contain divide-y divide-[#4a3728]/15 pr-2">
+    <ul className={`mt-3 ${fill ? "" : "max-h-56 overflow-y-auto overscroll-contain"} divide-y divide-[#4a3728]/15 pr-2`}>
       {records.map((record) => <li key={record.id}><Link href={`/notes/verified/${record.id}`} className="flex min-h-14 flex-wrap items-center justify-between gap-2 py-3 text-sm">
         <span className="min-w-0 break-words">{record.selected?.displayName ?? `이전 추천 #${record.id}`}<span className="ml-2 text-xs text-stone-600">{record.selected?.edition}</span>
           <span className="mt-1 block text-xs text-stone-600">{levels.get(record.id)==='V3_CERTIFIED' ? '병입 검증 후 저장한 추천' : levels.get(record.id)==='V2_REVIEWED' ? '기존 검수 방식으로 저장한 추천' : '당시 저장한 추천 기록'} · 현재 재검증 상태와 다를 수 있어요</span></span>
