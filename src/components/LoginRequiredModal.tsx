@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -14,6 +15,13 @@ export default function LoginRequiredModal({ service }: { service: string }) {
   const router = useRouter();
   const open = isInitialized && !isAuthenticated;
   const ref = useDialogFocus<HTMLDivElement>(open, () => router.push("/main"));
+  // 모달이 떠 있는 동안 뒤 화면이 스크롤되지 않게 한다(WhiskeyLoadingOverlay와 같은 방식).
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [open]);
 
   if (!open) return null;
   return (
