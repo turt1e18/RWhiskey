@@ -1,21 +1,25 @@
-import { getRecommendationImage } from "./recommendationImages";
+import { getRecommendationPhoto } from "./recommendationImages";
+import { cocktailImageQuery } from "@/lib/cocktailImageQuery";
 import { jsonRequestHeaders } from "@/api/apiClient";
+import { LOGIN_REQUIRED_MESSAGE, DAILY_LIMIT_MESSAGE } from "@/lib/userFacingError";
 import { recommendationApi, cocktailApi, userTokenApi } from "./whiskeyApi";
 import {
   GeminiWhiskyResponse,
   GeminiCocktailResponse,
   RecommendationSaveRequest,
-  CocktailSaveRequest
+  CocktailSaveRequest,
+  CocktailImageCredit
 } from "../type/ApiInterface";
 import { CocktailRecommendationRequest } from "../type/CocktailInterface";
 
 /** /api/gemini 실패 응답을 사용자에게 보여 줄 오류로 바꾼다. */
 async function geminiFailure(res: Response) {
   const code = (await res.json().catch(() => null))?.code;
-  if (code === "DAILY_LIMITED") return new Error("오늘 사용할 수 있는 추천 횟수를 모두 사용했어요.");
-  if (code === "RATE_LIMITED") return new Error("요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.");
-  if (res.status === 401) return new Error("로그인이 필요해요.");
-  return new Error("Gemini AI 추천을 가져오는데 실패했습니다.");
+  if (code === "DAILY_LIMITED") return new Error(DAILY_LIMIT_MESSAGE);
+  if (code === "NO_MORE_COCKTAILS") return new Error("조건에 맞는 다른 칵테일이 더 없어요. 조건을 바꿔 보세요.");
+  if (code === "RATE_LIMITED") return new Error("요청이 너무 잦아요. 잠시 뒤에 다시 시도해 주세요.");
+  if (res.status === 401 || res.status === 403) return new Error(LOGIN_REQUIRED_MESSAGE);
+  return new Error("추천을 가져오는 중 문제가 생겼어요. 잠시 뒤에 다시 시도해 주세요.");
 }
 
 /**
@@ -98,8 +102,7 @@ export const getWhiskyRecommendation = async (
  * 칵테일 추천 서비스 (Gemini API + Backend Integration)
  */
 export const getCocktailRecommendation = async (
-  request: CocktailRecommendationRequest,
-  flexFlag: boolean
+  request: CocktailRecommendationRequest
 ) => {
   let settlementToken: string | null = null;
 
@@ -110,8 +113,7 @@ export const getCocktailRecommendation = async (
       headers: jsonRequestHeaders(),
       body: JSON.stringify({
         data: request,
-        type: 1,
-        rich: flexFlag
+        type: 1
       })
     });
 
@@ -120,8 +122,18 @@ export const getCocktailRecommendation = async (
 
     const aiResult: GeminiCocktailResponse = await geminiResponse.json();
 
-    const foundImage = await getRecommendationImage("cocktail " + aiResult.cocktailName);
-    const images = foundImage ? [foundImage] : [];
+    // 카탈로그 추천은 검수된 사진만 쓴다(없으면 검색하지 않고 사진 없음). 그 밖의 경로는 이미지 검색이다.
+    let images: string[];
+    let imageCredit: CocktailImageCredit | null = null;
+    if (aiResult.cocktailId != null) {
+      imageCredit = aiResult.image ?? null;
+      images = imageCredit ? [imageCredit.url] : [];
+    } else {
+      // 큰 원본 이미지는 핫링크 차단으로 자주 안 열려서, 항상 열리는 검색 썸네일을 우선 쓴다.
+      const photo = await getRecommendationPhoto(cocktailImageQuery(aiResult.cocktailName, aiResult.cocktailNameEn));
+      const foundImage = photo ? (photo.fallbackUrl ?? photo.url) : null;
+      images = foundImage ? [foundImage] : [];
+    }
 
     // 4. 백엔드에 추천 결과 저장
     const saveRequest: CocktailSaveRequest = {
@@ -140,13 +152,14 @@ export const getCocktailRecommendation = async (
       pairingNote: aiResult.tastingNote,
       images,
       checkList: aiResult.checkList,
-      method: aiResult.method
+      method: aiResult.method,
+      cocktailId: aiResult.cocktailId
     };
 
     const savedOid = await cocktailApi.save(saveRequest, settlementToken ?? undefined);
 
     return {
-      aiResult: { ...aiResult, images },
+      aiResult: { ...aiResult, images, imageCredit },
       savedOid
     };
   } catch (error) {

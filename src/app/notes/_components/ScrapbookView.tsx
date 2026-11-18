@@ -48,7 +48,7 @@ const StarIcon = ({ size = 18, fillRatio = 1 }: { size?: number; fillRatio?: num
   );
 };
 
-const ReadOnlyStars = ({ value, size = 18 }: { value?: number; size?: number }) => {
+export const ReadOnlyStars = ({ value, size = 18 }: { value?: number; size?: number }) => {
   if (value == null) return null;
   return (
     <span className="inline-flex items-center gap-0.5">
@@ -116,7 +116,7 @@ export const ScrapbookView = ({ notes }: Props) => {
   );
 
   return (
-    <div className="relative mx-auto flex flex-col md:flex-row w-[min(1200px,95vw)] min-h-[85vh] rounded-[14px] overflow-hidden"
+    <div className="relative mx-auto flex flex-col md:flex-row w-[min(1200px,95vw)] min-h-[85vh] md:min-h-[calc(100dvh-8.5rem)] rounded-[14px] overflow-hidden"
       style={{
         boxShadow:
           "0 30px 80px rgba(0,0,0,0.6), 0 0 0 8px #2a1810, 0 0 0 10px #1A110D",

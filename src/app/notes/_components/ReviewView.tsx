@@ -64,7 +64,7 @@ export const ReviewView = ({ whisky, onBack, onSubmit }: Props) => {
 
       {/* 우측 상단 작은 원형 도장 */}
       {isRated && (
-        <div className="pointer-events-none absolute -right-4 -top-6 md:-top-8">
+        <div className="pointer-events-none absolute -right-4 -top-6 hidden md:-top-8 xl:block">
           <div className="stamp-circle font-serif w-[155px] h-[155px] md:w-[180px] md:h-[180px] border-[4px] flex flex-col items-center justify-center">
             <span className="text-xs md:text-xs tracking-[0.2em] font-bold">TASTED</span>
             <span className="text-xs md:text-xs mt-2 tracking-widest font-medium">
@@ -74,10 +74,11 @@ export const ReviewView = ({ whisky, onBack, onSubmit }: Props) => {
         </div>
       )}
 
-      <header className="mb-6 border-b-2 border-double border-[#3e2616]/40 pb-4 mt-6 pr-56">
+      <header className="mb-6 border-b-2 border-double border-[#3e2616]/40 pb-4 mt-6 xl:pr-56">
         <p className="text-xs uppercase tracking-[0.3em] text-[#3e2616]/60 font-bold">
           {whisky.category === "whisky" ? "Whisky" : "Cocktail"} Tasting Note
         </p>
+        {isRated && <p className="mt-1 text-xs font-bold tracking-[0.2em] text-[#a8201a] xl:hidden">TASTED · {whisky.ratedAt ?? ""}</p>}
         <h2 className="font-serif text-3xl text-[#3e2616] mt-1 font-bold">{displayName}</h2>
       </header>
 
