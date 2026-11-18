@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import WishButton from "@/components/recommendations/WishButton";
+import { NOTES_V2, noteWriteHref } from "@/lib/notes/flag";
 import { motion, useReducedMotion } from "framer-motion";
 import WhiskeyLoadingOverlay from "@/components/recommendations/WhiskeyLoadingOverlay";
 import RecommendationBackLink from "@/components/recommendations/RecommendationBackLink";
@@ -770,8 +772,9 @@ export default function VerifiedWhiskeyPreviewPage() {
                     {result.presentation?.pairings.map((item) => <p key={item.food} className="mt-2 text-sm leading-6"><strong>{item.food}</strong> — {item.reason}</p>)}
                     <p className="mt-2 text-xs text-stone-600">풍미를 참고한 제안이에요. 알레르기와 개인 취향을 확인해 주세요.</p>
                   </div>}
-                  <Link href={`/notes/verified/${result.recommendationId}`} className="mt-6 min-h-11 w-full border border-[#4a3728] px-3 py-3 text-center text-sm font-semibold">마신 뒤 시음 기록 남기기</Link>
-                  <p className="mt-2 text-xs text-stone-600">나중에 내 시음 노트에서도 이 추천을 다시 찾을 수 있어요.</p>
+                  <Link href={noteWriteHref({ kind: "VERIFIED_RECORD", ref: String(result.recommendationId) }, `/notes/verified/${result.recommendationId}`)} className="mt-6 min-h-11 w-full border border-[#4a3728] px-3 py-3 text-center text-sm font-semibold">마신 뒤 시음 기록 남기기</Link>
+                  {NOTES_V2 && <WishButton source={{ kind: "VERIFIED_RECORD", ref: String(result.recommendationId) }} />}
+                  {!NOTES_V2 && <p className="mt-2 text-xs text-stone-600">나중에 내 시음 노트에서도 이 추천을 다시 찾을 수 있어요.</p>}
                   <div className="mt-7 w-full border-t border-[#4a3728]/25 pt-4 text-center">
                     <span className="text-xs font-bold uppercase italic tracking-widest text-stone-600">R-Whiskey Selection</span>
                   </div>

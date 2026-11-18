@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import WishButton from '@/components/recommendations/WishButton';
+import { NOTES_V2, noteWriteHref } from '@/lib/notes/flag';
 import { whiskeyV3Api } from '@/api/whiskeyV3Api';
 import { authApi } from '@/api/whiskeyApi';
 import { ApiResponseError } from '@/api/apiClient';
@@ -221,8 +223,9 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
         {differences.map(text=><p key={text} className="mt-2">{text}</p>)}</div>}
       </div>
       </div>
-      <Link href={`/notes/ai/${a.id}`} className="mt-8 flex min-h-12 items-center justify-center bg-[#111] px-5 text-sm font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#2d2017]">마신 뒤 시음 기록 남기기</Link>
-      <p className="mt-2 text-xs leading-5 text-stone-600">내 시음 노트 목록에서 이 추천을 다시 찾을 수 있어요.</p>
+      <Link href={noteWriteHref({kind:'AI_OPERATION',ref:a.id},`/notes/ai/${a.id}`)} className="mt-8 flex min-h-12 items-center justify-center bg-[#111] px-5 text-sm font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#2d2017]">마신 뒤 시음 기록 남기기</Link>
+      {NOTES_V2&&<WishButton source={{kind:'AI_OPERATION',ref:a.id}}/>}
+      {!NOTES_V2&&<p className="mt-2 text-xs leading-5 text-stone-600">내 시음 노트 목록에서 이 추천을 다시 찾을 수 있어요.</p>}
       {openReport&&<WhiskeyInfoReport onOpen={()=>openReport(null,'CARD_FOOTER')}/>}
       </>}
     </article>
