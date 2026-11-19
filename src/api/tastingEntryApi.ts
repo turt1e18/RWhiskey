@@ -2,6 +2,7 @@ import apiClient, { ApiResponseError } from "./apiClient";
 import { entryFailure, type EntryAction, type EntryStatus, type ReportReason, type SaveFailure, type TastingBookmarkPage, type TastingEntry, type TastingEntryPage, type TastingEntryRequest } from "@/lib/notes/entryDraft";
 
 const base = "/api/tasting-entries";
+export type LoungeSort = "popular" | "latest";
 // 응답이 오지 않는 요청이 "저장 중…"에 머물지 않게 한다.
 const timeoutMs = 15_000;
 
@@ -17,10 +18,10 @@ export const tastingEntryApi = {
   get: (id: number) => apiClient<TastingEntry>(`${base}/${id}`, { method: "GET", timeoutMs }),
   replace: (id: number, body: TastingEntryRequest) => apiClient<TastingEntry>(`${base}/${id}`, { method: "PUT", body: JSON.stringify(body), timeoutMs }),
   remove: (id: number) => apiClient<null>(`${base}/${id}`, { method: "DELETE", emptyBodyAsNull: true, timeoutMs }),
-  lounge: (q: string, cursor: string | null) => {
-    const query = new URLSearchParams({ ...(q && { q }), ...(cursor && { cursor }) }).toString();
-    return apiClient<TastingEntryPage>(query ? `/api/lounge/entries?${query}` : "/api/lounge/entries", { method: "GET", timeoutMs });
-  },
+  lounge: (sort: LoungeSort, cursor: string | null) =>
+    apiClient<TastingEntryPage>(`/api/lounge/entries?${new URLSearchParams({ sort, ...(cursor && { cursor }) })}`, { method: "GET", timeoutMs }),
+  like: (id: number) => apiClient<null>(`${base}/${id}/like`, { method: "PUT", emptyBodyAsNull: true, timeoutMs }),
+  unlike: (id: number) => apiClient<null>(`${base}/${id}/like`, { method: "DELETE", emptyBodyAsNull: true, timeoutMs }),
   bookmarks: (cursor: string | null) =>
     apiClient<TastingBookmarkPage>(cursor ? `${base}/bookmarks?${new URLSearchParams({ cursor })}` : `${base}/bookmarks`, { method: "GET", timeoutMs }),
   bookmark: (id: number) => apiClient<null>(`${base}/${id}/bookmark`, { method: "PUT", emptyBodyAsNull: true, timeoutMs }),

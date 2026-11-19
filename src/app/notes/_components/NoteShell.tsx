@@ -38,7 +38,7 @@ export function BackPill({ href = "/notes", label = "← 테이스팅 노트" }:
 const MENU = [
   { href: "/notes/entries", label: "시음 기록" },
   { href: "/notes?section=recommended", label: "추천으로 만난 한 잔" },
-  { href: "/notes/bookmarks", label: "라운지에서 만난 한 잔" },
+  { href: "/notes/bookmarks", label: "저장한 글" },
   { href: "/notes/lounge", label: "라운지 둘러보기" },
 ];
 

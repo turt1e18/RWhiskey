@@ -264,7 +264,7 @@ function MyNotesInner() {
               className="relative w-full flex justify-center"
             >
               <div className="relative w-[min(1200px,95vw)]">
-                {/* 새 시음 노트(스위치 켬)에서는 목차의 "라운지에서 만난 한 잔"이 같은 곳이라 책갈피를 두지 않는다. */}
+                {/* 새 시음 노트(스위치 켬)에서는 목차의 "저장한 글"이 같은 곳이라 책갈피를 두지 않는다. */}
                 {!NOTES_V2 && <Bookmark label="스크랩북" onClick={() => setView("scrapbook")} />}
                 <DiaryFrame
                   rightId="paper-right"

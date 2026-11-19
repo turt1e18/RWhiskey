@@ -224,12 +224,12 @@ export function NoteForm({ uid, scope, initial, entryId, nameLocked = false, sou
             <div>
               <label className="flex min-h-11 items-center gap-3 text-sm font-bold">
                 <input type="checkbox" checked={draft.visibility === "PUBLIC"} onChange={(event) => set("visibility", event.target.checked ? "PUBLIC" : "PRIVATE")} aria-describedby="note-public-hint" className="h-5 w-5 rounded shrink-0 appearance-none border-2 border-[#3e2616] bg-white checked:bg-[#3e2616] checked:shadow-[inset_0_0_0_3px_#efe2c9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3e2616]" />
-                라운지에 공개하기
+                시음 노트 라운지에 공개하기
               </label>
               <p id="note-public-hint" className="mt-1 text-xs leading-5 text-[#3e2616]/70">
                 {draft.visibility === "PUBLIC"
-                  ? "다른 사람이 위스키 이름, 메모, 향·맛·여운, 점수를 볼 수 있어요. 글쓴이 이름은 보이지 않아요. 이름·연락처 같은 개인정보는 적지 마세요. 언제든 수정에서 비공개로 바꿀 수 있어요."
-                  : "체크하지 않으면 나만 볼 수 있어요."}
+                  ? "공개 전에 메모를 한 번 더 읽어 주세요. 함께 마신 사람, 가게 이름, 연락처처럼 나를 알아볼 수 있는 내용은 지워 주세요. 언제든 수정에서 비공개로 바꿀 수 있고, 다시 공개하면 공개한 날짜가 새로 정해져요."
+                  : "공개하면 위스키 이름, 마신 날, 마시는 방법, 메모, 향·맛·여운, 점수가 시음 노트 라운지에 보여요. 글쓴이 이름은 보이지 않아요. 체크하지 않으면 나만 볼 수 있어요."}
               </p>
             </div>
           </>

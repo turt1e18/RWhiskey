@@ -13,12 +13,12 @@ interface Item { href: string; title: string; hint: string; Icon: ComponentType<
  * 각 행은 별도 화면으로 이어지는 버튼이고, 오더 시트 행과 같은 점선·번호·쉐브론 모양을 쓴다.
  */
 export function NotesMenu({ verified, entries }: { verified: boolean; entries: boolean }) {
-  // 새 시음 노트(스위치 켬)는 세 갈래: 내 기록 / 추천 / 라운지에서 건배한 글. 구 오더 시트는 새 기능이 완성되면 기존 데이터와 함께 정리한다.
+  // 새 시음 노트(스위치 켬)는 세 갈래: 내 기록 / 추천 / 저장한 글. 구 오더 시트는 새 기능이 완성되면 기존 데이터와 함께 정리한다.
   const items: Item[] = entries
     ? [
         { href: "/notes/entries", title: "시음 기록", hint: "마신 기록과 마실 목록, 새 기록 쓰기", Icon: PenLine },
         { href: "/notes?section=recommended", title: "추천으로 만난 한 잔", hint: "추천받은 위스키와 취향 추천", Icon: Wine },
-        { href: "/notes/bookmarks", title: "라운지에서 만난 한 잔", hint: "건배(저장)한 다른 이의 기록", Icon: Sparkles },
+        { href: "/notes/bookmarks", title: "저장한 글", hint: "라운지에서 마음에 들어 저장한 다른 이의 기록", Icon: Sparkles },
       ]
     : [
         ...(verified ? [{ href: "/notes?section=verified", title: "추천으로 만난 한 잔", hint: "최근 추천과 저장한 시음 기록", Icon: Wine }] : []),
