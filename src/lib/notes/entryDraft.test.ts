@@ -101,6 +101,10 @@ test('추천에서 노트를 쓰는 주소는 왕복하고 알 수 없는 값은
   assert.equal(sourceNoteHref({ kind: 'LEGACY_ORDER', ref: 'a b&c' }), '/notes/new?source=LEGACY_ORDER:a%20b%26c');
 });
 
+test('신고 한도 초과는 신고 안내 문구를 준다', () => {
+  assert.match(entryFailure(429, 'DAILY_REPORT_LIMIT', 'report').message, /신고/);
+});
+
 test('좋아요 실패는 이유별 안내 문구를 준다', () => {
   assert.match(entryFailure(429, 'DAILY_LIKE_LIMIT', 'like').message, /좋아요/);
   assert.match(entryFailure(400, 'CANNOT_LIKE_OWN', 'like').message, /내가 쓴 글/);

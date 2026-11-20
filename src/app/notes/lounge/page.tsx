@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { tastingEntryApi, type LoungeSort } from "@/api/tastingEntryApi";
 import { EntryProblem } from "../_components/entryActions";
 import { LoungeEntryCard } from "../_components/LoungeEntryCard";
@@ -9,7 +10,7 @@ import { BackPill, FOCUS, LoginNeeded, NoteNav, useNoteUser } from "../_componen
 import { usePagedList } from "../_components/usePagedList";
 
 const TABS: { key: LoungeSort; label: string; hint: string }[] = [
-  { key: "popular", label: "이번 주 인기", hint: "최근 7일 동안 좋아요를 많이 받은 글 15개예요. 순서는 이번 주에 받은 좋아요 수로 정해요." },
+  { key: "popular", label: "이번 주 인기", hint: "최근 7일 동안 좋아요를 많이 받은 글이에요(최대 15개). 순서는 이번 주에 받은 좋아요 수로 정해요." },
   { key: "latest", label: "최신", hint: "방금 공개된 글부터 보여 드려요." },
 ];
 const shout = { textShadow: "0 2px 8px rgba(0,0,0,0.7)" };
@@ -17,8 +18,15 @@ const shout = { textShadow: "0 2px 8px rgba(0,0,0,0.7)" };
 const note = "mx-auto mb-6 max-w-xl rounded-xl bg-black/50 px-6 py-4 text-center text-[#fdfbf7] shadow-lg backdrop-blur-sm";
 
 export default function LoungePage() {
+  return <Suspense fallback={null}><Lounge /></Suspense>;
+}
+
+function Lounge() {
   const { uid, ready } = useNoteUser();
-  const [sort, setSort] = useState<LoungeSort>("popular");
+  const router = useRouter();
+  // 탭은 주소(?sort=)에 둔다. 상세에서 뒤로 돌아와도 같은 탭이 열린다.
+  const sort: LoungeSort = useSearchParams().get("sort") === "latest" ? "latest" : "popular";
+  const setSort = (next: LoungeSort) => router.replace(next === "latest" ? "/notes/lounge?sort=latest" : "/notes/lounge", { scroll: false });
   const list = usePagedList(ready && uid !== null, sort, (cursor) => tastingEntryApi.lounge(sort, cursor));
 
   return (

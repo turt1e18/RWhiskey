@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Wine } from "lucide-react";
 import { describeEntryError, tastingEntryApi } from "@/api/tastingEntryApi";
@@ -127,8 +128,11 @@ export default function LikedEntriesPage() {
                     })}
                   </ul>
                   {list.busy && <p role="status" className="mt-4 text-sm">불러오는 중…</p>}
-                  {list.settled && !list.busy && !list.problem && list.items.length === 0 && (
-                    <p className="font-serif text-sm italic leading-6 text-[#3e2616]/80">아직 좋아요한 글이 없어요. 라운지에서 마음에 드는 글에 좋아요를 눌러 보세요.</p>
+                  {list.settled && !list.busy && !list.problem && !list.next && list.items.length === 0 && (
+                    <div>
+                      <p className="font-serif text-sm italic leading-6 text-[#3e2616]/80">아직 좋아요한 글이 없어요. 라운지에서 마음에 드는 글에 좋아요를 눌러 보세요.</p>
+                      <Link href="/notes/lounge" className="inline-flex min-h-11 items-center text-sm font-bold underline underline-offset-4">라운지 둘러보기</Link>
+                    </div>
                   )}
                   {list.next && !list.busy && <button type="button" onClick={() => void list.loadMore()} className="mt-4 min-h-12 w-full rounded-sm border border-[#3e2616] font-serif tracking-wider hover:bg-[#3e240c]/10">더 보기</button>}
                   </div>

@@ -20,7 +20,7 @@ export const TopNav = ({ view, onChange }: TopNavProps) => {
             <button
               key={t.key}
               onClick={() => onChange(t.key)}
-              className="relative px-5 py-2 text-sm font-serif tracking-wider"
+              className="relative min-h-11 px-3 text-sm font-serif tracking-wider sm:px-5"
             >
               {active && (
                 <motion.span

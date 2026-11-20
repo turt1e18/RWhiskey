@@ -164,7 +164,7 @@ export function entryFailure(status: number | null, code: string | null, action:
   if (status === 404 && (action === "report" || action === "like")) return { message: "이 글은 더 이상 볼 수 없어요. 글쓴이가 비공개로 바꾸거나 지웠을 수 있어요.", needsLogin: false };
   if (status === 404) return { message: "기록을 찾지 못했어요. 이미 지웠거나 다른 계정의 기록일 수 있어요.", needsLogin: false };
   if (status === 409 && code === "SOURCE_ALREADY_RECORDED") return { message: "이 추천으로 쓴 기록이 이미 있어요. 시음 기록에서 열어 보세요.", needsLogin: false };
-  if (status === 429) return { message: code === "DAILY_LIKE_LIMIT" ? "오늘 누를 수 있는 좋아요를 모두 썼어요. 내일 다시 눌러 주세요." : code === "DAILY_PUBLISH_LIMIT" ? "오늘은 더 공개할 수 없어요. 내일 다시 시도해 주세요." : "오늘 쓸 수 있는 기록 수를 넘었어요. 내일 다시 시도해 주세요.", needsLogin: false };
+  if (status === 429) return { message: code === "DAILY_LIKE_LIMIT" ? "오늘 누를 수 있는 좋아요를 모두 썼어요. 내일 다시 눌러 주세요." : code === "DAILY_PUBLISH_LIMIT" ? "오늘은 더 공개할 수 없어요. 내일 다시 시도해 주세요." : code === "DAILY_REPORT_LIMIT" ? "오늘 접수할 수 있는 신고를 모두 썼어요. 내일 다시 신고해 주세요." : "오늘 쓸 수 있는 기록 수를 넘었어요. 내일 다시 시도해 주세요.", needsLogin: false };
   const known: Record<string, string> = {
     WHISKEY_NAME_REQUIRED: "위스키 이름을 적어 주세요.",
     TEXT_TOO_LONG: "글이 너무 길어요. 조금 줄인 뒤 다시 저장해 주세요.",
