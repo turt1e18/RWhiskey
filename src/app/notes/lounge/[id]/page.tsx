@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ApiResponseError } from "@/api/apiClient";
 import { describeEntryError, tastingEntryApi } from "@/api/tastingEntryApi";
 import { SERVING_LABELS, dotDate, entryFailure, type SaveFailure, type TastingEntry } from "@/lib/notes/entryDraft";
-import { EntryProblem, LikeButton, ReportControl, ReportPanel, SaveButton, useEntryActions, useEntryLike } from "../../_components/entryActions";
+import { EntryProblem, LikeButton, ReportControl, ReportPanel, useEntryActions, useEntryLike } from "../../_components/entryActions";
 import { BackPill, FOCUS, LoginNeeded, NoteNav, useNoteUser } from "../../_components/NoteShell";
 import { ReadOnlyStars } from "../../_components/ScrapbookView";
 
@@ -32,7 +32,7 @@ function Detail({ entry }: { entry: TastingEntry }) {
       <header className="mb-5 border-b border-dotted border-[#3e2616]/40 pb-4">
         <h1 className="font-kyobo text-2xl font-bold leading-tight md:text-3xl">{entry.whiskeyName}</h1>
         <p className="mt-2 font-serif text-sm italic text-[#3e2616]/80">
-          {entry.publishedAt && `${dotDate(entry.publishedAt)} 공개`}{entry.tastedOn && ` · ${dotDate(entry.tastedOn)} 마심`}{entry.serving && ` · ${SERVING_LABELS[entry.serving]}`}
+          {entry.mine && "내가 쓴 글 · "}{entry.publishedAt ? `${dotDate(entry.publishedAt)} 공개` : entry.mine && "나만 보기"}{entry.tastedOn && ` · ${dotDate(entry.tastedOn)} 마심`}{entry.serving && ` · ${SERVING_LABELS[entry.serving]}`}
         </p>
       </header>
       <div className="space-y-5">
@@ -43,7 +43,7 @@ function Detail({ entry }: { entry: TastingEntry }) {
         {empty && <p className="font-serif italic text-[#3e2616]/75">적힌 내용이 없어요.</p>}
         {entry.rating !== null && (
           <div className="border-t border-dotted border-[#3e2616]/30 pt-3">
-            <p className="mb-2 text-sm font-bold text-[#3e2616]/80">글쓴이 취향 점수</p>
+            <p className="mb-2 text-sm font-bold text-[#3e2616]/80">{entry.mine ? "내 취향 점수" : "글쓴이 취향 점수"}</p>
             <span className="sr-only">5점 만점에 {entry.rating}점</span>
             <span aria-hidden><ReadOnlyStars value={entry.rating} size={18} /></span>
           </div>
@@ -51,18 +51,17 @@ function Detail({ entry }: { entry: TastingEntry }) {
       </div>
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-dotted border-[#3e2616]/30 pt-3">
         <LikeButton like={like} name={entry.whiskeyName} />
-        <SaveButton actions={actions} />
-        <ReportControl id={entry.id} actions={actions} />
+        {entry.mine
+          ? <Link href={`/notes/${entry.id}`} className="inline-flex min-h-11 items-center rounded-sm bg-[#3e2616] px-4 font-serif text-sm font-bold tracking-wider text-[#fdfbf7]">내 기록 수정</Link>
+          : <ReportControl id={entry.id} actions={actions} />}
       </div>
-      <p className="mt-2 text-xs leading-5 text-[#3e2616]/75">좋아요 수는 모두에게 보이고 이번 주 인기에 반영돼요. 저장은 나만 보는 ‘저장한 글’에 담아요.</p>
-      <ReportPanel id={entry.id} actions={actions} />
+      {!entry.mine && <ReportPanel id={entry.id} actions={actions} />}
       {failure && <EntryProblem failure={failure} />}
     </article>
   );
 }
 
 export default function LoungeEntryPage() {
-  const router = useRouter();
   const { uid, ready } = useNoteUser();
   const raw = useParams<{ id: string }>().id;
   const id = /^[1-9][0-9]{0,15}$/.test(raw) ? Number(raw) : null;
@@ -72,16 +71,16 @@ export default function LoungeEntryPage() {
   const [busy, setBusy] = useState(true);
 
   const load = useCallback(async () => {
-    if (id === null) { setBusy(false); setGone(true); setProblem(entryFailure(404, null, "bookmark")); return; }
+    if (id === null) { setBusy(false); setGone(true); setProblem(entryFailure(404, null, "like")); return; }
     setBusy(true); setProblem(null); setGone(false);
     try {
       const found = await tastingEntryApi.get(id);
-      if (found.mine) router.replace(`/notes/${id}`); else setEntry(found);
+      setEntry(found);
     } catch (error) {
       const missing = error instanceof ApiResponseError && error.status === 404;
-      setGone(missing); setProblem(describeEntryError(error, missing ? "bookmark" : "load"));
+      setGone(missing); setProblem(describeEntryError(error, missing ? "like" : "load"));
     } finally { setBusy(false); }
-  }, [id, router]);
+  }, [id]);
   useEffect(() => { if (ready && uid !== null) void load(); else if (ready) setBusy(false); }, [ready, uid, load]);
 
   return (

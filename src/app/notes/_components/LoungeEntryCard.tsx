@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { SERVING_LABELS, dotDate, type TastingEntry } from "@/lib/notes/entryDraft";
 import { EntryProblem, LikeButton, useEntryLike } from "./entryActions";
@@ -16,7 +17,8 @@ const Pin = ({ color }: { color: string }) => (
 );
 
 /** 기존 라운지 쪽지와 같은 핀·종이 모양. 작성자는 보이지 않는다. 저장·신고·전체 본문은 상세 화면에서 한다. */
-export function LoungeEntryCard({ entry, index }: { entry: TastingEntry; index: number }) {
+// "더 보기"로 목록이 길어져도 이미 그려진 카드는 다시 그리지 않는다(entry·index가 그대로면 건너뜀).
+export const LoungeEntryCard = memo(function LoungeEntryCard({ entry, index }: { entry: TastingEntry; index: number }) {
   const like = useEntryLike(entry);
   const parts: [string, string | null][] = [["향", entry.nose], ["맛", entry.palate], ["여운", entry.finish]];
 
@@ -40,16 +42,13 @@ export function LoungeEntryCard({ entry, index }: { entry: TastingEntry; index: 
         </p>
 
         <div className="mt-auto flex items-center justify-between border-t border-dotted border-[#3e2616]/30 pt-2">
-          <div className="flex items-center gap-2">
-            <LikeButton like={like} name={entry.whiskeyName} />
-            {entry.recentLikeCount != null && <span className="font-serif text-xs text-[#3e2616]/75">이번 주 ♥{entry.recentLikeCount}</span>}
-          </div>
+          <LikeButton like={like} name={entry.whiskeyName} />
           {entry.mine && <span className="font-serif text-xs text-[#3e2616]/75">내가 쓴 글</span>}
-          <Link href={entry.mine ? `/notes/${entry.id}` : `/notes/lounge/${entry.id}`} aria-label={`${entry.whiskeyName} ${entry.mine ? "내 기록 열기" : "자세히 보기"}`}
-            className="inline-flex min-h-11 items-center font-serif text-sm font-bold underline underline-offset-4">{entry.mine ? "내 기록 열기" : "자세히 보기"}</Link>
+          <Link href={`/notes/lounge/${entry.id}`} aria-label={`${entry.whiskeyName} 자세히 보기`}
+            className="inline-flex min-h-11 items-center font-serif text-sm font-bold underline underline-offset-4">자세히 보기</Link>
         </div>
         {like.failure && <EntryProblem failure={like.failure} />}
       </div>
     </motion.article>
   );
-}
+});

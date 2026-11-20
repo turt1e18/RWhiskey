@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bookmark } from "lucide-react";
 import { describeEntryError, tastingEntryApi } from "@/api/tastingEntryApi";
 import { GlencairnButton } from "./GlencairnButton";
 import { REPORT_REASONS, type ReportReason, type SaveFailure, type TastingEntry } from "@/lib/notes/entryDraft";
@@ -16,24 +15,13 @@ export function EntryProblem({ failure }: { failure: SaveFailure }) {
   );
 }
 
-/** 남의 공개 글 한 건의 저장·신고 상태와 동작. 라운지 쪽지와 저장 목록 상세가 함께 쓴다. */
-export function useEntryActions(entry: TastingEntry, onSavedChange?: (saved: boolean) => void) {
-  const [saved, setSaved] = useState(entry.bookmarked);
+/** 남의 공개 글 한 건의 신고 상태와 동작. 라운지 상세와 좋아요한 글 상세가 함께 쓴다. */
+export function useEntryActions(entry: TastingEntry) {
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<SaveFailure | null>(null);
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [reported, setReported] = useState(false);
-
-  async function toggleSave() {
-    if (busy) return;
-    setBusy(true); setFailure(null);
-    try {
-      if (saved) await tastingEntryApi.unbookmark(entry.id); else await tastingEntryApi.bookmark(entry.id);
-      setSaved(!saved); onSavedChange?.(!saved);
-    } catch (error) { setFailure(describeEntryError(error, saved ? "unbookmark" : "bookmark")); }
-    finally { setBusy(false); }
-  }
 
   async function sendReport() {
     if (busy || !reason) return;
@@ -43,11 +31,11 @@ export function useEntryActions(entry: TastingEntry, onSavedChange?: (saved: boo
     finally { setBusy(false); }
   }
 
-  return { saved, busy, failure, reporting, setReporting, reason, setReason, reported, toggleSave, sendReport, cancelReport: () => { setReporting(false); setReason(null); } };
+  return { busy, failure, reporting, setReporting, reason, setReason, reported, sendReport, cancelReport: () => { setReporting(false); setReason(null); } };
 }
 
 /** 좋아요 한 건의 상태. 먼저 화면에 반영하고, 서버가 거절하면 되돌린다. */
-export function useEntryLike(entry: TastingEntry) {
+export function useEntryLike(entry: TastingEntry, onChange?: (liked: boolean) => void) {
   const [liked, setLiked] = useState(entry.liked);
   const [likes, setLikes] = useState(entry.likeCount);
   const [busy, setBusy] = useState(false);
@@ -57,7 +45,7 @@ export function useEntryLike(entry: TastingEntry) {
     if (busy || entry.mine) return;
     const was = liked, step = was ? -1 : 1;
     setBusy(true); setFailure(null); setLiked(!was); setLikes((n) => Math.max(0, n + step));
-    try { if (was) await tastingEntryApi.unlike(entry.id); else await tastingEntryApi.like(entry.id); }
+    try { if (was) await tastingEntryApi.unlike(entry.id); else await tastingEntryApi.like(entry.id); onChange?.(!was); }
     catch (error) { setLiked(was); setLikes((n) => Math.max(0, n - step)); setFailure(describeEntryError(error, "like")); }
     finally { setBusy(false); }
   }
@@ -69,18 +57,6 @@ export function LikeButton({ like, name }: { like: ReturnType<typeof useEntryLik
   return (
     <GlencairnButton liked={like.liked} count={like.likes} onClick={() => void like.toggle()} disabled={like.mine} busy={like.busy} pressed={like.mine ? undefined : like.liked}
       label={`${name ? `${name} 글 ` : ""}${like.mine ? "내 글은 좋아요를 누를 수 없어요. 지금 " : "좋아요 "}${like.likes}개`} className="min-h-11 min-w-11 disabled:cursor-default" />
-  );
-}
-
-/** 저장(저장한 글에 담기). 좋아요의 잔과 헷갈리지 않게 책갈피 모양으로 둔다. remove면 저장한 글 화면의 "빼기" 단추다. */
-export function SaveButton({ actions, remove = false }: { actions: EntryActions; remove?: boolean }) {
-  return (
-    <button type="button" onClick={() => void actions.toggleSave()} disabled={actions.busy} aria-pressed={remove ? undefined : actions.saved}
-      aria-label={remove ? "저장한 글에서 빼기" : "저장한 글에 담기"}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 text-[#3e2616]/80 transition-colors hover:text-[#a8201a] disabled:opacity-60">
-      <Bookmark aria-hidden size={20} className={actions.saved ? "fill-[#3e2616]" : ""} />
-      <span className="text-sm">{actions.saved ? "저장함" : "저장"}</span>
-    </button>
   );
 }
 

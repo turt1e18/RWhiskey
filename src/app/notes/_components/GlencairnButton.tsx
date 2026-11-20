@@ -12,8 +12,6 @@ interface Props {
   /** 눌리는 영역을 넓히고 싶을 때 덧붙인다. */
   className?: string;
   disabled?: boolean;
-  /** 잔 옆 글자. 버튼 안에 있어 글자를 눌러도 동작한다. */
-  text?: string;
   /** 눌림 상태를 화면 읽기에 알린다. 숫자를 숨긴 잔(hideCount)은 liked로 알린다. */
   pressed?: boolean;
   /** 처리 중에는 포커스를 잃지 않게 disabled 대신 이것으로 알린다. */
@@ -24,7 +22,7 @@ interface Props {
  * 글렌캐런 잔 - 클릭 시 잔 밑바닥에서 위스키(호박색)가
  * 잔 높이의 30%까지 부드럽게 차오른다.
  */
-export const GlencairnButton = ({ liked, count, onClick, label = "추천", hideCount = false, className = "", disabled = false, text, pressed, busy }: Props) => {
+export const GlencairnButton = ({ liked, count, onClick, label = "추천", hideCount = false, className = "", disabled = false, pressed, busy }: Props) => {
   const uid = useId().replace(/:/g, "");
   const clipId = `glen-clip-${uid}`;
 
@@ -94,7 +92,6 @@ export const GlencairnButton = ({ liked, count, onClick, label = "추천", hideC
         </svg>
       </motion.span>
       {!hideCount && <span className="text-xs font-serif">{count}</span>}
-      {text && <span className="font-serif text-sm">{text}</span>}
     </button>
   );
 };

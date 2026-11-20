@@ -35,7 +35,7 @@ function NewNote() {
   }, [ready, uid, source, router]);
 
   return (
-    <NoteShell title={source ? "마신 뒤 남기는 기록" : "새 시음 기록"} back={{ href: "/notes/entries", label: "← 시음 기록" }} left={<EntryLeaf draft={source && !preview.whiskeyName ? { ...preview, whiskeyName: "추천받은 위스키" } : preview} extra={source?.kind === "AI_OPERATION" ? <RecommendationNote operationId={source.ref} /> : undefined} />}>
+    <NoteShell title={source ? "마신 뒤 남기는 기록" : "새 시음 기록"} back={{ href: "/notes/entries", label: "← 시음 기록" }} leftPaper left={<EntryLeaf paper draft={source && !preview.whiskeyName ? { ...preview, whiskeyName: "추천받은 위스키" } : preview} extra={source?.kind === "AI_OPERATION" ? <RecommendationNote paper operationId={source.ref} /> : undefined} />}>
       {!ready ? <p role="status" className="mt-6 text-sm">불러오는 중…</p> : uid === null ? <LoginNeeded /> : checking ? <Spinner label="이미 쓴 기록이 있는지 보고 있어요" /> : (
         <>
           {source && <p className="mt-3 text-sm leading-6 text-[#3e2616]/80">추천받은 위스키의 이름은 자동으로 채워져요.</p>}

@@ -1,5 +1,5 @@
 import apiClient, { ApiResponseError } from "./apiClient";
-import { entryFailure, type EntryAction, type EntryStatus, type ReportReason, type SaveFailure, type TastingBookmarkPage, type TastingEntry, type TastingEntryPage, type TastingEntryRequest } from "@/lib/notes/entryDraft";
+import { entryFailure, type EntryAction, type EntryStatus, type ReportReason, type SaveFailure, type TastingLikePage, type TastingEntry, type TastingEntryPage, type TastingEntryRequest } from "@/lib/notes/entryDraft";
 
 const base = "/api/tasting-entries";
 export type LoungeSort = "popular" | "latest";
@@ -22,10 +22,9 @@ export const tastingEntryApi = {
     apiClient<TastingEntryPage>(`/api/lounge/entries?${new URLSearchParams({ sort, ...(cursor && { cursor }) })}`, { method: "GET", timeoutMs }),
   like: (id: number) => apiClient<null>(`${base}/${id}/like`, { method: "PUT", emptyBodyAsNull: true, timeoutMs }),
   unlike: (id: number) => apiClient<null>(`${base}/${id}/like`, { method: "DELETE", emptyBodyAsNull: true, timeoutMs }),
-  bookmarks: (cursor: string | null) =>
-    apiClient<TastingBookmarkPage>(cursor ? `${base}/bookmarks?${new URLSearchParams({ cursor })}` : `${base}/bookmarks`, { method: "GET", timeoutMs }),
-  bookmark: (id: number) => apiClient<null>(`${base}/${id}/bookmark`, { method: "PUT", emptyBodyAsNull: true, timeoutMs }),
-  unbookmark: (id: number) => apiClient<null>(`${base}/${id}/bookmark`, { method: "DELETE", emptyBodyAsNull: true, timeoutMs }),
+  /** 내가 좋아요한 글(최근 순). */
+  likes: (cursor: string | null) =>
+    apiClient<TastingLikePage>(cursor ? `${base}/likes?${new URLSearchParams({ cursor })}` : `${base}/likes`, { method: "GET", timeoutMs }),
   report: (id: number, reason: ReportReason) =>
     apiClient<null>(`${base}/${id}/report`, { method: "POST", body: JSON.stringify({ reason }), emptyBodyAsNull: true, timeoutMs }),
 };

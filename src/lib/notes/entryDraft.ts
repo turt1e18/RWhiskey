@@ -34,8 +34,8 @@ export interface TastingEntry {
 export interface TastingEntryPage { items: TastingEntry[]; nextCursor: string | null }
 
 /** 글쓴이가 비공개로 바꾸거나 지운 글은 available=false이고 entry가 없다. */
-export interface TastingBookmarkItem { entryId: number; bookmarkedAt: string; available: boolean; entry: TastingEntry | null }
-export interface TastingBookmarkPage { items: TastingBookmarkItem[]; nextCursor: string | null }
+export interface TastingLikeItem { entryId: number; likedAt: string; available: boolean; entry: TastingEntry | null }
+export interface TastingLikePage { items: TastingLikeItem[]; nextCursor: string | null }
 
 export type ReportReason = "SPAM" | "INAPPROPRIATE" | "COPYRIGHT" | "PERSONAL_INFO" | "OTHER";
 export const REPORT_REASONS: { key: ReportReason; label: string }[] = [
@@ -46,7 +46,7 @@ export const REPORT_REASONS: { key: ReportReason; label: string }[] = [
   { key: "OTHER", label: "그 밖의 문제예요" },
 ];
 
-export type EntryAction = "save" | "load" | "delete" | "add" | "bookmark" | "unbookmark" | "report" | "like";
+export type EntryAction = "save" | "load" | "delete" | "add" | "report" | "like";
 
 export interface TastingEntryRequest {
   clientKey?: string;
@@ -161,7 +161,7 @@ export function entryFailure(status: number | null, code: string | null, action:
   if (status === null) return { message: `연결이 끊겼어요. 네트워크를 확인한 뒤 다시 시도해 주세요.${kept}`, needsLogin: false };
   if (status === 401) return { message: `로그인이 풀렸어요. 새 탭에서 로그인한 뒤 여기서 ${action === "save" ? "저장을 다시 눌러" : "다시 눌러"} 주세요.${kept}`, needsLogin: true };
   if (status === 403) return { message: `요청이 거부됐어요. 페이지를 새로고침한 뒤 다시 시도해 주세요.${kept}`, needsLogin: false };
-  if (status === 404 && (action === "bookmark" || action === "unbookmark" || action === "report" || action === "like")) return { message: "이 글은 더 이상 볼 수 없어요. 글쓴이가 비공개로 바꾸거나 지웠을 수 있어요.", needsLogin: false };
+  if (status === 404 && (action === "report" || action === "like")) return { message: "이 글은 더 이상 볼 수 없어요. 글쓴이가 비공개로 바꾸거나 지웠을 수 있어요.", needsLogin: false };
   if (status === 404) return { message: "기록을 찾지 못했어요. 이미 지웠거나 다른 계정의 기록일 수 있어요.", needsLogin: false };
   if (status === 409 && code === "SOURCE_ALREADY_RECORDED") return { message: "이 추천으로 쓴 기록이 이미 있어요. 시음 기록에서 열어 보세요.", needsLogin: false };
   if (status === 429) return { message: code === "DAILY_LIKE_LIMIT" ? "오늘 누를 수 있는 좋아요를 모두 썼어요. 내일 다시 눌러 주세요." : code === "DAILY_PUBLISH_LIMIT" ? "오늘은 더 공개할 수 없어요. 내일 다시 시도해 주세요." : "오늘 쓸 수 있는 기록 수를 넘었어요. 내일 다시 시도해 주세요.", needsLogin: false };
@@ -171,13 +171,12 @@ export function entryFailure(status: number | null, code: string | null, action:
     INVALID_TASTING_DATE: "마신 날은 오늘까지만 고를 수 있어요.",
     INVALID_RATING: "점수를 다시 골라 주세요.",
     WISH_CANNOT_BE_RATED_OR_PUBLIC: "마실 목록의 기록에는 점수를 매기거나 공개할 수 없어요.",
-    CANNOT_BOOKMARK_OWN: "내가 쓴 글은 저장할 수 없어요.",
     CANNOT_REPORT_OWN: "내가 쓴 글은 신고할 수 없어요.",
     CANNOT_LIKE_OWN: "내가 쓴 글에는 좋아요를 누를 수 없어요.",
   };
   if (status === 400 && code && known[code]) return { message: known[code], needsLogin: false };
   if (action === "like") return { message: "좋아요를 반영하지 못해 원래대로 돌려놓았어요. 잠시 뒤 다시 눌러 주세요.", needsLogin: false };
-  const verb = action === "save" ? "저장하지" : action === "delete" ? "지우지" : action === "add" ? "담지" : action === "bookmark" ? "저장한 글에 담지" : action === "unbookmark" ? "저장한 글에서 빼지" : action === "report" ? "신고를 보내지" : "불러오지";
+  const verb = action === "save" ? "저장하지" : action === "delete" ? "지우지" : action === "add" ? "담지" : action === "report" ? "신고를 보내지" : "불러오지";
   return { message: `${verb} 못했어요. 잠시 뒤 다시 시도해 주세요.${kept}`, needsLogin: false };
 }
 

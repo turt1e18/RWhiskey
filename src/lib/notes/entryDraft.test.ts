@@ -77,11 +77,9 @@ test('실패 안내는 할 일을 말하고 서버 원문을 보여 주지 않�
   for (const status of [null, 400, 401, 403, 404, 429, 500]) assert.doesNotMatch(entryFailure(status, 'X', 'save').message, /API|Error|fetch|\d{3}/);
 });
 
-test('저장·신고 실패 안내는 글이 사라진 경우와 내 글을 구분한다', () => {
-  for (const action of ['bookmark', 'report'] as const) assert.match(entryFailure(404, null, action).message, /비공개|지웠/);
-  assert.match(entryFailure(400, 'CANNOT_BOOKMARK_OWN', 'bookmark').message, /내가 쓴 글/);
-  assert.match(entryFailure(500, null, 'bookmark').message, /저장한 글에 담지 못했어요/);
-  assert.match(entryFailure(500, null, 'unbookmark').message, /저장한 글에서 빼지 못했어요/);
+test('좋아요·신고 실패 안내는 글이 사라진 경우와 내 글을 구분한다', () => {
+  for (const action of ['like', 'report'] as const) assert.match(entryFailure(404, null, action).message, /비공개|지웠/);
+  assert.match(entryFailure(400, 'CANNOT_LIKE_OWN', 'like').message, /내가 쓴 글/);
   assert.match(entryFailure(500, null, 'report').message, /신고를 보내지 못했어요/);
   for (const status of [null, 401, 500]) assert.doesNotMatch(entryFailure(status, null, 'report').message, /보관/);
   assert.deepEqual(REPORT_REASONS.map((item) => item.key), ['SPAM', 'INAPPROPRIATE', 'COPYRIGHT', 'PERSONAL_INFO', 'OTHER']);
