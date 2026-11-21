@@ -5,6 +5,8 @@ export interface SignupRequest {
   email: string;
   pw: string;
   name: string;
+  /** 필수 약관·개인정보 동의. BE가 true 가 아니면 거부한다. */
+  agreedRequired: boolean;
 }
 
 export interface SignupResponse {

@@ -14,7 +14,7 @@ setup("시험 계정 준비와 인증 상태 저장", async ({ baseURL }) => {
       a = { role, email, password: newPassword(), name: `QA ${role.toUpperCase()}`, state: path.join(AUTH_DIR, `${run}-${role}.json`) };
       markEmailVerified(email);
       const be = await request.newContext({ baseURL: BE_URL });
-      const res = await be.post("/api/auth/signup", { data: { email, pw: a.password, name: a.name } });
+      const res = await be.post("/api/auth/signup", { data: { email, pw: a.password, name: a.name, agreedRequired: true } });
       expect(res.ok(), `signup ${role} status ${res.status()}`).toBeTruthy();
       await be.dispose();
       saveAccount(a);

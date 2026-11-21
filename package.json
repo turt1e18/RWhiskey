@@ -23,7 +23,7 @@
     "eslint-plugin-react": "^7.37.2",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
-    "next": "^15.3.2",
+    "next": "^15.5.29",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sonner": "^2.0.7",

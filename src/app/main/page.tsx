@@ -94,6 +94,9 @@ export default function MainScreen() {
                 >
                   로그아웃
                 </button>
+                <Link href="/account/withdraw" className="ml-2 inline-flex min-h-11 items-center text-xs text-white/70 underline underline-offset-2 hover:text-white">
+                  회원 탈퇴
+                </Link>
               </div>
             ) : (
               <a
@@ -209,6 +212,9 @@ export default function MainScreen() {
                 >
                   로그아웃
                 </button>
+                <Link href="/account/withdraw" className="mt-3 inline-flex min-h-11 items-center justify-center text-xs text-white/70 underline underline-offset-2">
+                  회원 탈퇴
+                </Link>
               </div>
             ) : (
               <a

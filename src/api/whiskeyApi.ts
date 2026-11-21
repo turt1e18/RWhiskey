@@ -240,6 +240,12 @@ export const cocktailApi = {
 /**
  * 사용자 토큰 API 서비스
  */
+// 회원 계정(본인 탈퇴)
+export const userAccountApi = {
+  withdraw: (pw: string) =>
+    apiClient<void>('/api/user/withdraw', { method: 'POST', body: JSON.stringify({ pw }) }),
+};
+
 export const userTokenApi = {
   // 토큰 상태 조회
   getStatus: () => {

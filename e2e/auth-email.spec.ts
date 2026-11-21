@@ -83,7 +83,7 @@ test("SU-01~05 회원가입: 입력 검증 → 실제 메일 코드 → 오답·
 });
 
 test("SU-06 중복 이메일 가입 거부", async ({ request }) => {
-  const res = await request.post(`${BE_URL}/api/auth/signup`, { data: { email: REAL, pw: newPassword(), name: "중복" } });
+  const res = await request.post(`${BE_URL}/api/auth/signup`, { data: { email: REAL, pw: newPassword(), name: "중복", agreedRequired: true } });
   test.info().annotations.push({ type: "dup", description: `status=${res.status()}` });
   expect(res.ok()).toBe(false);
 });

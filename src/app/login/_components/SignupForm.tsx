@@ -114,7 +114,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
     setError("")
 
     try {
-      await authApi.signup({ name, email, pw: password })
+      await authApi.signup({ name, email, pw: password, agreedRequired: isAgreedRequired })
       setSuccess(true)
       setTimeout(() => {
         onBack()
@@ -278,9 +278,15 @@ export default function SignupForm({ onBack }: SignupFormProps) {
                 onChange={(e) => handleRequiredAgree(e.target.checked)}
               />
               <label htmlFor="agree-required" className="text-xs font-bold cursor-pointer" style={{ color: "#3E2A1E" }}>
-                [필수] 개인정보 수집 및 이용 동의
+                [필수] 이용약관·개인정보 수집 및 이용 동의
               </label>
             </div>
+            <p className="text-xs" style={{ color: "#5C4A39" }}>
+              전문 보기:{" "}
+              <a href="/terms" target="_blank" rel="noopener" className="inline-block py-2 underline underline-offset-2">이용약관<span className="sr-only"> (새 탭)</span></a>
+              {" · "}
+              <a href="/privacy" target="_blank" rel="noopener" className="inline-block py-2 underline underline-offset-2">개인정보처리방침<span className="sr-only"> (새 탭)</span></a>
+            </p>
             <div className="h-24 overflow-y-auto p-2 text-xs bg-stone-100/50 border border-stone-200 rounded leading-relaxed text-stone-600 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-stone-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               RWhiskey은(는) 정보통신망 이용촉진 및 정보보호 등에 관한 법률 및 개인정보보호법에 따라 원활한 서비스 제공을 위해 아래와 같이 최소한의 개인정보를 수집 및 이용합니다.
               <br /><br />

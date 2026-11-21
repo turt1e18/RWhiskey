@@ -6,13 +6,13 @@ import { BE_URL, markEmailVerified, newPassword, redisKeyExists, redisSet } from
 test.describe("AB 인증 우회 시험(메일 수신 제외)", () => {
   test("AB-01 인증 없이 가입 거부 / AB-02 인증 후 가입·중복 거부", async ({ request }) => {
     const email = `m3qa-ab-${Date.now()}@example.test`;
-    const noVerify = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: newPassword(), name: "QA AB" } });
+    const noVerify = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: newPassword(), name: "QA AB", agreedRequired: true } });
     expect(noVerify.ok(), "미인증 가입은 거부").toBe(false);
     markEmailVerified(email);
-    const ok = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: newPassword(), name: "QA AB" } });
+    const ok = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: newPassword(), name: "QA AB", agreedRequired: true } });
     expect(ok.ok(), `가입 status ${ok.status()}`).toBe(true);
     markEmailVerified(email);
-    const dup = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: newPassword(), name: "QA AB" } });
+    const dup = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: newPassword(), name: "QA AB", agreedRequired: true } });
     test.info().annotations.push({ type: "status", description: `unverified=${noVerify.status()} dup=${dup.status()}` });
     expect(dup.ok(), "중복 가입 거부").toBe(false);
   });
@@ -20,7 +20,7 @@ test.describe("AB 인증 우회 시험(메일 수신 제외)", () => {
   test("AB-03 짧은 비밀번호 가입 거부(BE 검증)", async ({ request }) => {
     const email = `m3qa-ab-short-${Date.now()}@example.test`;
     markEmailVerified(email);
-    const res = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: "short1", name: "QA AB" } });
+    const res = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: "short1", name: "QA AB", agreedRequired: true } });
     expect(res.ok()).toBe(false);
   });
 
@@ -28,7 +28,7 @@ test.describe("AB 인증 우회 시험(메일 수신 제외)", () => {
     const email = `m3qa-ab-reset-${Date.now()}@example.test`;
     const pw1 = newPassword();
     markEmailVerified(email);
-    expect((await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: pw1, name: "QA AB" } })).ok()).toBe(true);
+    expect((await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: pw1, name: "QA AB", agreedRequired: true } })).ok()).toBe(true);
 
     const old = await pwRequest.newContext({ baseURL });
     expect((await old.post("/api/auth/login", { data: { email, pw: pw1 } })).ok()).toBe(true);
@@ -65,7 +65,7 @@ test.describe("AB 인증 우회 시험(메일 수신 제외)", () => {
     const email = `m3qa-ab-lock-${Date.now()}@example.test`;
     const pw1 = newPassword();
     markEmailVerified(email);
-    expect((await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: pw1, name: "QA AB" } })).ok()).toBe(true);
+    expect((await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: pw1, name: "QA AB", agreedRequired: true } })).ok()).toBe(true);
     const fe = await pwRequest.newContext({ baseURL });
     for (let i = 0; i < 10; i++) expect((await fe.post("/api/auth/login", { data: { email, pw: pw1 + "x" } })).status()).toBe(401);
     await fe.dispose();
