@@ -55,3 +55,8 @@ worklog.md
 *.erd
 sample*.html
 !README.md
+
+# playwright (산출물·인증 상태·시험 계정 정보는 Git 제외)
+/e2e/.output*/
+/e2e/.report/
+/e2e/.auth/

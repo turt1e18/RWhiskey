@@ -31,6 +31,8 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
+    "@playwright/test": "^1.56.1",
     "@storybook/nextjs-vite": "10.6.4",
     "@types/node": "^20",
     "@types/react": "^18",
