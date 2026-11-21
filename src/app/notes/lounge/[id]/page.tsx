@@ -31,7 +31,7 @@ function Detail({ entry }: { entry: TastingEntry }) {
     <article className="note-paper font-kyobo mx-auto w-full max-w-2xl p-6 text-[#1a1a1a] md:p-10">
       <header className="mb-5 border-b border-dotted border-[#3e2616]/40 pb-4">
         <h1 className="font-kyobo text-2xl font-bold leading-tight md:text-3xl">{entry.whiskeyName}</h1>
-        <p className="mt-2 font-serif text-sm italic text-[#3e2616]/80">
+        <p className="font-pretendard-nums mt-2 text-sm text-[#3e2616]/80">
           {entry.mine && "내가 쓴 글 · "}{entry.publishedAt ? `${dotDate(entry.publishedAt)} 공개` : entry.mine && "나만 보기"}{entry.tastedOn && ` · ${dotDate(entry.tastedOn)} 마심`}{entry.serving && ` · ${SERVING_LABELS[entry.serving]}`}
         </p>
       </header>

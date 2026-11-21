@@ -18,8 +18,8 @@ const Pin = ({ color }: { color: string }) => (
 
 /** 기존 라운지 쪽지와 같은 핀·종이 모양. 작성자는 보이지 않는다. 저장·신고·전체 본문은 상세 화면에서 한다. */
 // "더 보기"로 목록이 길어져도 이미 그려진 카드는 다시 그리지 않는다(entry·index가 그대로면 건너뜀).
-export const LoungeEntryCard = memo(function LoungeEntryCard({ entry, index }: { entry: TastingEntry; index: number }) {
-  const like = useEntryLike(entry);
+export const LoungeEntryCard = memo(function LoungeEntryCard({ entry, index, onLiked }: { entry: TastingEntry; index: number; onLiked?: (id: number, liked: boolean) => void }) {
+  const like = useEntryLike(entry, (liked) => onLiked?.(entry.id, liked));
   const parts: [string, string | null][] = [["향", entry.nose], ["맛", entry.palate], ["여운", entry.finish]];
 
   return (
@@ -36,7 +36,7 @@ export const LoungeEntryCard = memo(function LoungeEntryCard({ entry, index }: {
           {entry.memo && <p className="whitespace-pre-wrap break-words">{entry.memo}</p>}
         </div>
         {entry.rating !== null && <div className="mt-3"><span className="sr-only">5점 만점에 {entry.rating}점</span><span aria-hidden><ReadOnlyStars value={entry.rating} size={16} /></span></div>}
-        <p className="mt-2 font-serif text-xs text-[#3e2616]/75">
+        <p className="font-pretendard-nums mt-2 text-xs text-[#3e2616]/75">
           {entry.publishedAt && `${dotDate(entry.publishedAt)} 공개`}
           {entry.tastedOn && ` · ${dotDate(entry.tastedOn)} 마심`}{entry.serving && ` · ${SERVING_LABELS[entry.serving]}`}
         </p>

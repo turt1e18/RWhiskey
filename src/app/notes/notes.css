@@ -14,6 +14,8 @@
 /* 폰트 설정: 영문은 Cormorant Garamond, 한글은 Pretendard 우선 적용 */
 .notes-font-all * {
   font-family: "Cormorant Garamond", "Pretendard", "Gowun Dodum", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  /* Cormorant의 기본 올드스타일 숫자는 "1"이 "I"처럼 보여 라이닝 숫자로 맞춘다 */
+  font-variant-numeric: lining-nums;
 }
 
 /* 라운지 쪽지 전용: 해당 클래스가 부여된 요소와 그 하위의 모든 텍스트에 손글씨 강제 */

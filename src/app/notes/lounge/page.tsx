@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ApiResponseError } from "@/api/apiClient";
 import { tastingEntryApi, type LoungeSort } from "@/api/tastingEntryApi";
+import { markDeparture, withLike } from "@/lib/notes/listSnapshot";
 import { EntryProblem } from "../_components/entryActions";
 import { LoungeEntryCard } from "../_components/LoungeEntryCard";
 import { BackPill, FOCUS, LoginNeeded, NoteNav, useNoteUser } from "../_components/NoteShell";
@@ -27,7 +29,31 @@ function Lounge() {
   // 탭은 주소(?sort=)에 둔다. 상세에서 뒤로 돌아와도 같은 탭이 열린다.
   const sort: LoungeSort = useSearchParams().get("sort") === "latest" ? "latest" : "popular";
   const setSort = (next: LoungeSort) => router.replace(next === "latest" ? "/notes/lounge?sort=latest" : "/notes/lounge", { scroll: false });
-  const list = usePagedList(ready && uid !== null, sort, (cursor) => tastingEntryApi.lounge(sort, cursor));
+  // 상세에서 돌아오면 보던 목록과 스크롤을 되살린다. 계정·탭마다 따로 보관한다.
+  const snapshotKey = uid === null ? null : `lounge:${uid}:${sort}`;
+  const list = usePagedList(ready && uid !== null, sort, (cursor) => tastingEntryApi.lounge(sort, cursor), snapshotKey);
+  const panel = useRef<HTMLDivElement>(null);
+  const [fresh, setFresh] = useState<{ id: number; tick: number } | null>(null);
+  const { setItems, departure } = list;
+
+  const onLiked = useCallback((id: number, liked: boolean) => setItems((current) => withLike(current, id, liked)), [setItems]);
+
+  // 상세로 나갈 때 어느 글을 열었는지와 스크롤 위치를 남긴다.
+  const rememberDeparture = (event: MouseEvent<HTMLElement>) => {
+    const id = Number((event.target as HTMLElement).closest("a")?.getAttribute("href")?.match(/^\/notes\/lounge\/(\d+)$/)?.[1]);
+    if (snapshotKey && id) markDeparture(window.sessionStorage, `${snapshotKey}:out`, { id, panel: panel.current?.scrollTop ?? 0, win: window.scrollY });
+  };
+
+  // 되살린 뒤: 스크롤 위치를 돌려 놓고, 열었던 글만 최신 값으로 다시 받는다(상세에서 좋아요를 눌렀을 수 있다). 사라진 글은 뺀다.
+  useEffect(() => {
+    if (!departure) return;
+    const frame = requestAnimationFrame(() => { panel.current?.scrollTo({ top: departure.panel }); window.scrollTo({ top: departure.win }); });
+    let live = true;
+    tastingEntryApi.get(departure.id).then((entry) => {
+      if (live) { setItems((current) => current.map((item) => item.id === departure.id ? entry : item)); setFresh({ id: departure.id, tick: Date.now() }); }
+    }).catch((error) => { if (live && error instanceof ApiResponseError && error.status === 404) setItems((current) => current.filter((item) => item.id !== departure.id)); });
+    return () => { live = false; cancelAnimationFrame(frame); };
+  }, [departure, setItems]);
 
   return (
     <div className={`notes-font-all relative min-h-screen w-full overflow-x-hidden ${FOCUS}`}>
@@ -50,15 +76,15 @@ function Lounge() {
               </div>
               <p id="lounge-hint" className="mx-auto mb-1 text-center text-sm text-[#fdfbf7]" style={shout}>{TABS.find((tab) => tab.key === sort)?.hint}</p>
 
-              <div id="lounge-panel" role="tabpanel" aria-labelledby={`lounge-tab-${sort}`} aria-describedby="lounge-hint" className="scrollbar-hidden fade-bottom-cork min-h-0 px-2 pb-8 pt-3 md:flex-1 md:overflow-y-auto">
+              <div ref={panel} id="lounge-panel" role="tabpanel" aria-labelledby={`lounge-tab-${sort}`} aria-describedby="lounge-hint" className="scrollbar-hidden fade-bottom-cork min-h-0 px-2 pb-8 pt-3 md:flex-1 md:overflow-y-auto">
               {list.problem && (
                 <div className={note}>
                   <EntryProblem failure={list.problem} />
                   <button type="button" onClick={() => void list.retry()} className="min-h-11 font-bold underline underline-offset-4">{list.problem.needsLogin ? "로그인했다면 다시 불러오기" : "다시 불러오기"}</button>
                 </div>
               )}
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {list.items.map((entry, index) => <LoungeEntryCard key={`${sort}-${entry.id}`} entry={entry} index={index} />)}
+              <div onClickCapture={rememberDeparture} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {list.items.map((entry, index) => <LoungeEntryCard key={`${sort}-${entry.id}${fresh?.id === entry.id ? `-${fresh.tick}` : ""}`} entry={entry} index={index} onLiked={onLiked} />)}
               </div>
               {list.busy && <p role="status" className={note}>불러오는 중…</p>}
               {list.settled && !list.busy && !list.problem && list.items.length === 0 && (

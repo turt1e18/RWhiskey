@@ -57,7 +57,7 @@ export const ReadOnlyStars = ({ value, size = 18 }: { value?: number; size?: num
         const ratio = remain >= 1 ? 1 : remain >= 0.5 ? 0.5 : 0;
         return <StarIcon key={i} size={size} fillRatio={ratio} />;
       })}
-      <span className="ml-2 text-xs text-[#3e2616]/60 font-serif">{value.toFixed(1)}</span>
+      <span className="font-pretendard-nums ml-2 text-xs text-[#3e2616]/75">{value.toFixed(1)}</span>
     </span>
   );
 };

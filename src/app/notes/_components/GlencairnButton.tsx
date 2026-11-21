@@ -91,7 +91,7 @@ export const GlencairnButton = ({ liked, count, onClick, label = "추천", hideC
           <line x1="6" y1="26" x2="16" y2="26" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
       </motion.span>
-      {!hideCount && <span className="text-xs font-serif">{count}</span>}
+      {!hideCount && <span className="text-sm font-pretendard-nums">{count}</span>}
     </button>
   );
 };

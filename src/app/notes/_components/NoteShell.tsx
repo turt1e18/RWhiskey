@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode, type Ref } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { DiaryFrame } from "./DiaryFrame";
 import { TopNav } from "./TopNav";
@@ -66,8 +66,8 @@ function Leather({ lead }: { lead: string }) {
  * 좁은 화면에서는 표지가 위, 종이가 아래로 쌓인다.
  */
 /** left를 주면 가죽 면에 이동 메뉴 대신 그 내용을 둔다(시음 기록 작성·상세 화면). */
-export function NoteShell({ title, eyebrow = "My Tasting Diary", lead = "오늘의 한 잔을\n새겨 두세요", active = "notes", left, leftPaper = false, back, children }:
-  { title: string; eyebrow?: string; lead?: string; active?: "notes" | "lounge" | "scrapbook"; left?: ReactNode; leftPaper?: boolean; back?: { href: string; label: string }; children: ReactNode }) {
+export function NoteShell({ title, eyebrow = "My Tasting Diary", lead = "오늘의 한 잔을\n새겨 두세요", active = "notes", left, leftPaper = false, back, scrollRef, children }:
+  { scrollRef?: Ref<HTMLDivElement>; title: string; eyebrow?: string; lead?: string; active?: "notes" | "lounge" | "scrapbook"; left?: ReactNode; leftPaper?: boolean; back?: { href: string; label: string }; children: ReactNode }) {
   // 화면이 바뀌면 틀은 그대로 두고 안쪽만 서서히 바뀐다(모션 줄이기 설정이면 바로 그린다).
   const calm = useReducedMotion();
   const swapIn = (x: number) => ({ initial: calm ? false as const : { opacity: 0, x }, animate: { opacity: 1, x: 0 }, transition: { duration: 0.35, ease: "easeOut" as const } });
@@ -82,7 +82,7 @@ export function NoteShell({ title, eyebrow = "My Tasting Diary", lead = "오늘�
                 <h1 className="mt-1 font-serif text-2xl font-bold md:text-3xl">{title}</h1>
               </header>
               {/* 좁은 화면은 페이지가 스크롤된다(손가락 스크롤이 겹치지 않게). 넓은 화면은 목록만 스크롤한다. */}
-              <div className="scrollbar-soft fade-bottom-paper -mx-1 min-h-0 px-1 pb-6 md:flex-1 md:overflow-y-auto md:pr-3">
+              <div ref={scrollRef} className="scrollbar-soft fade-bottom-paper -mx-1 min-h-0 px-1 pb-6 md:flex-1 md:overflow-y-auto md:pr-3">
                 {children}
               </div>
             </motion.main>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { authApi } from "@/api/whiskeyApi";
 import { MeResponse } from "@/type/ApiInterface";
+import { clearSnapshots } from "@/lib/notes/listSnapshot";
 
 interface UserState {
   user: MeResponse | null;
@@ -57,6 +58,7 @@ export const useAuthStore = create<UserState>((set) => ({
     } catch (error) {
       console.error("Logout API failed:", error);
     } finally {
+      if (typeof window !== "undefined") clearSnapshots(window.sessionStorage);
       set({ user: null, isAuthenticated: false });
     }
   }

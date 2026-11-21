@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { ChevronRight, Lock, Share2 } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useEffect, useRef, type MouseEvent } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ApiResponseError } from "@/api/apiClient";
 import { tastingEntryApi } from "@/api/tastingEntryApi";
 import { dotDate, type EntryStatus } from "@/lib/notes/entryDraft";
+import { markDeparture } from "@/lib/notes/listSnapshot";
 import { EntryProblem } from "../_components/entryActions";
 import { EntriesLeaf } from "../_components/EntryLeaf";
 import { LoginNeeded, NoteShell, useNoteUser } from "../_components/NoteShell";
@@ -13,12 +16,43 @@ import { usePagedList } from "../_components/usePagedList";
 const TABS: { key: EntryStatus | null; label: string }[] = [{ key: null, label: "전체" }, { key: "TASTED", label: "마신 기록" }, { key: "WISH", label: "마실 목록" }];
 
 export default function EntriesPage() {
+  return <Suspense fallback={null}><Entries /></Suspense>;
+}
+
+function Entries() {
   const { uid, ready } = useNoteUser();
-  const [tab, setTab] = useState<EntryStatus | null>(null);
-  const list = usePagedList(ready && uid !== null, tab ?? "ALL", (cursor) => tastingEntryApi.mine(tab, cursor));
+  const router = useRouter();
+  const pathname = usePathname();
+  // 탭은 주소(?tab=)에 둔다. 상세에서 뒤로 돌아와도 같은 탭이 열린다.
+  const param = useSearchParams().get("tab");
+  const tab: EntryStatus | null = param === "TASTED" || param === "WISH" ? param : null;
+  const setTab = (next: EntryStatus | null) => router.replace(next ? `${pathname}?tab=${next}` : pathname, { scroll: false });
+  const snapshotKey = uid === null ? null : `entries:${uid}:${tab ?? "ALL"}`;
+  const list = usePagedList(ready && uid !== null, tab ?? "ALL", (cursor) => tastingEntryApi.mine(tab, cursor), snapshotKey);
+  const scroller = useRef<HTMLDivElement>(null);
+  const { setItems, departure } = list;
+
+  // 상세로 나갈 때 어느 글을 열었는지와 스크롤 위치를 남긴다.
+  const rememberDeparture = (event: MouseEvent<HTMLElement>) => {
+    const id = Number((event.target as HTMLElement).closest("a")?.getAttribute("href")?.match(/^\/notes\/(\d+)$/)?.[1]);
+    if (snapshotKey && id) markDeparture(window.sessionStorage, `${snapshotKey}:out`, { id, panel: scroller.current?.scrollTop ?? 0, win: window.scrollY });
+  };
+
+  // 되살린 뒤: 스크롤을 돌려 놓고, 열었던 글만 다시 받는다(상세에서 고치거나 지웠을 수 있다). 사라졌거나 탭 조건에 안 맞으면 뺀다.
+  useEffect(() => {
+    if (!departure) return;
+    const frame = requestAnimationFrame(() => { scroller.current?.scrollTo({ top: departure.panel }); window.scrollTo({ top: departure.win }); });
+    let live = true;
+    const drop = () => { if (live) setItems((current) => current.filter((item) => item.id !== departure.id)); };
+    tastingEntryApi.get(departure.id).then((entry) => {
+      if (!live) return;
+      if (tab && entry.status !== tab) drop(); else setItems((current) => current.map((item) => item.id === departure.id ? entry : item));
+    }).catch((error) => { if (error instanceof ApiResponseError && error.status === 404) drop(); });
+    return () => { live = false; cancelAnimationFrame(frame); };
+  }, [departure, setItems, tab]);
 
   return (
-    <NoteShell title="내 시음 기록" left={<EntriesLeaf items={list.items} hasMore={Boolean(list.next)} ready={list.settled && !list.problem} />}>
+    <NoteShell title="내 시음 기록" scrollRef={scroller} left={<EntriesLeaf items={list.items} hasMore={Boolean(list.next)} ready={list.settled && !list.problem} />}>
       {!ready ? <p role="status" className="mt-6 text-sm">불러오는 중…</p> : uid === null ? <LoginNeeded /> : (
         <>
           <Link href="/notes/new" className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-sm bg-[#3e2616] font-serif tracking-wider text-[#fdfbf7] shadow-md hover:bg-[#3e2616]/90">+ 새 기록 남기기</Link>
@@ -34,7 +68,7 @@ export default function EntriesPage() {
               {!list.problem.needsLogin && <button type="button" onClick={() => void list.retry()} className="min-h-11 text-sm font-bold underline underline-offset-4">다시 불러오기</button>}
             </div>
           )}
-          <ul className="mt-3">
+          <ul onClickCapture={rememberDeparture} className="mt-3">
             {list.items.map((entry, index) => (
               <li key={entry.id} className="border-b border-dotted border-[#3e2616]/30">
                 <Link href={`/notes/${entry.id}`} className="group flex min-h-14 items-center gap-3 px-1 py-3 transition-all hover:bg-[#3e240c]/10">

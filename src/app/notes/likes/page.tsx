@@ -32,7 +32,7 @@ function Detail({ item, onUnliked }: { item: TastingLikeItem; onUnliked: () => v
       <header className="mb-5 border-b border-dotted border-[#3e2616]/40 pb-4">
         <p className="text-xs uppercase tracking-[0.3em] text-[#3e2616]/75">Liked Note</p>
         <h2 className="mt-2 font-serif text-3xl leading-tight md:text-4xl">{entry.whiskeyName}</h2>
-        <p className="mt-2 font-serif text-sm italic text-[#3e2616]/80">
+        <p className="font-pretendard-nums mt-2 text-sm text-[#3e2616]/80">
           {entry.publishedAt && `${dotDate(entry.publishedAt)} 공개`}{entry.tastedOn && ` · ${dotDate(entry.tastedOn)} 마심`}{entry.serving && ` · ${SERVING_LABELS[entry.serving]}`}
         </p>
       </header>
@@ -130,7 +130,7 @@ export default function LikedEntriesPage() {
                   {list.busy && <p role="status" className="mt-4 text-sm">불러오는 중…</p>}
                   {list.settled && !list.busy && !list.problem && !list.next && list.items.length === 0 && (
                     <div>
-                      <p className="font-serif text-sm italic leading-6 text-[#3e2616]/80">아직 좋아요한 글이 없어요. 라운지에서 마음에 드는 글에 좋아요를 눌러 보세요.</p>
+                      <p className="font-serif text-sm leading-6 text-[#3e2616]/80">아직 좋아요한 글이 없어요. 라운지에서 마음에 드는 글에 좋아요를 눌러 보세요.</p>
                       <Link href="/notes/lounge" className="inline-flex min-h-11 items-center text-sm font-bold underline underline-offset-4">라운지 둘러보기</Link>
                     </div>
                   )}
