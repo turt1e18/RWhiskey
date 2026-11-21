@@ -5,7 +5,6 @@ import {
   LoginRequest,
   LoginResponse,
   MeResponse,
-  TagResponse,
   RecommendationSaveRequest,
   NoteResponse,
   NoteReviewRequest,
@@ -80,29 +79,6 @@ export const authApi = {
 /**
  * 위스키 태그(필터용) 관련 API 서비스
  */
-export const whiskeyTagsApi = {
-  getCategories: () => {
-    return apiClient<TagResponse[]>('/api/whiskey/tags/categories', {
-      method: 'GET',
-    });
-  },
-  getFlavors: () => {
-    return apiClient<TagResponse[]>('/api/whiskey/tags/flavors', {
-      method: 'GET',
-    });
-  },
-  getRegions: () => {
-    return apiClient<TagResponse[]>('/api/whiskey/tags/regions', {
-      method: 'GET',
-    });
-  },
-  getStyles: () => {
-    return apiClient<TagResponse[]>('/api/whiskey/tags/styles', {
-      method: 'GET',
-    });
-  },
-};
-
 /**
  * 위스키 추천(Recommendation) 관련 API 서비스
  */

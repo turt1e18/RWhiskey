@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ApiResponseError } from "@/api/apiClient";
 import { describeEntryError, tastingEntryApi } from "@/api/tastingEntryApi";
 import { SERVING_LABELS, dotDate, entryFailure, type SaveFailure, type TastingEntry } from "@/lib/notes/entryDraft";
@@ -64,6 +64,8 @@ function Detail({ entry }: { entry: TastingEntry }) {
 export default function LoungeEntryPage() {
   const { uid, ready } = useNoteUser();
   const raw = useParams<{ id: string }>().id;
+  // 들어온 탭(?sort=)으로 돌아간다(BUG-4)
+  const backHref = useSearchParams().get("sort") === "latest" ? "/notes/lounge?sort=latest" : "/notes/lounge";
   const id = /^[1-9][0-9]{0,15}$/.test(raw) ? Number(raw) : null;
   const [entry, setEntry] = useState<TastingEntry | null>(null);
   const [problem, setProblem] = useState<SaveFailure | null>(null);
@@ -101,7 +103,7 @@ export default function LoungeEntryPage() {
           )}
         </main>
       </div>
-      <BackPill href="/notes/lounge" label="← 라운지" />
+      <BackPill href={backHref} label="← 라운지" />
       <NoteNav active="lounge" />
     </div>
   );

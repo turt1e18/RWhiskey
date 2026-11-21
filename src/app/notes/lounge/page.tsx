@@ -84,7 +84,7 @@ function Lounge() {
                 </div>
               )}
               <div onClickCapture={rememberDeparture} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {list.items.map((entry, index) => <LoungeEntryCard key={`${sort}-${entry.id}${fresh?.id === entry.id ? `-${fresh.tick}` : ""}`} entry={entry} index={index} onLiked={onLiked} />)}
+                {list.items.map((entry, index) => <LoungeEntryCard key={`${sort}-${entry.id}${fresh?.id === entry.id ? `-${fresh.tick}` : ""}`} entry={entry} index={index} onLiked={onLiked} sort={sort} />)}
               </div>
               {list.busy && <p role="status" className={note}>불러오는 중…</p>}
               {list.settled && !list.busy && !list.problem && list.items.length === 0 && (

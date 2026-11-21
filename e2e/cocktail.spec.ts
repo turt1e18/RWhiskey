@@ -145,16 +145,18 @@ test.describe("CR 칵테일 추천", () => {
     await expect(pressed(page, /민트/)).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("CR-08 응답 지연(무응답 모의) 12초: 로딩이 계속되는지 관찰(타임아웃 안내 유무)", async ({ page }) => {
+  test("CR-08 무응답(모의) 60초 → 기다리기 중단 안내, 입력 유지, '다시 시도' 가능", async ({ page }, info) => {
+    // 60초를 실제로 기다리므로 데스크톱에서만 돈다(브라우저별 차이 없는 fetch 제한 시간)
+    test.skip(info.project.name !== "desktop", "60초 대기 시험은 desktop 한 번만");
+    test.setTimeout(120_000);
     await mockCommon(page);
     await page.route("**/api/gemini", () => { /* 응답하지 않음 */ });
     await fillOrder(page);
     await submit(page).click();
-    await page.waitForTimeout(12_000);
-    const alerts = await page.getByRole("alert").count();
-    const stillForm = await submit(page).isVisible();
-    test.info().annotations.push({ type: "observed", description: `12초 후 alert=${alerts}, 주문서 버튼 보임=${stillForm} (FE /api/gemini fetch 에 타임아웃 없음)` });
-    expect(stillForm).toBe(false); // 로딩 화면이 유지된다(타임아웃 복구 UI 는 없음)
+    await expect(page.getByRole("alert").filter({ hasText: "응답이 너무 오래 걸려 기다리기를 멈췄어요" })).toBeVisible({ timeout: 75_000 });
+    await expect(pressed(page, "상큼한")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByLabel("바텐더에게 남기는 메모 (선택)")).toHaveValue("[M3-QA] 비 오는 날");
+    await expect(page.getByRole("button", { name: "다시 시도" })).toBeVisible();
   });
 
   test("CR-09 추천 버튼 연타 → AI 요청 1건", async ({ page }) => {

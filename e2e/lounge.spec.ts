@@ -58,7 +58,7 @@ test.describe("LG 시음 노트 라운지 (b 계정 시점)", () => {
     const { ctx, page } = await rolePage(browser, "b", info.project.use as Record<string, unknown>);
     await page.goto("/notes/lounge?sort=latest");
     await page.getByRole("link", { name: `${PUB} 자세히 보기` }).click();
-    await expect(page).toHaveURL(new RegExp(`/notes/lounge/${pub.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/notes/lounge/${pub.id}\\?sort=latest$`));
     await expect(page.getByRole("heading", { name: PUB })).toBeVisible();
     await expect(page.getByText(`${TAG} 공개 메모`)).toBeVisible();
     await expect(page.getByRole("button", { name: "신고" })).toBeVisible();
@@ -173,14 +173,14 @@ test.describe("LG 시음 노트 라운지 (b 계정 시점)", () => {
     const { ctx, page } = await rolePage(browser, "b", info.project.use as Record<string, unknown>);
     await page.goto("/notes/lounge?sort=latest");
     await page.getByRole("link", { name: `${PUB} 자세히 보기` }).click();
-    await expect(page).toHaveURL(new RegExp(`/notes/lounge/${pub.id}$`));
-    // 브라우저 뒤로 가기는 탭을 유지한다. "← 라운지" 링크는 href="/notes/lounge"(sort 없음)라 인기 탭으로 돌아간다(앱 UX 이슈로 보고).
+    await expect(page).toHaveURL(new RegExp(`/notes/lounge/${pub.id}\\?sort=latest$`));
+    // 브라우저 뒤로 가기와 "← 라운지" 링크 모두 최신 탭으로 돌아온다(BUG-4 수정)
     await page.goBack();
     await expect(page.getByRole("tab", { name: "최신" })).toHaveAttribute("aria-selected", "true");
     await page.getByRole("link", { name: `${PUB} 자세히 보기` }).click();
     await page.getByRole("link", { name: "← 라운지" }).click();
-    const pillKeepsTab = (await page.getByRole("tab", { name: "최신" }).getAttribute("aria-selected")) === "true";
-    info.annotations.push({ type: "observed", description: `'← 라운지' 링크로 돌아오면 최신 탭 유지=${pillKeepsTab}` });
+    await expect(page).toHaveURL(/\/notes\/lounge\?sort=latest$/);
+    await expect(page.getByRole("tab", { name: "최신" })).toHaveAttribute("aria-selected", "true");
     await page.goto("/notes/lounge?sort=latest");
     await page.reload();
     await expect(page.getByRole("tab", { name: "최신" })).toHaveAttribute("aria-selected", "true");
