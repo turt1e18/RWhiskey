@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { RESEND_COOLDOWN_SEC, useCountdown } from "@/lib/useCountdown"
 import { authApi } from "@/api/whiskeyApi"
 
 interface SignupFormProps {
@@ -25,6 +26,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
   const [isAllAgreed, setIsAllAgreed] = useState(false)
   
   const [error, setError] = useState("")
+  const [resendLeft, startResendWait] = useCountdown()
   const [success, setSuccess] = useState(false)
 
   // 이메일 인증 코드 발송
@@ -36,8 +38,14 @@ export default function SignupForm({ onBack }: SignupFormProps) {
     setError("")
     setIsSendingCode(true)
     try {
-      await authApi.sendVerificationCode(email)
+      const res = await authApi.sendVerificationCode(email)
+      // 메일 발송 실패는 200 + success=false 로 온다
+      if (!res.success) {
+        setError("코드 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.")
+        return
+      }
       setIsCodeSent(true)
+      startResendWait(RESEND_COOLDOWN_SEC)
       alert("인증 코드가 발송되었습니다.")
     } catch (err: any) {
       setError(err.message || "코드 발송에 실패했습니다.")
@@ -195,11 +203,11 @@ export default function SignupForm({ onBack }: SignupFormProps) {
             <button
               type="button"
               onClick={handleSendCode}
-              disabled={isSendingCode || isEmailVerified}
+              disabled={isSendingCode || isEmailVerified || resendLeft > 0}
               className="btn-stamp text-xs whitespace-nowrap disabled:opacity-50"
               style={{ color: "#3E2A1E", padding: "0.4rem 0.8rem" }}
             >
-              {isCodeSent ? "재발송" : "인증 요청"}
+              {resendLeft > 0 ? `재발송 (${resendLeft}초)` : isCodeSent ? "재발송" : "인증 요청"}
             </button>
           </div>
         </div>

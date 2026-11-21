@@ -36,7 +36,11 @@ export function account(role: string): Account {
 // 로컬 시험 환경 전용: 이메일 수신 없이 BE 회원가입 경로를 쓰기 위해 "인증 완료" 플래그만 Redis에 세운다.
 // 실제 메일 수신 검증은 auth-email.spec.ts 에서 따로 한다.
 export function markEmailVerified(email: string) {
-  execFileSync("docker", ["exec", REDIS_CONTAINER, "redis-cli", "-n", REDIS_DB, "SET", `email:verify:verified:${email}`, "true", "EX", "1800"], { stdio: "ignore" });
+  redisSet(`email:verify:verified:${email}`, "true", 1800);
+}
+
+export function redisSet(key: string, value: string, ttlSec: number) {
+  execFileSync("docker", ["exec", REDIS_CONTAINER, "redis-cli", "-n", REDIS_DB, "SET", key, value, "EX", String(ttlSec)], { stdio: "ignore" });
 }
 
 export function redisKeyExists(key: string): boolean {
