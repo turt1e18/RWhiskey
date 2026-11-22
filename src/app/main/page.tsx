@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useDialogFocus } from "@/lib/useDialogFocus";
 import RWhiskeyLogo from "./_components/LogoText";
 import MainRouterButton from "./_components/MainRouterButton";
 import NoticeModal from "./_components/NoticeModal";
 import HowToOrder from "./_components/HowToOrder";
+import sampleBottle from "./_components/sample-bottle.webp";
 import { useAuthStore } from "@/store/authStore";
 
 export default function MainScreen() {
@@ -398,10 +400,11 @@ export default function MainScreen() {
                 오늘의 추천
               </p>
               <div className="mt-3 w-full h-[6.5rem] lg:h-[7.5rem] flex items-center justify-center overflow-hidden">
-                <img
+                <Image
                   alt=""
-                  className="max-h-full object-contain"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYKP5t3Gq3nsLh5zVKaC4O0xCsaZlMlgRPphdkfsPYCu_C7d6UKnbVv08o7FUoKrMfQPcN8U5EF9Iox9wxQy3NtU1yHyIkgyDcrXFK4kzv7CDcXu8M7-LwUHOE-a3rnhiwMXYzvAyziYjjBoNP0pYH3_wu46advcvc0p_OHsRler7y91mPaLpLcZ5o9Rgs8aAZJ0c6rxYinNBKfHZtmlcoAMEirnrxRfv84ZFVF3QpSLX34OoUkTM10eHu3K6oq9j0DZhRyeQZl2-T"
+                  src={sampleBottle}
+                  sizes="120px"
+                  className="h-full w-auto object-contain"
                 />
               </div>
               <p className="mt-3 font-serif text-2xl font-semibold leading-tight text-black">라가불린 16년</p>
