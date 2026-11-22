@@ -47,8 +47,8 @@ export default function BeforeScreen(props: any) {
         console.error("Failed to fetch next order number:", err);
       }
     }
-    fetchNextNo();
-  }, []);
+    if (isAuthenticated) fetchNextNo();
+  }, [isAuthenticated]);
 
   // 옵션 데이터
   const weatherOptions = ["맑음", "흐림", "비", "추움", "기타"];

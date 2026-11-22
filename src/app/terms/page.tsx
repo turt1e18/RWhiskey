@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PaperPage } from "@/components/PaperPage";
 
-export const metadata: Metadata = { title: "이용약관 | 데일리 바텐더" };
+export const metadata: Metadata = { title: "이용약관" };
 
 // shortcut: 서비스 실제 기능 기준의 초안이다. 운영 공개 전 법적 검토와 시행일 확정이 필요하다.
 const H = "font-serif text-base font-bold mt-6 mb-2";
