@@ -18,7 +18,7 @@ const geistMono = localFont({
 });
 
 const kyobo = localFont({
-  src: "./fonts/KyoboHandwriting2024psw.ttf",
+  src: "./fonts/KyoboHandwriting2024psw.woff2",
   variable: "--font-kyobo"
 });
 

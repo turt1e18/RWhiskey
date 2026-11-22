@@ -2,15 +2,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Gowun+Dodum&display=swap');
 
-/* 로컬 교보 손글씨 폰트 직접 정의 */
-@font-face {
-  font-family: 'KyoboHandwriting2024psw';
-  src: url('../fonts/KyoboHandwriting2024psw.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* 폰트 설정: 영문은 Cormorant Garamond, 한글은 Pretendard 우선 적용 */
 .notes-font-all * {
   font-family: "Cormorant Garamond", "Pretendard", "Gowun Dodum", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
@@ -20,7 +11,8 @@
 
 /* 라운지 쪽지 전용: 해당 클래스가 부여된 요소와 그 하위의 모든 텍스트에 손글씨 강제 */
 .font-kyobo, .font-kyobo * {
-  font-family: 'KyoboHandwriting2024psw', 'Pretendard', cursive !important;
+  /* 루트 레이아웃이 불러온 교보 손글씨(--font-kyobo)를 같이 써서 같은 폰트를 두 번 받지 않는다 */
+  font-family: var(--font-kyobo), 'Pretendard', cursive !important;
 }
 
 /* 어두운 나무 책상 + 중앙 핀 조명 */
