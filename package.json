@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --import ./scripts/test-hooks.mjs --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\"",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open --ci",
     "build-storybook": "storybook build",
     "postbuild": "next-sitemap"
