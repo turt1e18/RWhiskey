@@ -115,6 +115,36 @@ test.describe("CN 가입 동의", () => {
     await expect.poll(() => body?.agreedRequired).toBe(true);
     await ctx.close();
   });
+
+  test("CN-03 실제 가입: 발송·인증만 모의, 가입은 FE→BE→DB 저장 후 로그인 가능", async ({ browser }) => {
+    const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const page = await ctx.newPage();
+    page.on("dialog", (d) => d.accept());
+    const email = `m3qa-cn-real-${Date.now()}@example.test`;
+    const pw = newPassword();
+    markEmailVerified(email);
+    await page.route("**/api/auth/email/send", (r) => r.fulfill({ json: { success: true, message: "sent" } }));
+    await page.route("**/api/auth/email/verify", (r) => r.fulfill({ json: { success: true, message: "ok" } }));
+    await page.goto("/login");
+    await expect(async () => {
+      await page.getByRole("button", { name: "회원 명부에 등록하기" }).click({ timeout: 1000 });
+      await expect(page.locator("#signup-email")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 20_000 });
+    await page.locator("#signup-name").fill("QA 동의 실가입");
+    await page.locator("#signup-email").fill(email);
+    await page.locator("#signup-email").locator("xpath=..").getByRole("button", { name: "인증 요청" }).click();
+    await page.locator("#verification-code").fill("123456");
+    await page.locator("#verification-code").locator("xpath=..").getByRole("button").click();
+    await page.locator("#signup-password").fill(pw);
+    await page.locator("#agree-required").check();
+    const signup = page.waitForResponse((r) => r.url().includes("/api/auth/signup"));
+    await page.getByRole("button", { name: "회원 명단에 등록하기" }).click();
+    expect((await signup).status(), "실제 BE 가입 응답").toBeLessThan(300);
+    const be = await pwRequest.newContext({ baseURL: BE_URL });
+    expect((await be.post("/api/auth/login", { data: { email, pw } })).ok(), "가입 계정 로그인").toBeTruthy();
+    await be.dispose();
+    await ctx.close();
+  });
 });
 
 test.describe("HD 보안 헤더·방침 페이지", () => {
