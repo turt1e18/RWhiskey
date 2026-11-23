@@ -18,7 +18,8 @@ export default function SignupForm({ onBack }: SignupFormProps) {
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [isVerifyingCode, setIsVerifyingCode] = useState(false)
   
-  const [isCodeSent, setIsCodeSent] = useState(false)
+  // 마지막으로 코드를 보낸 주소. 코드칸·재발송 대기는 이 주소에만 해당한다(BE 재발송 제한도 주소별).
+  const [sentEmail, setSentEmail] = useState("")
   const [isEmailVerified, setIsEmailVerified] = useState(false)
   
   const [isAgreedRequired, setIsAgreedRequired] = useState(false)
@@ -28,6 +29,16 @@ export default function SignupForm({ onBack }: SignupFormProps) {
   const [error, setError] = useState("")
   const [resendLeft, startResendWait] = useCountdown()
   const [success, setSuccess] = useState(false)
+
+  const isCodeSent = sentEmail !== "" && email === sentEmail
+  const isWaiting = resendLeft > 0 && isCodeSent
+
+  // 이메일을 고치면 이전 주소의 코드 입력·오류를 지운다(인증 완료 뒤에는 칸이 잠겨 있다)
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    setVerificationCode("")
+    setError("")
+  }
 
   // 이메일 인증 코드 발송
   const handleSendCode = async () => {
@@ -44,7 +55,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
         setError("코드 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.")
         return
       }
-      setIsCodeSent(true)
+      setSentEmail(email)
       startResendWait(RESEND_COOLDOWN_SEC)
       alert("인증 코드가 발송되었습니다.")
     } catch (err: any) {
@@ -195,7 +206,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
               className="input-dotted flex-1"
               placeholder="이메일"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               autoComplete="email"
               disabled={isEmailVerified}
               required
@@ -203,11 +214,11 @@ export default function SignupForm({ onBack }: SignupFormProps) {
             <button
               type="button"
               onClick={handleSendCode}
-              disabled={isSendingCode || isEmailVerified || resendLeft > 0}
+              disabled={isSendingCode || isEmailVerified || isWaiting}
               className="btn-stamp text-xs whitespace-nowrap disabled:opacity-50"
               style={{ color: "#3E2A1E", padding: "0.4rem 0.8rem" }}
             >
-              {resendLeft > 0 ? `재발송 (${resendLeft}초)` : isCodeSent ? "재발송" : "인증 요청"}
+              {isWaiting ? `재발송 (${resendLeft}초)` : isCodeSent ? "재발송" : "인증 요청"}
             </button>
           </div>
         </div>

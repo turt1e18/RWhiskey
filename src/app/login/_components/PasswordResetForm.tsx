@@ -18,21 +18,25 @@ export default function PasswordResetForm({ onBack }: PasswordResetFormProps) {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
 
-  const [isCodeSent, setIsCodeSent] = useState(false);
+  // 마지막으로 코드를 보낸 주소. 코드칸·재발송 대기는 이 주소에만 해당한다(BE 재발송 제한도 주소별).
+  const [sentEmail, setSentEmail] = useState("");
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   const [error, setError] = useState("");
   const [resendLeft, startResendWait] = useCountdown();
   const [success, setSuccess] = useState(false);
 
+  const isCodeSent = sentEmail !== "" && email === sentEmail;
+  const isWaiting = resendLeft > 0 && isCodeSent;
+
   // 이메일 주소 수정 시 인증 상태 초기화
   const handleEmailChange = (value: string) => {
     setEmail(value);
-    if (isEmailVerified || isCodeSent) {
+    setVerificationCode("");
+    setError("");
+    if (isEmailVerified) {
       setIsEmailVerified(false);
-      setIsCodeSent(false);
-      setVerificationCode("");
-      setError("");
+      setSentEmail(""); // 인증에 쓴 코드는 소모됐으므로 되돌아와도 코드칸을 다시 띄우지 않는다
     }
   };
 
@@ -51,7 +55,7 @@ export default function PasswordResetForm({ onBack }: PasswordResetFormProps) {
         setError("코드 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
         return;
       }
-      setIsCodeSent(true);
+      setSentEmail(email);
       startResendWait(RESEND_COOLDOWN_SEC);
       alert("인증 코드가 발송되었습니다.");
     } catch (err: any) {
@@ -168,11 +172,11 @@ export default function PasswordResetForm({ onBack }: PasswordResetFormProps) {
             <button
               type="button"
               onClick={handleSendCode}
-              disabled={isSendingCode || isEmailVerified || resendLeft > 0}
+              disabled={isSendingCode || isEmailVerified || isWaiting}
               className="btn-stamp text-xs whitespace-nowrap disabled:opacity-50"
               style={{ color: "#3E2A1E", padding: "0.4rem 0.8rem" }}
             >
-              {resendLeft > 0 ? `재발송 (${resendLeft}초)` : isCodeSent && !isEmailVerified ? "재발송" : "인증 요청"}
+              {isWaiting ? `재발송 (${resendLeft}초)` : isCodeSent && !isEmailVerified ? "재발송" : "인증 요청"}
             </button>
           </div>
         </div>
