@@ -61,4 +61,34 @@ test.describe("RS 인증 코드 재전송 제한", () => {
       await expect(sendButton(page, f.sel)).toBeDisabled();
     });
   }
+
+  test("RS-04 재설정: 코드 발송·인증 뒤 이메일을 고치면 인증 상태가 초기화된다(발송·인증만 모의)", async ({ page }) => {
+    await page.route("**/api/auth/email/send", (r) => r.fulfill({ json: { success: true, message: "sent" } }));
+    await page.route("**/api/auth/email/verify", (r) => r.fulfill({ json: { success: true, message: "ok" } }));
+    await openForm(page, "암호를 잊으셨나요?", "#reset-email");
+    const email = `m3qa-rs-reset-${Date.now()}@example.test`;
+    await page.locator("#reset-email").fill(email);
+    await sendButton(page, "#reset-email").click();
+    await page.locator("#verification-code").fill("123456");
+
+    // 코드 입력 중 이메일 수정 → 코드 칸과 입력값이 사라진다
+    await page.locator("#reset-email").fill(`x${email}`);
+    await expect(page.locator("#verification-code")).toBeHidden();
+
+    // 재발송 대기(60초)는 이메일을 고쳐도 유지된다 → 새로 열어 인증 완료 뒤 이메일 수정 → 새 비밀번호 칸이 사라진다
+    await expect(sendButton(page, "#reset-email")).toBeDisabled();
+    await page.reload();
+    await expect(async () => {
+      await page.getByRole("button", { name: "암호를 잊으셨나요?" }).click({ timeout: 1000 });
+      await expect(page.locator("#reset-email")).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 20_000 });
+    await page.locator("#reset-email").fill(email);
+    await sendButton(page, "#reset-email").click();
+    await page.locator("#verification-code").fill("123456");
+    await page.locator("#verification-code").locator("xpath=..").getByRole("button").click();
+    await expect(page.locator("#new-password")).toBeVisible();
+    await page.locator("#reset-email").fill(`y${email}`);
+    await expect(page.locator("#new-password")).toBeHidden();
+    await expect(page.getByText("본인 인증이 완료되었습니다")).toBeHidden();
+  });
 });

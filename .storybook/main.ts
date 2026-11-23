@@ -10,7 +10,8 @@ const appTailwind = loadConfig(resolve(root, 'tailwind.config.ts'));
 
 const config: StorybookConfig = {
   stories: ['./stories/**/*.stories.@(ts|tsx)'],
-  staticDirs: [{ from: './assets', to: '/storybook-assets' }, { from: '../public/pixel-bar', to: '/pixel-bar' }],
+  // public/ 은 @storybook/nextjs-vite 가 루트로 자동 복사한다(/pixel-bar 포함). 다시 적으면 동시 복사로 EEXIST 가 난다.
+  staticDirs: [{ from: './assets', to: '/storybook-assets' }],
   framework: { name: '@storybook/nextjs-vite', options: {} },
   core: { disableTelemetry: true },
   env: () => ({}),

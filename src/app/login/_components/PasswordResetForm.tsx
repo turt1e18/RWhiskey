@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { RESEND_COOLDOWN_SEC, useCountdown } from "@/lib/useCountdown";
 import { authApi } from "@/api/whiskeyApi";
 
@@ -26,14 +26,15 @@ export default function PasswordResetForm({ onBack }: PasswordResetFormProps) {
   const [success, setSuccess] = useState(false);
 
   // 이메일 주소 수정 시 인증 상태 초기화
-  useEffect(() => {
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
     if (isEmailVerified || isCodeSent) {
       setIsEmailVerified(false);
       setIsCodeSent(false);
       setVerificationCode("");
       setError("");
     }
-  }, [email]);
+  };
 
   // 이메일 인증 코드 발송
   const handleSendCode = async () => {
@@ -160,7 +161,7 @@ export default function PasswordResetForm({ onBack }: PasswordResetFormProps) {
               className="input-dotted flex-1"
               placeholder="이메일"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               autoComplete="email"
               required
             />
