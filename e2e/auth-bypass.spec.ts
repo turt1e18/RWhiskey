@@ -1,9 +1,10 @@
 import { test, expect, request as pwRequest } from "@playwright/test";
-import { BE_URL, markEmailVerified, newPassword, redisKeyExists, redisSet } from "./support/accounts";
+import { BE_URL, clearLocalIpLimits, markEmailVerified, newPassword, redisKeyExists, redisSet } from "./support/accounts";
 
 // 메일 코드 수신을 건너뛰고(사용자 결정) Redis "인증 완료" 표시만 세운 뒤 BE 가입·재설정 규칙을 확인한다.
 // 실제 메일 수신·코드 입력 UI 성공 경로는 검증하지 않는다.
 test.describe("AB 인증 우회 시험(메일 수신 제외)", () => {
+  test.beforeEach(() => clearLocalIpLimits());
   test("AB-01 인증 없이 가입 거부 / AB-02 인증 후 가입·중복 거부", async ({ request }) => {
     const email = `m3qa-ab-${Date.now()}@example.test`;
     const noVerify = await request.post(`${BE_URL}/api/auth/signup`, { data: { email, pw: newPassword(), name: "QA AB", agreedRequired: true } });

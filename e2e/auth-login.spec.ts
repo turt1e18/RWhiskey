@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { account } from "./support/accounts";
+import { account, clearLocalIpLimits } from "./support/accounts";
 
 // 계정 유무와 관계없이 같은 문구여야 한다(401 → loginErrorMessage)
 const FAIL_MSG = /이메일 또는 비밀번호가 올바르지 않아요/;
@@ -20,6 +20,7 @@ async function me(page: Page) {
 }
 
 test.describe("LI 로그인·세션", () => {
+  test.beforeEach(() => clearLocalIpLimits());
   test("LI-01 정상 로그인 → /main 이동, 새로고침·이동 후 세션 유지", async ({ page }) => {
     const a = account("a");
     await fillLogin(page, a.email, a.password);

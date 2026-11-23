@@ -43,6 +43,12 @@ export function redisSet(key: string, value: string, ttlSec: number) {
   execFileSync("docker", ["exec", REDIS_CONTAINER, "redis-cli", "-n", REDIS_DB, "SET", key, value, "EX", String(ttlSec)], { stdio: "ignore" });
 }
 
+// 모든 요청이 같은 로컬 IP라 기기 프로젝트 3개를 돌면 IP 실패 한도(15분 30회)에 걸린다. 인증 시험 전에 비운다.
+export function clearLocalIpLimits() {
+  const keys = ["127.0.0.1", "0:0:0:0:0:0:0:1"].flatMap((ip) => [`auth:login:ip-fail:${ip}`, `email:verify:ip-fail:${ip}`]);
+  execFileSync("docker", ["exec", REDIS_CONTAINER, "redis-cli", "-n", REDIS_DB, "DEL", ...keys], { stdio: "ignore" });
+}
+
 export function redisKeyExists(key: string): boolean {
   return execFileSync("docker", ["exec", REDIS_CONTAINER, "redis-cli", "-n", REDIS_DB, "EXISTS", key]).toString().trim() === "1";
 }
