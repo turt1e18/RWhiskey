@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { RESEND_COOLDOWN_SEC, useCountdown } from "@/lib/useCountdown"
 import { authApi } from "@/api/whiskeyApi"
 
 interface SignupFormProps {
@@ -17,7 +18,8 @@ export default function SignupForm({ onBack }: SignupFormProps) {
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [isVerifyingCode, setIsVerifyingCode] = useState(false)
   
-  const [isCodeSent, setIsCodeSent] = useState(false)
+  // 마지막으로 코드를 보낸 주소. 코드칸·재발송 대기는 이 주소에만 해당한다(BE 재발송 제한도 주소별).
+  const [sentEmail, setSentEmail] = useState("")
   const [isEmailVerified, setIsEmailVerified] = useState(false)
   
   const [isAgreedRequired, setIsAgreedRequired] = useState(false)
@@ -25,7 +27,18 @@ export default function SignupForm({ onBack }: SignupFormProps) {
   const [isAllAgreed, setIsAllAgreed] = useState(false)
   
   const [error, setError] = useState("")
+  const [resendLeft, startResendWait] = useCountdown()
   const [success, setSuccess] = useState(false)
+
+  const isCodeSent = sentEmail !== "" && email === sentEmail
+  const isWaiting = resendLeft > 0 && isCodeSent
+
+  // 이메일을 고치면 이전 주소의 코드 입력·오류를 지운다(인증 완료 뒤에는 칸이 잠겨 있다)
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    setVerificationCode("")
+    setError("")
+  }
 
   // 이메일 인증 코드 발송
   const handleSendCode = async () => {
@@ -36,8 +49,14 @@ export default function SignupForm({ onBack }: SignupFormProps) {
     setError("")
     setIsSendingCode(true)
     try {
-      await authApi.sendVerificationCode(email)
-      setIsCodeSent(true)
+      const res = await authApi.sendVerificationCode(email)
+      // 메일 발송 실패는 200 + success=false 로 온다
+      if (!res.success) {
+        setError("코드 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.")
+        return
+      }
+      setSentEmail(email)
+      startResendWait(RESEND_COOLDOWN_SEC)
       alert("인증 코드가 발송되었습니다.")
     } catch (err: any) {
       setError(err.message || "코드 발송에 실패했습니다.")
@@ -106,7 +125,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
     setError("")
 
     try {
-      await authApi.signup({ name, email, pw: password })
+      await authApi.signup({ name, email, pw: password, agreedRequired: isAgreedRequired })
       setSuccess(true)
       setTimeout(() => {
         onBack()
@@ -187,7 +206,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
               className="input-dotted flex-1"
               placeholder="이메일"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               autoComplete="email"
               disabled={isEmailVerified}
               required
@@ -195,11 +214,11 @@ export default function SignupForm({ onBack }: SignupFormProps) {
             <button
               type="button"
               onClick={handleSendCode}
-              disabled={isSendingCode || isEmailVerified}
+              disabled={isSendingCode || isEmailVerified || isWaiting}
               className="btn-stamp text-xs whitespace-nowrap disabled:opacity-50"
               style={{ color: "#3E2A1E", padding: "0.4rem 0.8rem" }}
             >
-              {isCodeSent ? "재발송" : "인증 요청"}
+              {isWaiting ? `재발송 (${resendLeft}초)` : isCodeSent ? "재발송" : "인증 요청"}
             </button>
           </div>
         </div>
@@ -270,9 +289,15 @@ export default function SignupForm({ onBack }: SignupFormProps) {
                 onChange={(e) => handleRequiredAgree(e.target.checked)}
               />
               <label htmlFor="agree-required" className="text-xs font-bold cursor-pointer" style={{ color: "#3E2A1E" }}>
-                [필수] 개인정보 수집 및 이용 동의
+                [필수] 이용약관·개인정보 수집 및 이용 동의
               </label>
             </div>
+            <p className="text-xs" style={{ color: "#5C4A39" }}>
+              전문 보기:{" "}
+              <a href="/terms" target="_blank" rel="noopener" className="inline-block py-2 underline underline-offset-2">이용약관<span className="sr-only"> (새 탭)</span></a>
+              {" · "}
+              <a href="/privacy" target="_blank" rel="noopener" className="inline-block py-2 underline underline-offset-2">개인정보처리방침<span className="sr-only"> (새 탭)</span></a>
+            </p>
             <div className="h-24 overflow-y-auto p-2 text-xs bg-stone-100/50 border border-stone-200 rounded leading-relaxed text-stone-600 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-stone-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               RWhiskey은(는) 정보통신망 이용촉진 및 정보보호 등에 관한 법률 및 개인정보보호법에 따라 원활한 서비스 제공을 위해 아래와 같이 최소한의 개인정보를 수집 및 이용합니다.
               <br /><br />

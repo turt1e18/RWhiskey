@@ -105,7 +105,7 @@ export default function AfterScreen({
       <nav className="flex items-center justify-between px-6 py-4 w-full max-w-2xl mx-auto shrink-0">
         <button
           onClick={() => setSwitchState(0)}
-          className="flex items-center space-x-2 text-stone-500 hover:text-white transition-colors"
+          className="flex items-center space-x-2 text-stone-400 hover:text-white transition-colors"
         >
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></path>

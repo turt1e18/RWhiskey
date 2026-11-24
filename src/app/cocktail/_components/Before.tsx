@@ -286,27 +286,27 @@ export default function BeforeScreen(props: BeforeScreenProps) {
             <div className="flex-1 space-y-8 font-sans">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
                 <section className="font-sans">
-                  <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                  <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">01.</span> 칵테일 경험
-                  </h3>
+                  </h2>
                   <div className="flex flex-col gap-2 font-sans">
                     <ChoiceButton selected={!tried} onClick={() => chooseExperience(false)} label="처음이에요" />
                     <ChoiceButton selected={tried} onClick={() => chooseExperience(true)} label="마셔 본 적 있어요" />
                   </div>
                 </section>
                 <section className="font-sans">
-                  <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                  <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">02.</span> 어디서 즐기실 건가요?
-                  </h3>
+                  </h2>
                   <div className="flex flex-col gap-2 font-sans">
                     <ChoiceButton selected={!atHome} onClick={() => choosePlace(false)} label="바에서 주문할래요" />
                     <ChoiceButton selected={atHome} onClick={() => choosePlace(true)} label="집에서 만들래요" hint="재료와 만드는 법까지 알려 드려요" />
                   </div>
                 </section>
                 <section className="font-sans">
-                  <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                  <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">03.</span> 술을 넣을까요?
-                  </h3>
+                  </h2>
                   <div className="flex flex-col gap-2 font-sans">
                     <ChoiceButton selected={!request.isNonAlcoholic} onClick={() => setRequest(prev => ({ ...prev, isNonAlcoholic: false }))} label="알코올 포함" />
                     <ChoiceButton selected={request.isNonAlcoholic} onClick={() => setRequest(prev => ({ ...prev, isNonAlcoholic: true }))} label="알코올 없이" />
@@ -314,9 +314,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
                 </section>
                 {showStrength && (
                   <section className="font-sans">
-                    <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                    <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                       <span className="text-red-800 text-xs font-sans">04.</span> 도수는 어느 정도로 할까요?
-                    </h3>
+                    </h2>
                     <div className="flex flex-col gap-2 font-sans">
                       {strengthOptions.map((opt) => (
                         <ChoiceButton key={String(opt.value)} selected={(request.strength ?? null) === opt.value}
@@ -330,9 +330,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               {/* 3. 기주 선택 (무알콜이면 숨김) */}
               {hasBase && (
                 <section className="animate-in fade-in slide-in-from-top-4 duration-500 font-sans border-t border-[#4a3728]/10 pt-6">
-                  <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                  <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">{showStrength ? "05." : "04."}</span> 베이스 기주 지정
-                  </h3>
+                  </h2>
                   <div className="flex flex-wrap gap-2 font-sans">
                     {baseSpiritOptions.map((spirit) => (
                       <button
@@ -384,9 +384,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
 
               {/* 4. 맛 선호 */}
               <section className="font-sans border-t border-[#4a3728]/10 pt-6">
-                <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                   <span className="text-red-800 text-xs font-sans">{num(4)}</span> 선호하는 맛 (다중 선택)
-                </h3>
+                </h2>
                 <div className="flex flex-wrap gap-2 font-sans">
                   {tasteOptions.map((taste) => (
                     <button
@@ -407,9 +407,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
 
               {/* 5. 탄산 유무 */}
               <section className="font-sans">
-                <h3 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
+                <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2 font-sans">
                   <span className="text-red-800 text-xs font-sans">{num(5)}</span> 탄산
-                </h3>
+                </h2>
                 <div className="flex gap-8 font-sans">
                   {[
                     { label: "탄산 있음 (Sparkling)", value: true },
@@ -440,9 +440,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               {/* 6. 기피 재료 */}
               <section className="font-sans border-t border-[#4a3728]/10 pt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
+                  <h2 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">{num(6)}</span> 기피 재료
-                  </h3>
+                  </h2>
                   <span className="text-xs text-stone-600 font-medium font-sans">{request.dislikes.length} / 8</span>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4 font-sans">
@@ -485,9 +485,9 @@ export default function BeforeScreen(props: BeforeScreenProps) {
               {/* 7. 주문 메시지 */}
               <section className="font-sans border-t border-[#4a3728]/10 pt-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
+                  <h2 className="text-base font-bold text-stone-800 flex items-center gap-2 font-sans">
                     <span className="text-red-800 text-xs font-sans">{num(7)}</span> 바텐더에게 남기는 메모 <span className="text-stone-600 text-xs font-normal">(선택)</span>
-                  </h3>
+                  </h2>
                   <span className="text-xs text-stone-600 font-medium font-sans">{request.currentMood.length} / 100</span>
                 </div>
                 <textarea

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --import ./scripts/test-hooks.mjs --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\"",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open --ci",
     "build-storybook": "storybook build",
     "postbuild": "next-sitemap"
@@ -18,12 +19,9 @@
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "^7.37.2",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
-    "next": "^15.3.2",
+    "next": "^15.5.29",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sonner": "^2.0.7",
@@ -31,13 +29,19 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
+    "@playwright/test": "^1.56.1",
     "@storybook/nextjs-vite": "10.6.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",
+    "esbuild": "^0.28.2",
     "eslint": "^8",
     "eslint-config-next": "^15.0.3",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.2",
     "next-sitemap": "^4.2.3",
     "postcss": "^8.5.1",
     "prettier": "^3.3.3",
@@ -45,6 +49,11 @@
     "storybook": "10.6.4",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
-    "vite": "7.3.1"
+    "vite": "7.3.8"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "$postcss"
+    }
   }
 }

@@ -25,6 +25,20 @@ async function geminiFailure(res: Response) {
 /**
  * 위스키 추천 서비스 (Gemini API + Backend Integration)
  */
+// 서버는 Gemini 18초·승인·카탈로그 제한을 두므로 정상 응답은 이보다 빠르다. 서버가 끝까지 응답하지 않을 때만 기다리기를 멈춘다.
+// 서버 쪽 제한보다 짧게 잡으면 서버가 성공해 횟수를 쓴 뒤 정산표를 못 받아 횟수만 잃는다.
+const GEMINI_CLIENT_DEADLINE_MS = 60_000;
+export const GEMINI_TIMEOUT_MESSAGE = "응답이 너무 오래 걸려 기다리기를 멈췄어요. 잠시 뒤에 다시 시도해 주세요.";
+
+async function fetchGemini(body: string) {
+  try {
+    return await fetch("/api/gemini", { method: "POST", headers: jsonRequestHeaders(), body, signal: AbortSignal.timeout(GEMINI_CLIENT_DEADLINE_MS) });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "TimeoutError") throw new Error(GEMINI_TIMEOUT_MESSAGE);
+    throw e;
+  }
+}
+
 export const getWhiskyRecommendation = async (
   userInput: {
     weatherValue?: string;
@@ -39,16 +53,13 @@ export const getWhiskyRecommendation = async (
 
   try {
     // 1. Gemini AI API 호출 (횟수 차감과 호출 실패 시 환불은 서버가 처리한다)
-    const geminiResponse = await fetch("/api/gemini", {
-      method: "POST",
-      headers: jsonRequestHeaders(),
-      body: JSON.stringify({
+    const geminiResponse = await fetchGemini(JSON.stringify({
         data: `날씨: ${userInput.weatherValue}, 기분: ${userInput.moodValue}, 요구사항: ${userInput.additionalValue}${userInput.mainTasteTag ? `, 강조풍미: ${userInput.mainTasteTag}` : ""}`,
         type: 0,
         rich: userInput.flexFlag,
         mainTasteTag: userInput.mainTasteTag
       })
-    });
+    );
 
     if (!geminiResponse.ok) throw await geminiFailure(geminiResponse);
     // 서버가 1회를 차감해 두었고, 응답의 정산 표로 저장을 마치거나 실패 시 환불한다.
@@ -108,14 +119,11 @@ export const getCocktailRecommendation = async (
 
   try {
     // 1. Gemini AI API 호출 (횟수 차감과 호출 실패 시 환불은 서버가 처리한다)
-    const geminiResponse = await fetch("/api/gemini", {
-      method: "POST",
-      headers: jsonRequestHeaders(),
-      body: JSON.stringify({
+    const geminiResponse = await fetchGemini(JSON.stringify({
         data: request,
         type: 1
       })
-    });
+    );
 
     if (!geminiResponse.ok) throw await geminiFailure(geminiResponse);
     settlementToken = geminiResponse.headers.get("X-Settlement-Token");

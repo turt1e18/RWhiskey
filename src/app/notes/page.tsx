@@ -50,7 +50,10 @@ function MyNotesInner() {
 
   // 스크랩된 라운지 노트 ID 관리
   const [scrappedIds, setScrappedIds] = useState<string[]>([]);
-  const scrappedNotes = loungeNotesData.filter((n) => scrappedIds.includes(n.id));
+  // 라운지는 최신 100건만 오므로 스크랩북은 스크랩 응답을 바탕으로 하고, 방금 라운지에서 스크랩한 노트를 더한다
+  const [scrapNotesData, setScrapNotesData] = useState<LoungeNoteInterface[]>([]);
+  const scrappedNotes = [...scrapNotesData, ...loungeNotesData.filter((n) => !scrapNotesData.some((s) => s.id === n.id))]
+    .filter((n) => scrappedIds.includes(n.id));
 
   // API 응답을 UI 모델로 매핑 (개인 노트)
   const mapNoteResponseToEntry = useCallback((note: NoteResponse): TastingNoteEntryInterface => {
@@ -130,10 +133,11 @@ function MyNotesInner() {
     try {
       const data = await notesApi.getScrappedNotes();
       setScrappedIds(data.map(n => String(n.id)));
+      setScrapNotesData(data.map((n, i) => mapNoteResponseToLounge(n, i)));
     } catch (error) {
       console.error("Failed to fetch scraps:", error);
     }
-  }, []);
+  }, [mapNoteResponseToLounge]);
 
   const loadAllData = useCallback(async () => {
     await Promise.all([fetchMyNotes(), fetchLoungeFeed(), fetchScraps()]);
@@ -264,7 +268,7 @@ function MyNotesInner() {
               className="relative w-full flex justify-center"
             >
               <div className="relative w-[min(1200px,95vw)]">
-                {/* 새 시음 노트(스위치 켬)에서는 목차의 "라운지에서 만난 한 잔"이 같은 곳이라 책갈피를 두지 않는다. */}
+                {/* 새 시음 노트(스위치 켬)에서는 목차의 "좋아요한 글"이 같은 곳이라 책갈피를 두지 않는다. */}
                 {!NOTES_V2 && <Bookmark label="스크랩북" onClick={() => setView("scrapbook")} />}
                 <DiaryFrame
                   rightId="paper-right"

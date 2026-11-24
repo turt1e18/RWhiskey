@@ -37,7 +37,7 @@ export function EntryLeaf({ draft, paper = false, extra }: { draft: Leaf; paper?
   const meta = [tastedOn ? dotDate(tastedOn) : null, serving ? SERVING_LABELS[serving] : null].filter(Boolean).join(" · ");
   // paper: 오른쪽과 같은 종이 위에 놓일 때(상세 화면). 아니면 가죽 위.
   const tone = paper
-    ? { text: "text-[#3e2616]", eyebrow: "text-[#3e2616]/70", dim: "text-[#3e2616]/50", sub: "text-[#3e2616]/75", frame: "border-[#3e2616]/40 bg-[#3e2616]/5", ph: "text-[#3e2616]/55" }
+    ? { text: "text-[#3e2616]", eyebrow: "text-[#3e2616]/70", dim: "text-[#3e2616]/65", sub: "text-[#3e2616]/75", frame: "border-[#3e2616]/40 bg-[#3e2616]/5", ph: "text-[#3e2616]/55" }
     : { text: "text-[#fdfbf7]/90", eyebrow: "text-[#fdfbf7]/70", dim: "text-[#fdfbf7]/50", sub: "text-[#fdfbf7]/75", frame: "border-[#c9a14a]/50 bg-black/10", ph: "text-[#c9a14a]/70" };
   return (
     <div className={`flex h-full flex-col ${tone.text}`}>
@@ -50,7 +50,7 @@ export function EntryLeaf({ draft, paper = false, extra }: { draft: Leaf; paper?
         </div>
       </div>
       <div className="mt-4 md:mt-6">
-        <p className={`break-keep font-serif text-xl leading-snug md:text-2xl ${whiskeyName.trim() ? "" : tone.dim}`}>
+        <p className={`break-keep [overflow-wrap:anywhere] font-serif text-xl leading-snug md:text-2xl ${whiskeyName.trim() ? "" : tone.dim}`}>
           {whiskeyName.trim() || "위스키 이름"}
         </p>
         {meta && <p className={`mt-1 text-xs ${tone.sub}`}>{meta}</p>}
@@ -92,7 +92,7 @@ export function EntriesLeaf({ items, hasMore, ready }: { items: TastingEntry[]; 
       {latest && (
         <div className="mt-5 border-t border-[#c9a14a]/30 pt-4 md:mt-8">
           <p className="font-serif text-sm text-[#fdfbf7]/75">가장 최근 한 잔</p>
-          <p className="mt-1 break-keep font-serif text-lg leading-snug md:text-xl">{latest.whiskeyName}</p>
+          <p className="mt-1 break-keep [overflow-wrap:anywhere] font-serif text-lg leading-snug md:text-xl">{latest.whiskeyName}</p>
           <p className="mt-1 text-xs text-[#fdfbf7]/75">{dotDate(latest.tastedOn ?? latest.createdAt)}</p>
         </div>
       )}

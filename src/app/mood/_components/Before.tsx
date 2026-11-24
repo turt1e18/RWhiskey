@@ -10,7 +10,6 @@ import { useAuthStore } from "@/store/authStore";
 import { getWhiskyRecommendation } from "@/api/recommendationService";
 import { useRecommendationStore } from "@/store/recommendationStore";
 import { recommendationApi } from "@/api/whiskeyApi";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import RecommendationBackLink from "@/components/recommendations/RecommendationBackLink";
 
@@ -34,7 +33,6 @@ export default function BeforeScreen(props: any) {
   } = props;
   const { user, isAuthenticated, isInitialized } = useAuthStore();
   const { selectedMainTag, resetMainTag } = useRecommendationStore();
-  const router = useRouter();
 
   const [loading, setLoading] = useState(false);
   const [nextNo, setNextNo] = useState<number | null>(null);
@@ -49,8 +47,8 @@ export default function BeforeScreen(props: any) {
         console.error("Failed to fetch next order number:", err);
       }
     }
-    fetchNextNo();
-  }, []);
+    if (isAuthenticated) fetchNextNo();
+  }, [isAuthenticated]);
 
   // 옵션 데이터
   const weatherOptions = ["맑음", "흐림", "비", "추움", "기타"];
