@@ -12,6 +12,7 @@ export default function WhiskeyCollectedBottlingPanel({display,children}:{displa
         </div>)}
         {display.volumes.length>0&&<div className="min-w-0"><dt className="text-xs text-stone-600">알려진 제품 용량</dt><dd className="mt-1 break-words">{display.volumes.map(v=>`${v}ml`).join(', ')}</dd></div>}
         </dl>}
+      {!empty&&display.reference&&<p className="mt-4 text-xs leading-5 text-stone-700">참고 정보예요. 같은 제품도 병입판에 따라 다를 수 있어요.</p>}
       {children}
     </section>
   </details>;

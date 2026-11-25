@@ -6,8 +6,10 @@ import type {CollectedBasicFieldName} from './collectedBottlingInformation';
 import {bottlingLabels,caskDisplay} from './bottlingDisplay';
 import {bilingualLabel} from '@/components/recommendations/whiskeyPresentation';
 
-export interface ResultBasicFact {field:CollectedBasicFieldName;label:string;value:string;kind:'KNOWN'|'AI'|'MISSING'|'HELD'}
-export interface ResultInformation {basic:ResultBasicFact[];bottling:{field:string;label:string;value:string;raw?:string}[];volumes:number[];notice:string|null}
+// KNOWN: 인증 카탈로그·검증 페이지 값, REFERENCE: 수집 DB 관찰값(참고 정보), AI: 모델 제안값(참고 정보)
+export interface ResultBasicFact {field:CollectedBasicFieldName;label:string;value:string;kind:'KNOWN'|'REFERENCE'|'AI'|'MISSING'|'HELD'}
+/** reference: 병입 정보 중 수집 DB 관찰값(참고 정보)이 하나라도 보이는지 */
+export interface ResultInformation {basic:ResultBasicFact[];bottling:{field:string;label:string;value:string;raw?:string}[];volumes:number[];notice:string|null;reference:boolean}
 const labels={category:'위스키 종류',country:'위스키 생산국',abv:'알코올 도수',age:'숙성 연수'};
 const heldReasons=new Set(['CONFLICTING_OBSERVATIONS','UNCERTAIN_SCOPE_OR_VALUE','AGE_NOT_CONFIRMED','VARIANT_NOT_CONFIRMED','MULTIPLE_PRODUCT_LINES','CONFLICTING_PRODUCT_GROUPS']);
 const extraLabels:Record<string,string>={edition:'에디션',market:'판매 지역',independentBottling:'독립 병입',oldBottle:'올드바틀',
@@ -48,7 +50,7 @@ function detailFormat(field:string,value:string):string|null {
 /** Preserve source/rights/expiry checks in the input contract; only customer presentation is reduced. */
 export function whiskeyResultInformation(card:AiSuggestionCard,now=Date.now()):ResultInformation {
   if(collectedBodyHidden(card,now))return {basic:collectedBasicFields.map(field=>({field,label:labels[field],value:'정보 확인 필요',kind:'HELD'})),
-    bottling:[],volumes:[],notice:'제품 정보를 다시 확인해 주세요.'};
+    bottling:[],volumes:[],notice:'제품 정보를 다시 확인해 주세요.',reference:false};
   const p=card.identity;const info=card.collectedBottlingInformation;
   const catalog:CatalogFacts|null=card.catalogFacts?.status==='CURRENT'&&Date.parse(card.catalogFacts.validUntil)>now?card.catalogFacts:null;
   const catalogFields=catalog?.fields??[];
@@ -69,7 +71,7 @@ export function whiskeyResultInformation(card:AiSuggestionCard,now=Date.now()):R
     if(info?.status==='NAME_MATCH'&&source?.status==='OBSERVED'&&source.value){
       // A field with explicit credit requirements is not republished without that credit.
       if(!source.sources.some(s=>s.attribution||s.licenseUrl)){
-        const value=normalized(field,source.value);if(value)return {field,label:labels[field],value:basicFormat(field,value),kind:'KNOWN'};
+        const value=normalized(field,source.value);if(value)return {field,label:labels[field],value:basicFormat(field,value),kind:'REFERENCE'};
         held=true;return {field,label:labels[field],value:'정보 확인 필요',kind:'HELD'};
       }
     }
@@ -80,13 +82,13 @@ export function whiskeyResultInformation(card:AiSuggestionCard,now=Date.now()):R
     const value=normalized(field,typeof proposed==='number'?String(proposed):proposed);
     return {field,label:labels[field],value:value&&!card.candidateOrigin?basicFormat(field,value):'아직 정보가 없어요',kind:value&&!card.candidateOrigin?'AI':'MISSING'};
   });
-  const bottling:ResultInformation['bottling']=[];
+  const bottling:ResultInformation['bottling']=[];let reference=false;
   for(const field of Object.keys(bottlingLabels)){
     const certified=catalogFields.find(f=>f.field===(aliases[field]??field));
     const source=info?.fields.find(f=>f.field===field);
     if(!certified&&(globalHold||source?.reason&&heldReasons.has(source.reason))){held=true;continue;}
     let raw=certified?.value??null;
-    if(!raw&&info?.status==='NAME_MATCH'&&source?.status==='OBSERVED'&&!source.sources.some(s=>s.attribution||s.licenseUrl))raw=source.value;
+    if(!raw&&info?.status==='NAME_MATCH'&&source?.status==='OBSERVED'&&!source.sources.some(s=>s.attribution||s.licenseUrl)){raw=source.value;reference=reference||!!(raw&&detailFormat(field,raw));}
     if(!raw)raw=pageFields.find(f=>f.field===field)?.value??null;
     const value=raw?detailFormat(field,raw):null;
     if(value)bottling.push({field,label:bottlingLabels[field],value,...(field==='maturationCask'||field==='finishCask'?{raw:String(raw)}:{})});
@@ -98,11 +100,14 @@ export function whiskeyResultInformation(card:AiSuggestionCard,now=Date.now()):R
   }
   const certifiedVolume=normalized('volumeMl',catalogFields.find(f=>f.field==='volumeMl')?.value);
   const pageVolume=normalized('volumeMl',pageFields.find(f=>f.field==='volumeMl')?.value);
+  const collectedVolumes=!globalHold&&info?.status==='NAME_MATCH'?info.availableVolumesMl:[];
   const volumes=[...(certifiedVolume?[Number(certifiedVolume)]:[]),
-    ...(!globalHold&&info?.status==='NAME_MATCH'?info.availableVolumesMl:[]),
+    ...collectedVolumes,
     ...(!globalHold&&pageVolume?[Number(pageVolume)]:[])].filter(value=>
       Number.isInteger(value)&&value>0&&value<=100000&&(!p.volumeMl||p.volumeMl===value));
-  return {basic,bottling,volumes:[...new Set(volumes)].sort((a,b)=>a-b),notice:held?'제품 정보를 정확히 구분하기 어려워 일부 항목은 표시하지 않았어요.':null};
+  const shownVolumes=[...new Set(volumes)].sort((a,b)=>a-b);
+  reference=reference||shownVolumes.some(v=>collectedVolumes.includes(v)&&v!==Number(certifiedVolume));
+  return {basic,bottling,volumes:shownVolumes,notice:held?'제품 정보를 정확히 구분하기 어려워 일부 항목은 표시하지 않았어요.':null,reference};
 }
 export function resultInformationDigest(card:AiSuggestionCard,now=Date.now()):string {return JSON.stringify(whiskeyResultInformation(card,now));}
 /** Read-side enrichment never replaces the saved identity, prose, preferences or feedback. */

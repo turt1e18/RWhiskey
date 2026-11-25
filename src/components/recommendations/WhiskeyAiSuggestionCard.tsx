@@ -95,7 +95,7 @@ function WhiskeyAiSuggestionBody({response,ownerUid}:{response:V3Response;ownerU
   const orderChips=orderSummaryChips(response.requestSummary);
   const orderedOn=receiptDate(response.recommendedAt);
   // 화면에 실제로 보이는 도수만 안내 문장에 쓴다(보류·누락 값은 쓰지 않음).
-  const shownAbv=display.basic.find(f=>f.field==='abv'&&(f.kind==='KNOWN'||f.kind==='AI'));
+  const shownAbv=display.basic.find(f=>f.field==='abv'&&f.kind!=='MISSING'&&f.kind!=='HELD');
   const steps=servingSteps(response.appliedLevel,shownAbv?Number.parseFloat(shownAbv.value)||null:null);
   const pairings=(a.presentation.pairings??[]).filter(x=>x.food?.trim());
   const differences=[

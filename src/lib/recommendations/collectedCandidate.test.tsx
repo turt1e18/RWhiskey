@@ -26,7 +26,7 @@ test('source selection carries a strict access origin and never becomes an optio
 });
 test('source basics are observations or missing and never labelled AI estimates',()=>{
   const display=whiskeyResultInformation(sourceCard,now);
-  assert.deepEqual(display.basic.map(f=>f.kind),['MISSING','MISSING','KNOWN','KNOWN']);
+  assert.deepEqual(display.basic.map(f=>f.kind),['MISSING','MISSING','REFERENCE','REFERENCE']);
   assert.equal(display.basic[2].value,'46.3%');
   assert.ok(!collectedBodyHidden(sourceCard,now));assert.ok(collectedBodyHidden(sourceCard,now+900001));
   const expired=whiskeyResultInformation(sourceCard,now+900001);
