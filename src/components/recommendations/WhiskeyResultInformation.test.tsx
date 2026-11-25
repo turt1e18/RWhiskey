@@ -12,7 +12,9 @@ import type {V3Response} from '@/lib/recommendations/v3Contract';
 function markup(value=card){const display=whiskeyResultInformation(value);return renderToStaticMarkup(<><WhiskeyResultBasicFacts display={display}/><WhiskeyCollectedBottlingPanel display={display}/></>);}
 test('actual information values are readable without source UI or empty bottling fields',()=>{
   const html=markup();assert.ok(html.includes('46.3%'));assert.ok(html.includes('12년'));assert.ok(html.includes('Bourbon'));
-  assert.equal((html.match(/참고 정보/g)??[]).length,2);
+  // AI 값 2 + 수집 값 2(참고 정보 라벨) + 병입 패널 안내 1
+  assert.equal((html.match(/참고 정보/g)??[]).length,5);assert.ok(!html.includes('확인된 정보'));
+  assert.ok(html.includes('참고 정보예요. 같은 제품도 병입판에 따라 다를 수 있어요.'));
   for(const noise of ['출처','https://','2026-10-22','등록 제품명','캐스크 번호','피니시 통','Highland','미확인'])assert.ok(!html.includes(noise),noise);
 });
 test('fixed basic labels and a native bottling entry persist even when no values exist',()=>{

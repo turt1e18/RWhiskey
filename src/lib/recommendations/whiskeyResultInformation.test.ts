@@ -10,9 +10,11 @@ test('actual facts remain values while basic-only original AI estimates are brie
   const before=JSON.stringify(card);
   const view=whiskeyResultInformation(card);
   assert.deepEqual(view.basic.map(f=>f.field),['category','country','abv','age']);
-  assert.deepEqual(view.basic.map(f=>f.kind),['AI','AI','KNOWN','KNOWN']);
+  // 수집 DB 관찰값은 참고 정보(REFERENCE): 2026-11-25 전체 공개 결정
+  assert.deepEqual(view.basic.map(f=>f.kind),['AI','AI','REFERENCE','REFERENCE']);
   assert.equal(view.basic[2].value,'46.3%');assert.equal(view.basic[3].value,'12년');
   assert.deepEqual(view.bottling,[{field:'maturationCask',label:'숙성 통',value:'Bourbon (버번)',raw:'BOURBON'}]);assert.deepEqual(view.volumes,[]);
+  assert.equal(view.reference,true);
   assert.equal(JSON.stringify(card),before);
 });
 test('all missing basic labels stay fixed and null age is never NAS',()=>{
@@ -28,7 +30,7 @@ test('NAS is explicit and has the same AI status policy as every other basic fac
   const ai=whiskeyResultInformation({...card,identity:{brand:'Example',expression:'One',ageStatement:'NAS'},collectedBottlingInformation:null});
   assert.equal(ai.basic[3].value,'숙성 연수 미표기');assert.equal(ai.basic[3].kind,'AI');
   const info={...collected,basicFields:collected.basicFields!.map(f=>f.field==='age'?{...f,value:'NAS'}:f)};
-  assert.equal(whiskeyResultInformation({...card,collectedBottlingInformation:info}).basic[3].kind,'KNOWN');
+  assert.equal(whiskeyResultInformation({...card,collectedBottlingInformation:info}).basic[3].kind,'REFERENCE');
 });
 test('ambiguous and variant-held products cannot refill missing fields with AI',()=>{
   for(const status of ['AMBIGUOUS','INSUFFICIENT_IDENTITY'] as const){
@@ -49,6 +51,7 @@ test('catalog expiry and numeric meaning are preserved, and current certified fi
 test('product-page facts are retained for general products but never expanded to an explicit edition or mismatched strength',()=>{
   const general={...card,collectedBottlingInformation:null,productSourceObservations:page};
   assert.equal(whiskeyResultInformation(general).basic[2].kind,'KNOWN');assert.equal(whiskeyResultInformation(general).bottling.length,1);
+  assert.equal(whiskeyResultInformation(general).reference,false);
   for(const identity of [{...card.identity,edition:'Special'},{...card.identity,market:'US'},{...card.identity,volumeMl:750}]){
     const view=whiskeyResultInformation({...general,identity});assert.equal(view.basic[2].kind,'AI');assert.equal(view.bottling.length,0);
   }

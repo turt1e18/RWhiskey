@@ -14,12 +14,18 @@ test('beginners see only the reference label, never the confirmed label',()=>{
  const ai=renderToStaticMarkup(<WhiskeyCollectedBasicFact beginner fact={{field:'abv',label:'알코올 도수',value:'46.3%',kind:'AI'}}/>);
  assert.ok(ai.includes('참고 정보'));
 });
+test('collected values are labelled reference information at every level',()=>{
+ for(const beginner of [true,false]){
+  const html=renderToStaticMarkup(<WhiskeyCollectedBasicFact beginner={beginner} fact={{field:'abv',label:'알코올 도수',value:'46.3%',kind:'REFERENCE'}}/>);
+  assert.equal((html.match(/참고 정보/g)??[]).length,1);assert.ok(!html.includes('확인된 정보'));
+ }
+});
 test('model-only values carry one short visible non-interactive label',()=>{
  const html=renderToStaticMarkup(<WhiskeyCollectedBasicFact fact={{field:'age',label:'숙성 연수',value:'12년',kind:'AI'}}/>);
  assert.equal((html.match(/참고 정보/g)??[]).length,1);assert.ok(html.includes('12년'));assert.ok(!html.includes('<button'));
 });
 test('the server notice appears once, only when a reference value is shown',()=>{
- const base={basic:[{field:'abv' as const,label:'알코올 도수',value:'46.3%',kind:'AI' as const}],bottling:[],volumes:[],notice:null};
+ const base={basic:[{field:'abv' as const,label:'알코올 도수',value:'46.3%',kind:'AI' as const}],bottling:[],volumes:[],notice:null,reference:false};
  const withRef=renderToStaticMarkup(<WhiskeyResultBasicFacts display={base} notice="세부 정보는 참고용이에요."/>);
  assert.equal((withRef.match(/세부 정보는 참고용이에요/g)??[]).length,1);
  const known=renderToStaticMarkup(<WhiskeyResultBasicFacts display={{...base,basic:[{...base.basic[0],kind:'KNOWN' as const}]}} notice="세부 정보는 참고용이에요."/>);
