@@ -46,7 +46,7 @@ export default function WithdrawPage() {
   if (done) {
     return (
       <PaperPage title="탈퇴가 끝났어요">
-        <p role="status" className="text-sm leading-relaxed">그동안 이용해 주셔서 고마워요. 계정 정보는 지웠고 모든 기기에서 로그아웃됐어요.</p>
+        <p role="status" className="text-sm leading-relaxed">그동안 이용해 주셔서 고마워요. 계정 정보는 알아볼 수 없게 바꿨고 모든 기기에서 로그아웃됐어요. 이용 기록은 30일 뒤에 지워져요.</p>
         <Link href="/main" className="btn-stamp mt-6 inline-flex min-h-11 w-full items-center justify-center font-semibold">메인으로</Link>
       </PaperPage>
     );
@@ -64,9 +64,11 @@ export default function WithdrawPage() {
           <div className="text-sm leading-relaxed space-y-2">
             <p>탈퇴하면 아래처럼 처리되고, <strong>되돌릴 수 없어요.</strong></p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>이메일·닉네임·비밀번호는 바로 삭제돼요. 이 계정으로는 다시 로그인할 수 없어요.</li>
-              <li>라운지에 공개한 글과 노트는 비공개로 바뀌어 다른 사람에게 보이지 않아요.</li>
-              <li>노트·추천 기록은 계정과 연결이 끊긴 채 남고, 다시 열어 볼 수 없어요.</li>
+              <li>이메일·닉네임·비밀번호는 바로 알아볼 수 없게 바뀌어요. 이 계정으로는 다시 로그인할 수 없어요.</li>
+              <li>라운지에 공개한 글과 노트는 바로 다른 사람에게 보이지 않아요.</li>
+              <li>확인 중인 &lsquo;내가 알려준 정보&rsquo;는 취소돼요.</li>
+              <li>시음 기록·노트·추천 기록 같은 이용 기록은 부정 이용과 분쟁 대응을 위해 <strong>30일 동안 보관한 뒤 지워요.</strong> 그동안에도 다시 열어 볼 수는 없어요.</li>
+              <li>알려주신 정보 중 위스키 정보에 이미 반영된 값(도수 등)은 남고, 직접 쓰신 메모·출처는 30일 뒤 함께 지워요.</li>
               <li>모든 기기에서 로그아웃돼요.</li>
               <li>같은 이메일로 새로 가입할 수 있지만, 지금 기록은 이어지지 않아요.</li>
             </ul>
