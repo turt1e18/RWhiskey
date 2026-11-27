@@ -10,18 +10,11 @@ import NoticeModal from "./_components/NoticeModal";
 import HowToOrder from "./_components/HowToOrder";
 import sampleBottle from "./_components/sample-bottle.webp";
 import { useAuthStore } from "@/store/authStore";
+import LogoutControl from "./_components/LogoutControl";
 
 export default function MainScreen() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    if (confirm("로그아웃 하시겠습니까?")) {
-      await logout();
-      alert("로그아웃 되었습니다.");
-      setIsMenuOpen(false);
-    }
-  };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const drawerRef = useDialogFocus<HTMLDivElement>(isMenuOpen, () => setIsMenuOpen(false));
@@ -59,7 +52,7 @@ export default function MainScreen() {
           </div>
 
           {/* 우측 네비게이션 메뉴 - 데스크탑 전용 */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden xl:flex items-center gap-8 whitespace-nowrap">
             <a
               href="#intro"
               className="text-sm font-medium text-white/80 hover:text-[#ffb247] transition-colors"
@@ -78,6 +71,20 @@ export default function MainScreen() {
             >
               결과 미리보기
             </a>
+            <Link
+              href="/contribute?from=nav"
+              className="text-sm font-medium text-white/80 hover:text-[#ffb247] transition-colors"
+            >
+              위스키 정보 알려주기
+            </Link>
+            {isAuthenticated && user?.operator && (
+              <Link
+                href="/admin/contributions"
+                className="text-sm font-medium text-white/80 hover:text-[#ffb247] transition-colors"
+              >
+                제보 확인(운영자)
+              </Link>
+            )}
 
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
@@ -90,12 +97,10 @@ export default function MainScreen() {
                 >
                   내 노트 보기
                 </Link>
-                <button
-                  onClick={handleLogout}
+                <LogoutControl
+                  layout="row"
                   className="text-sm font-medium px-5 py-2 rounded-full bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 transition-colors"
-                >
-                  로그아웃
-                </button>
+                />
                 <Link href="/account/withdraw" className="ml-2 inline-flex min-h-11 items-center text-xs text-white/70 underline underline-offset-2 hover:text-white">
                   회원 탈퇴
                 </Link>
@@ -113,7 +118,7 @@ export default function MainScreen() {
           {/* 모바일/테블릿 메뉴 버튼 (햄버거) */}
           <button
             onClick={toggleMenu}
-            className="flex lg:hidden flex-col items-center justify-center gap-1.5 min-h-11 min-w-11 z-[60]"
+            className="flex xl:hidden flex-col items-center justify-center gap-1.5 min-h-11 min-w-11 z-[60]"
             aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
             aria-expanded={isMenuOpen}
             aria-controls="main-drawer"
@@ -197,6 +202,22 @@ export default function MainScreen() {
             >
               결과 미리보기
             </a>
+            <Link
+              href="/contribute?from=nav"
+              onClick={() => setIsMenuOpen(false)}
+              className="text-xl font-medium text-white/90 hover:text-[#ffb247]"
+            >
+              위스키 정보 알려주기
+            </Link>
+            {isAuthenticated && user?.operator && (
+              <Link
+                href="/admin/contributions"
+                onClick={() => setIsMenuOpen(false)}
+                className="text-xl font-medium text-white/90 hover:text-[#ffb247]"
+              >
+                제보 확인(운영자)
+              </Link>
+            )}
           </div>
 
           <div className="mt-auto pt-8 border-t border-white/10">
@@ -208,12 +229,11 @@ export default function MainScreen() {
                 >
                   내 노트 보기
                 </Link>
-                <button
-                  onClick={handleLogout}
+                <LogoutControl
+                  layout="column"
+                  onDone={() => setIsMenuOpen(false)}
                   className="w-full py-4 rounded-xl bg-white/5 text-white/70 border border-white/10 text-center font-bold"
-                >
-                  로그아웃
-                </button>
+                />
                 <Link href="/account/withdraw" className="mt-3 inline-flex min-h-11 items-center justify-center text-xs text-white/70 underline underline-offset-2">
                   회원 탈퇴
                 </Link>

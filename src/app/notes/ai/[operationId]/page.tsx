@@ -80,6 +80,8 @@ export default function AiTastingNotePage(){
         <button disabled={sourceBusy} onClick={()=>void refreshSources()} className="mt-3 min-h-11 text-sm underline disabled:opacity-60">{sourceBusy?'불러오는 중…':'제품 정보 다시 확인'}</button>
         {sourceStatus&&<p role="status" className="mt-3 text-sm leading-6">{sourceStatus}</p>}
       </WhiskeyCollectedBottlingPanel>
+      <p className="mt-3 text-sm leading-6">이 병에 대해 아는 게 있나요?{' '}
+        <Link href={`/contribute?from=notes&q=${encodeURIComponent(name)}`} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">정보 알려주기</Link></p>
     </>}
     {status && <p role="status" className="mt-4 text-sm leading-6">{status}</p>}
     {auth && <Link href="/login" target="_blank" rel="noopener noreferrer" className="my-3 inline-flex min-h-11 items-center underline">새 탭에서 다시 로그인</Link>}

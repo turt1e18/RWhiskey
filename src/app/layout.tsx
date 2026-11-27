@@ -56,6 +56,9 @@ export default function RootLayout({
     <html lang="ko" className="dark">
       <head>
         <meta name="color-scheme" content="dark" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font -- the root layout covers every page; this rule targets pages/_document */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
         <meta
           name="description"
           content="하루를 장식할 한잔에 대해 고민이 생기면 이용해보세요."
