@@ -56,15 +56,16 @@ export function ReportDialog({operationId,initialField=null,entryPoint,onClose}:
         <button type="button" onClick={onClose} className="-mr-2 -mt-2 inline-flex min-h-11 min-w-11 items-center justify-center text-sm text-stone-700 underline">닫기</button>
       </div>
       {receipt?<div role="status" className="mt-4 text-sm leading-6">
-        <p className="font-semibold">보내주셔서 고마워요. 확인한 뒤 참고할게요.</p>
+        <p className="font-semibold">보내주셔서 고마워요. 확인한 뒤 맞으면 위스키 정보에 반영해요.</p>
         <p className="mt-1 text-stone-700">보낸 항목: {receipt.fields.map(reportFieldLabel).join(', ')}</p>
         {receipt.skippedPending.length>0&&<p className="mt-1 text-stone-700">
           이전에 보내주신 내용이 아직 확인을 기다리고 있어 이번에는 뺐어요: {receipt.skippedPending.map(reportFieldLabel).join(', ')}</p>}
         <p className="mt-1 text-stone-700">지금 보이는 추천 결과는 바뀌지 않아요.</p>
+        <Link href="/contribute/mine" className="mt-2 inline-flex min-h-11 items-center font-semibold underline underline-offset-4">처리 상황 보기</Link>
         <button type="button" onClick={onClose} className="mt-5 flex min-h-12 w-full items-center justify-center bg-[#111] px-5 text-sm font-bold tracking-[0.12em] text-white hover:bg-[#2d2017]">닫기</button>
       </div>:<>
         <div className="mt-3 space-y-1 text-xs leading-5 text-stone-700">
-          <p>보내주신 내용은 운영자가 확인한 뒤 위스키 정보 수집에 참고해요. 바로 화면에 반영되지는 않아요.</p>
+          <p>보내주신 내용은 확인한 뒤 맞으면 위스키 정보에 반영해요. 바로 화면에 반영되지는 않고, 진행 상황은 &apos;내가 알려준 정보&apos;에서 볼 수 있어요.</p>
           <p>이름·연락처·주문번호 같은 개인정보는 적지 말아 주세요.</p>
         </div>
         <fieldset className="mt-5">

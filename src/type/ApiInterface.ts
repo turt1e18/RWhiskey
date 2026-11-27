@@ -34,6 +34,8 @@ export interface MeResponse {
   uid: number | null;
   email: string | null;
   name: string | null;
+  /** Menu only; the admin API checks the account again on every request. */
+  operator?: boolean;
 }
 
 /**

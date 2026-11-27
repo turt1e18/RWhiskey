@@ -35,6 +35,8 @@ export default function LoginForm({ onSignup, onReset }: LoginFormProps) {
           name: response.name,
           email: response.email
         });
+        // The login response has no operator flag; /me fills it in so the operator menu shows without a reload.
+        void useAuthStore.getState().fetchUser();
         router.push(takeReturnPath("/main"));
       } else {
         setError("회원 명부에서 찾을 수 없는 이메일 또는 비밀번호입니다.");
