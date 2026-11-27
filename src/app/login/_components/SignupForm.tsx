@@ -24,6 +24,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
   const [isEmailVerified, setIsEmailVerified] = useState(false)
   
   const [isAgreedRequired, setIsAgreedRequired] = useState(false)
+  const [isAdult, setIsAdult] = useState(false)
   const [isAgreedOptional, setIsAgreedOptional] = useState(false)
   const [isAllAgreed, setIsAllAgreed] = useState(false)
   
@@ -92,21 +93,25 @@ export default function SignupForm({ onBack }: SignupFormProps) {
   // 전체 동의 핸들러
   const handleAllAgree = (checked: boolean) => {
     setIsAllAgreed(checked)
+    setIsAdult(checked)
     setIsAgreedRequired(checked)
     setIsAgreedOptional(checked)
   }
 
-  // 개별 동의 핸들러
+  // 개별 동의 핸들러: 세 칸이 모두 체크되면 전체 동의도 체크된다
+  const handleAdult = (checked: boolean) => {
+    setIsAdult(checked)
+    setIsAllAgreed(checked && isAgreedRequired && isAgreedOptional)
+  }
+
   const handleRequiredAgree = (checked: boolean) => {
     setIsAgreedRequired(checked)
-    if (!checked) setIsAllAgreed(false)
-    if (checked && isAgreedOptional) setIsAllAgreed(true)
+    setIsAllAgreed(checked && isAdult && isAgreedOptional)
   }
 
   const handleOptionalAgree = (checked: boolean) => {
     setIsAgreedOptional(checked)
-    if (!checked) setIsAllAgreed(false)
-    if (checked && isAgreedRequired) setIsAllAgreed(true)
+    setIsAllAgreed(checked && isAdult && isAgreedRequired)
   }
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -114,6 +119,11 @@ export default function SignupForm({ onBack }: SignupFormProps) {
     
     if (!isEmailVerified) {
       setError("이메일 인증을 먼저 완료해주세요.")
+      return
+    }
+
+    if (!isAdult) {
+      setError("만 19세 이상만 가입할 수 있어요. 해당하면 확인 칸을 체크해 주세요.")
       return
     }
 
@@ -126,7 +136,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
     setError("")
 
     try {
-      await authApi.signup({ name, email, pw: password, agreedRequired: isAgreedRequired })
+      await authApi.signup({ name, email, pw: password, agreedRequired: isAgreedRequired, adultConfirmed: isAdult })
       setSuccess(true)
       setTimeout(() => {
         onBack()
@@ -278,7 +288,25 @@ export default function SignupForm({ onBack }: SignupFormProps) {
         {/* Privacy Policy Agreements */}
         <div className="flex flex-col gap-4 py-4 border-t border-dashed" style={{ borderColor: "#BFAD98" }}>
           <p className="label-style">개인정보 이용약관</p>
-          
+
+          {/* Adult confirmation (self-declared) */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <input
+                id="agree-adult"
+                type="checkbox"
+                className="w-4 h-4 accent-[#3E2A1E] cursor-pointer"
+                checked={isAdult}
+                onChange={(e) => handleAdult(e.target.checked)}
+                aria-describedby="agree-adult-hint"
+              />
+              <label htmlFor="agree-adult" className="text-xs font-bold cursor-pointer" style={{ color: "#3E2A1E" }}>
+                [필수] 만 19세 이상입니다
+              </label>
+            </div>
+            <p id="agree-adult-hint" className="text-xs" style={{ color: "#5C4A39" }}>주류 정보를 다루는 서비스라 만 19세 이상만 가입할 수 있어요.</p>
+          </div>
+
           {/* Required Agreement */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
@@ -310,9 +338,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
               - 필수 항목: 이메일 주소, 비밀번호, 닉네임<br />
               - 자동 수집 항목: IP 주소, 쿠키(Cookie), 서비스 이용 기록, 접속 로그<br /><br />
               3. 개인정보의 보유 및 이용 기간<br />
-              원칙적으로 개인정보의 수집 및 이용 목적이 달성된 후(회원 탈퇴 시)에는 해당 정보를 지체 없이 파기합니다. 단, 관계 법령에 의해 보존할 필요가 있는 경우 아래의 기간 동안 보관합니다.<br />
-              - 웹사이트 접속 기록 (통신비밀보호법): 3개월<br />
-              - 소비자의 불만 또는 분쟁 처리에 관한 기록 (전자상거래법): 3년<br /><br />
+              회원 탈퇴 시 이메일·닉네임·비밀번호는 즉시 식별할 수 없게 바꾸고, 시음 기록·추천 기록 등 이용 기록은 부정 이용 방지와 분쟁 대응을 위해 30일 동안 보관한 뒤 파기합니다. 관계 법령이 보존을 요구하는 기록은 그 기간 동안만 보관합니다.<br /><br />
               4. 동의를 거부할 권리 및 불이익<br />
               이용자는 본 필수 동의를 거부할 권리가 있으나, 거부 시 회원가입 및 서비스 이용이 제한됩니다.
             </div>
