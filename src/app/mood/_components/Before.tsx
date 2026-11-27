@@ -35,6 +35,7 @@ export default function BeforeScreen(props: any) {
   const { selectedMainTag, resetMainTag } = useRecommendationStore();
 
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [nextNo, setNextNo] = useState<number | null>(null);
 
   // 컴포넌트 마운트 시 다음 주문 번호 가져오기
@@ -69,10 +70,11 @@ export default function BeforeScreen(props: any) {
       userInput.trim().length === 0 &&
       (weather === "기타" || mood === "기타")
     ) {
-      alert("기타를 선택하신 경우 추가 요청 사항을 입력해주세요.");
+      setFormError("'기타'를 고르셨다면 추가 요청 사항에 원하는 내용을 적어 주세요.");
       return;
     }
 
+    setFormError(null);
     setLoading(true);
 
     const combinedPromise = (async () => {
@@ -113,7 +115,7 @@ export default function BeforeScreen(props: any) {
       await combinedPromise;
       setSwitchState(1);
     } catch (err: any) {
-      alert(recommendationErrorMessage(err));
+      setFormError(recommendationErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -272,6 +274,9 @@ export default function BeforeScreen(props: any) {
 
             {!isAuthenticated && isInitialized && (
               <p role="status" className="mt-2 text-sm text-stone-700">로그인하면 추천을 받을 수 있어요. <Link href="/login" className="inline-flex min-h-11 items-center font-semibold underline">로그인하러 가기</Link></p>
+            )}
+            {formError && (
+              <p role="alert" className="mt-2 text-sm font-semibold text-red-800">{formError}</p>
             )}
             <button
               onClick={callCombinedAPI}

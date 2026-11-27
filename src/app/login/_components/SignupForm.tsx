@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { RESEND_COOLDOWN_SEC, useCountdown } from "@/lib/useCountdown"
 import { authApi } from "@/api/whiskeyApi"
+import { toast } from "sonner"
 
 interface SignupFormProps {
   onBack: () => void
@@ -57,7 +58,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
       }
       setSentEmail(email)
       startResendWait(RESEND_COOLDOWN_SEC)
-      alert("인증 코드가 발송되었습니다.")
+      toast.success("인증 코드를 보냈어요. 메일함을 확인해 주세요.")
     } catch (err: any) {
       setError(err.message || "코드 발송에 실패했습니다.")
     } finally {
@@ -77,7 +78,7 @@ export default function SignupForm({ onBack }: SignupFormProps) {
       const response = await authApi.verifyCode(email, verificationCode)
       if (response.success) {
         setIsEmailVerified(true)
-        alert("이메일 인증이 완료되었습니다.")
+        toast.success("이메일 인증을 마쳤어요.")
       } else {
         setError(response.message || "인증 코드가 일치하지 않습니다.")
       }
