@@ -49,6 +49,8 @@ export function bilingualLabel(kind: "category" | "country", value: string | nul
   const mapped=common[key];if(mapped)return `${mapped[0]} (${mapped[1]})`;
   const known=Object.keys(kind==='category'?categoryLabels:countryLabels).find(k=>k.toLowerCase()===key);
   if(known){const label=whiskeyLabel(kind,known,facets);return label===known?known:`${known} (${label})`;}
+  // Catalog text often ends in "Whisky" ("Single Malt Whisky"); only after the exact labels miss, try once without it.
+  const trimmed=kind==='category'?common[key.replace(/\s+whiske?y$/,'')]:undefined;if(trimmed)return `${trimmed[0]} (${trimmed[1]})`;
   if(/[_/\-]/.test(value))return value.trim().replace(/[_/\-]+/g,' ').replace(/\s+/g,' ').toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase());
   const label = whiskeyLabel(kind, value, facets);
   return label === value ? value : `${value} (${label})`;

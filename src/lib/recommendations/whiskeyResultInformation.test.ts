@@ -90,3 +90,19 @@ test('overlapping sweetness signals display one stable taste row',()=>{
   const rows=whiskeyResultInformation({...card,catalogFacts:facts}).bottling.filter(f=>f.label==='단맛');
   assert.deepEqual(rows,[{field:'tasteSweetness',label:'단맛',value:'은은함'}]);
 });
+
+test('operator reference outranks collected values but never certified ones, and is still reference',()=>{
+  const operatorReference={bottlingId:7,reviewedAt:'2026-11-27T00:00:00Z',grade:'REFERENCE' as const,fields:[{field:'abv' as const,value:'43'},{field:'age' as const,value:'NAS'}]};
+  const basic=whiskeyResultInformation({...card,operatorReference}).basic;
+  assert.deepEqual(basic.find(f=>f.field==='abv'),{field:'abv',label:'알코올 도수',value:'43%',kind:'REFERENCE'});      // P2-01 over collected 46.3
+  assert.equal(basic.find(f=>f.field==='age')?.value,'숙성 연수 미표기');
+  const certified:CatalogFacts={status:'CURRENT',bottlingId:7,factsDigest:'d',policyVersion:'p',checkedAt:'2026-11-27T00:00:00Z',
+    validUntil:'2999-01-01T00:00:00Z',fields:[{field:'abv',value:'40',sources:[{url:'https://producer.example/a'}]}]} as unknown as CatalogFacts;
+  assert.equal(whiskeyResultInformation({...card,operatorReference,catalogFacts:certified}).basic.find(f=>f.field==='abv')?.kind,'KNOWN');
+  const reverified=whiskeyResultInformation({...card,operatorReference:{...operatorReference,grade:'VERIFIED',
+    fields:[...operatorReference.fields,{field:'country' as const,value:'India'}]}}).basic;
+  assert.equal(reverified.find(f=>f.field==='abv')?.kind,'KNOWN');                                                    // P2-16
+  assert.equal(reverified.find(f=>f.field==='country')?.kind,'REFERENCE');                                            // not compared by the evidence check
+  const refreshed=refreshResultInformation(card,{...card,operatorReference});
+  assert.equal(refreshed.changed,true);assert.deepEqual(refreshed.card.operatorReference,operatorReference);
+});

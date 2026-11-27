@@ -78,3 +78,13 @@ test('changed expired and unavailable historical fact statuses preserve the save
   for(const status of ['EXPIRED','CHANGED','UNAVAILABLE','NOT_RECHECKED'] as const)
     assert.equal(toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,catalogFacts:{...facts,status}}})?.catalogFacts?.status,status);
 });
+
+test('a malformed operator reference is dropped without hiding the card',()=>{
+  const withRef=(operatorReference:unknown)=>toAiSuggestion({...ai,aiSuggestion:{...ai.aiSuggestion!,operatorReference}} as unknown as V3Response);
+  const bad=[{bottlingId:-1,reviewedAt:'2026-11-27T00:00:00Z',grade:'REFERENCE',fields:[{field:'abv',value:'43'}]},{bottlingId:7,reviewedAt:'2026-11-27T00:00:00Z',grade:'CERTIFIED',fields:[{field:'abv',value:'43'}]},
+    {bottlingId:7,reviewedAt:'x',grade:'REFERENCE',fields:[{field:'abv',value:'43'}]},{bottlingId:7,reviewedAt:'2026-11-27T00:00:00Z',grade:'REFERENCE',fields:[{field:'tastingNote',value:'x'}]},
+    {bottlingId:7,reviewedAt:'2026-11-27T00:00:00Z',grade:'REFERENCE',fields:[{field:'abv',value:'43'},{field:'abv',value:'44'}]}];
+  for(const r of bad){const card=withRef(r);assert.equal(card?.id,aiId);assert.equal(card?.operatorReference,null);}   // P2-07
+  const ok={bottlingId:7,reviewedAt:'2026-11-27T00:00:00Z',grade:'REFERENCE',fields:[{field:'abv',value:'43'}]};
+  assert.deepEqual(withRef(ok)?.operatorReference,ok);
+});

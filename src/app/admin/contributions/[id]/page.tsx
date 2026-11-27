@@ -8,10 +8,12 @@ import {PaperPage} from '@/components/PaperPage';
 import {adminFailure,applyLabel,decidedParts,decisionLabel,describeValue,evidenceTypes,fieldLabel,statusLabel,type Part} from '@/lib/contribution/contribution';
 import {reportSourceOptions} from '@/lib/recommendations/informationReport';
 import {useAuthStore} from '@/store/authStore';
+import RetargetStep from './_components/RetargetStep';
+import ReverifyStep from './_components/ReverifyStep';
 
 const NO_APPLY=new Set(['FLAVOR','PHOTO_MISMATCH','OTHER']);
 const PRODUCT_LEVEL=new Set(['NAME','DISTILLERY','CATEGORY_REGION']);
-const verifiedLabel:Record<string,string>={VERIFIED:'인증됨',NEEDS_REVIEW:'검토 대기',DRAFT:'초안',REJECTED:'거절됨'};
+const verifiedLabel:Record<string,string>={VERIFIED:'인증됨(확인된 정보)',NEEDS_REVIEW:'검토 대기',DRAFT:'초안',REJECTED:'거절됨'};
 
 /** One decided-value part: coded values are picked from a list so a typo cannot reach the catalog. */
 function PartInput({part,value,onChange}:{part:Part;value:string;onChange:(v:string)=>void}){
@@ -42,9 +44,10 @@ export default function AdminContributionDetail(){
   const [infoRequest,setInfoRequest]=useState('');
   const [applied,setApplied]=useState<ApplyResult|null>(null);
 
-  const load=useCallback(()=>contributionAdminApi.detail(id).then(v=>{setView(v);
-    setDrafts(Object.fromEntries(v.items.map(i=>[i.field,{decision:i.decision,values:{...(i.decidedValue??{})},reasonPublic:i.reasonPublic??'',reasonInternal:i.reasonInternal??''}])));})
-    .catch(e=>{if(e instanceof ApiResponseError&&(e.status===403||e.status===401||e.status===404))setHidden(true);else setMessage({text:'불러오지 못했어요.',error:true});}),[id]);
+  const applyView=useCallback((v:AdminView)=>{setView(v);
+    setDrafts(Object.fromEntries(v.items.map(i=>[i.field,{decision:i.decision,values:{...(i.decidedValue??{})},reasonPublic:i.reasonPublic??'',reasonInternal:i.reasonInternal??''}])));},[]);
+  const load=useCallback(()=>contributionAdminApi.detail(id).then(applyView)
+    .catch(e=>{if(e instanceof ApiResponseError&&(e.status===403||e.status===401||e.status===404))setHidden(true);else setMessage({text:'불러오지 못했어요.',error:true});}),[id,applyView]);
   useEffect(()=>{if(isAuthenticated)void load();},[isAuthenticated,load]);
 
   const setDraft=(f:string,patch:Partial<Draft>)=>setDrafts(d=>({...d,[f]:{...d[f],...patch}}));
@@ -55,7 +58,7 @@ export default function AdminContributionDetail(){
         return {field:i.field,decision:d.decision,decidedValue:needs?Object.fromEntries(Object.entries(d.values).filter(([,v])=>v.trim()!=='')):null,
           reasonPublic:d.reasonPublic.trim()||null,reasonInternal:d.reasonInternal.trim()};}).filter(i=>i.decision!=='PENDING'||status);
       const next=await contributionAdminApi.decide(view.id,{version:view.version,items:status?[]:items,status:status??null,infoRequest:status==='NEEDS_INFO'?infoRequest.trim():null});
-      setView(next);setMessage({text:status==='HELD'?'보류했어요.':status==='NEEDS_INFO'?'추가 정보를 요청했어요.':'결정을 저장했어요.',error:false});
+      applyView(next);setMessage({text:status==='HELD'?'보류했어요.':status==='NEEDS_INFO'?'추가 정보를 요청했어요.':'결정을 저장했어요.',error:false});
     } catch(e){setMessage({text:adminFailure(codeOf(e)),error:true});} finally {setBusy(false);}
   }
   async function apply(){
@@ -78,6 +81,7 @@ export default function AdminContributionDetail(){
   const downgradeRisk=!!t&&!separate&&(t.verificationStatus==='VERIFIED'||approved.some(i=>PRODUCT_LEVEL.has(i.field))&&t.verifiedSiblingCount>0);
   const needsCreate=!t||!separate&&view.targetType!=='CATALOG';
   const editable=!['APPLIED','WITHDRAWN'].includes(view.status);
+  const retargetable=!t&&view.targetType!=='CATALOG'&&!['APPLIED','APPLYING','WITHDRAWN'].includes(view.status);
   // Apply uses the saved decision; unsaved edits would be silently dropped, so block until saved.
   const dirty=view.items.some(i=>{const d=drafts[i.field];if(!d||i.apply==='APPLIED')return false;
     const saved=i.decidedValue??{};const vals=Object.fromEntries(Object.entries(d.values).filter(([,v])=>v.trim()!==''));
@@ -90,7 +94,9 @@ export default function AdminContributionDetail(){
       {t?<><p className="font-semibold">{t.displayName} <span className="font-normal text-stone-600">병 #{t.bottlingId} · {verifiedLabel[t.verificationStatus]??t.verificationStatus}{t.hasCertificate?' · 인증서 있음':''}</span></p>
         <p className="text-xs text-stone-600">같은 제품의 병 {t.siblingCount}개 (인증 {t.verifiedSiblingCount}개)</p></>
         :<><p className="font-semibold">카탈로그에 없는 대상 <span className="font-normal">{String(view.targetSnapshot.labelName??view.targetSnapshot.brand??'')} {String(view.targetSnapshot.expression??'')}</span></p>
-          {view.targetType==='AI'&&<p className="mt-1 rounded-sm bg-amber-50 p-2 text-xs text-amber-900">이 제보는 추천 결과에서 들어와 카탈로그 병과 연결되지 않았어요. 같은 병이 이미 카탈로그에 있으면 새로 등록하지 말고, 거절 사유(내부)에 그 병 번호를 남기세요.</p>}</>}
+          {retargetable&&<RetargetStep view={view} onDone={next=>{applyView(next);setMessage({text:'기존 병에 연결했어요. 항목을 다시 결정하세요.',error:false});}}/>}</>}
+      {t?.verificationStatus==='NEEDS_REVIEW'&&<ReverifyStep key={t.bottlingId} bottlingId={t.bottlingId} onDone={r=>{void load();
+        setMessage({text:`병 #${r.bottlingId}을 다시 인증했어요. 도수·숙성 연수는 '확인된 정보'로, 종류·생산국은 '참고 정보'로 보이고 검증 추천 후보로 돌아가요.${r.invalidated.length?` 옛 근거 ${r.invalidated.length}개는 무효로 표시했어요(삭제 안 함).`:''}`,error:false});}}/>}
       <p className="mt-1 text-xs text-stone-600">상태 {statusLabel[view.status]} · 제보자 uid {view.ownerUid} · {new Date(view.createdAt).toLocaleString('ko-KR')}</p>
       {(view.source||view.sourceUrl)&&<p className="mt-1 text-xs">출처: {reportSourceOptions.find(o=>o.value===view.source)?.label??view.source??'-'} {view.sourceUrl&&<a href={view.sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className="break-all underline">{view.sourceUrl}</a>}</p>}
       {view.note&&<p className="mt-1 whitespace-pre-line text-xs">덧붙인 말: {view.note}</p>}

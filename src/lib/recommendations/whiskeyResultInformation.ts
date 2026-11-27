@@ -66,6 +66,12 @@ export function whiskeyResultInformation(card:AiSuggestionCard,now=Date.now()):R
   const basic=collectedBasicFields.map((field:CollectedBasicFieldName):ResultBasicFact=>{
     const certified=field==='age'?ageValue(catalogFields):catalogFields.find(f=>f.field===field)?.value;
     if(certified!=null){const value=normalized(field,certified);if(value)return {field,label:labels[field],value:basicFormat(field,value),kind:'KNOWN'};held=true;return {field,label:labels[field],value:'정보 확인 필요',kind:'HELD'};}
+    // An operator checked a source for this exact bottling, so it outranks collected observations. Reverification evidence
+    // compares strength and age only, so category and country stay reference even on a reverified bottling.
+    const operator=card.operatorReference?.fields.find(f=>f.field===field)?.value;
+    const operatorValue=operator!=null?normalized(field,operator):null;
+    const verified=card.operatorReference?.grade==='VERIFIED'&&(field==='abv'||field==='age');
+    if(operatorValue)return {field,label:labels[field],value:basicFormat(field,operatorValue),kind:verified?'KNOWN':'REFERENCE'};
     const source=basics?.find(f=>f.field===field);
     if(globalHold||source?.reason&&heldReasons.has(source.reason)){held=true;return {field,label:labels[field],value:'정보 확인 필요',kind:'HELD'};}
     if(info?.status==='NAME_MATCH'&&source?.status==='OBSERVED'&&source.value){
@@ -124,7 +130,8 @@ export function refreshResultInformation(current:AiSuggestionCard,next:AiSuggest
     candidateOrigin:next.candidateOrigin,
     catalogFacts:catalogFailed&&!withdrawal?current.catalogFacts:next.catalogFacts,
     productSourceObservations:next.productSourceObservations,
-    collectedBottlingInformation:collectedFailed&&!withdrawal?current.collectedBottlingInformation:next.collectedBottlingInformation};
+    collectedBottlingInformation:collectedFailed&&!withdrawal?current.collectedBottlingInformation:next.collectedBottlingInformation,
+    operatorReference:next.operatorReference};
   const now=Date.now();
   return {card,unavailable:collectedFailed||catalogFailed,changed:resultInformationDigest(current,now)!==resultInformationDigest(card,now)};
 }

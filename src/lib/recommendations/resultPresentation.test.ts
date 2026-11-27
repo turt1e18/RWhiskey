@@ -47,3 +47,10 @@ test('serving steps mention strength only when it is displayed and follow the ex
   assert.match(servingSteps('ADVANCED',57.1)[1],/57.1%로 높은 편/);
   assert.doesNotMatch(servingSteps('INTERMEDIATE',40)[1],/%/);
 });
+
+test('catalog category text with a trailing Whisky still gets the Korean label',()=>{
+  assert.equal(bilingualLabel('category','Single Malt Whisky',null),'Single Malt (싱글 몰트)');
+  assert.equal(bilingualLabel('category','Single Malt Scotch Whisky',null),'Single Malt Scotch Whisky (싱글 몰트 스카치)'); // own label kept
+  assert.equal(bilingualLabel('category','Blended Whisky',null),'Blended Whisky (블렌디드 위스키)');      // existing entry wins
+  assert.equal(bilingualLabel('category','Rye Whiskey',null),'Rye Whiskey (라이 위스키)');
+});

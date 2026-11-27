@@ -112,6 +112,9 @@ export const applyLabel:Record<ItemApply,string>={NONE:'미반영',APPLIED:'반�
 export const evidenceTypes=[{value:'MANUFACTURER',label:'제조사'},{value:'BOTTLER',label:'병입사'},{value:'IMPORTER',label:'수입사'},
   {value:'LABEL_REGISTRY',label:'라벨 등록처'},{value:'RETAILER',label:'판매처'},{value:'COMMUNITY',label:'커뮤니티'},{value:'OTHER',label:'기타'}];
 
+/** Field names the reverification evidence must state, in operator words. */
+export const evidenceFieldLabel:Record<string,string>={brand:'브랜드',expressionName:'제품명',edition:'에디션',batchCode:'배치',
+  vintageYear:'증류 연도',releaseYear:'출시 연도',abv:'도수(%)',volumeMl:'용량(ml)',ageStatementType:'숙성 표기',ageYears:'숙성 연수'};
 export function adminFailure(code:string|null):string {
   const map:Record<string,string>={CONTRIBUTION_CHANGED:'다른 운영자가 먼저 처리했어요. 새로 고친 뒤 다시 확인하세요.',
     TARGET_CHANGED:'검토하는 동안 이 병의 정보가 바뀌었어요. 새로 고친 뒤 다시 확인하세요.',
@@ -120,6 +123,12 @@ export function adminFailure(code:string|null):string {
     REASON_REQUIRED:'처리 사유(내부)를 적어 주세요.',NAME_REQUIRED:'새 병은 이름(브랜드·제품명)을 승인해야 등록돼요.',
     RELEASE_KEY_REQUIRED:'다른 판으로 등록하려면 에디션·배치나 연도를 함께 승인하세요.',RELEASE_EXISTS:'같은 판이 이미 있어요.',
     MIXED_RELEASE:'정정과 다른 판 등록을 한 제보에서 함께 할 수 없어요.',PRODUCT_NAME_EXISTS:'같은 이름의 제품이 이미 있어요. 중복 제품으로 처리하세요.',
-    NOTHING_TO_APPLY:'반영할 승인 항목이 없어요.',APPLY_FAILED:'반영하지 못했어요. 카탈로그는 바뀌지 않았어요. 다시 시도하세요.'};
+    NOTHING_TO_APPLY:'반영할 승인 항목이 없어요.',APPLY_FAILED:'반영하지 못했어요. 카탈로그는 바뀌지 않았어요. 다시 시도하세요.',
+    ALREADY_CATALOG:'이미 카탈로그 병과 연결된 제보예요.',NOT_RETARGETABLE:'반영했거나 취소된 제보는 다른 병에 연결할 수 없어요.',
+    TARGET_NOT_FOUND:'그 병을 찾을 수 없어요. 다시 검색하세요.',NOT_REVERIFIABLE:'검토 대기 상태인 병만 다시 인증할 수 있어요.',
+    IDENTITY_KEY_MISSING:'이 병은 식별 키가 없어 다시 인증할 수 없어요.',SOURCE_NOT_TRUSTED:'다시 인증에는 제조사·병입사·수입사·라벨 등록처 근거만 쓸 수 있어요.',
+    EVIDENCE_MISMATCH:'근거에 적은 값이 병의 현재 값과 달라요. 값을 확인하거나, 병 값을 먼저 정정하세요.',
+    STALE_EVIDENCE_NOT_MARKED:'병 값과 어긋나는 옛 근거를 모두 체크해야 해요.',INVALID_EVIDENCE:'근거 주소(https)와 발행처를 확인하세요.',
+    REVERIFY_CHECK_FAILED:'추천에 쓰는 기존 검증 검사를 통과하지 못했어요. 아무것도 바뀌지 않았어요. 근거 주소가 공식 페이지 주소인지 확인하세요.'};
   return (code&&map[code])||'처리하지 못했어요. 다시 시도하세요.';
 }

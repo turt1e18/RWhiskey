@@ -32,6 +32,10 @@ export interface AdminView {id:string;ownerUid:number;kind:ContributionKind;stat
   sourceUrl:string|null;note:string|null;infoRequest:string|null;infoReply:string|null;similar:AdminSummary[];events:AdminEvent[];createdAt:string}
 export interface DecisionItem {field:InformationReportField;decision:ItemDecision;decidedValue?:Record<string,string>|null;reasonPublic?:string|null;reasonInternal:string}
 export interface ApplyResult {status:ContributionStatus;applied:string[];conflicts:string[];downgraded:number[];targetBottlingId:number|null}
+export interface StaleEvidence {id:number;url:string;publisher:string;sourceType:string;mismatched:string[]}
+export interface ReverifyPreview {bottlingId:number;displayName:string;bottlingVersion:number;verificationStatus:string;hasCertificate:boolean;
+  required:Record<string,string>;stale:StaleEvidence[];trustedSourceTypes:string[]}
+export interface ReverifyResult {bottlingId:number;verificationStatus:string;evidenceId:number;invalidated:number[]}
 
 const json=(method:'POST',body:unknown,headers?:Record<string,string>)=>({method,body:JSON.stringify(body),headers,timeoutMs:10_000});
 const id=(v:string)=>encodeURIComponent(v);
@@ -53,4 +57,8 @@ export const contributionAdminApi={
   apply:(cid:string,key:string,body:{version:number;expectedBottlingVersion?:number|null;create?:boolean;acknowledgeDowngrade?:boolean;
     evidence?:{url:string;sourceType:string;publisher:string;observedFields:Record<string,string>}|null})=>
     apiClient<ApplyResult>(`/api/admin/contributions/${id(cid)}/apply`,json('POST',body,{'Idempotency-Key':key})),
+  retarget:(cid:string,body:{version:number;bottlingId:number})=>apiClient<AdminView>(`/api/admin/contributions/${id(cid)}/retarget`,json('POST',body)),
+  reverifyPreview:(bottlingId:number)=>apiClient<ReverifyPreview>(`/api/admin/catalog/bottlings/${bottlingId}/reverify-preview`,{timeoutMs:8_000}),
+  reverify:(bottlingId:number,body:{expectedBottlingVersion:number;evidence:{url:string;sourceType:string;publisher:string;observedFields:Record<string,string>};
+    invalidateEvidenceIds:number[];reason:string})=>apiClient<ReverifyResult>(`/api/admin/catalog/bottlings/${bottlingId}/reverify`,json('POST',body)),
 };

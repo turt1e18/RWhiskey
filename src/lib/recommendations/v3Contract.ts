@@ -54,6 +54,17 @@ export interface AiSuggestionCard {
   productSourceObservations?:ProductSourceObservations|null;
   collectedBottlingInformation?:CollectedBottlingInformation|null;
   candidateOrigin?:CollectedCandidateOrigin|null;
+  operatorReference?:OperatorReference|null;
+}
+/** Operator-reviewed bottling values: REFERENCE = "참고 정보"; VERIFIED = reverified and the live evidence check passes ("확인된 정보"). */
+export interface OperatorReference {bottlingId:number;reviewedAt:string;grade:'REFERENCE'|'VERIFIED';fields:{field:'category'|'country'|'abv'|'age';value:string}[]}
+export function validOperatorReference(r:unknown):r is OperatorReference {
+  if(!r||typeof r!=='object')return false;const o=r as Record<string,unknown>;
+  return Number.isInteger(o.bottlingId)&&(o.bottlingId as number)>0&&(o.grade==='REFERENCE'||o.grade==='VERIFIED')&&typeof o.reviewedAt==='string'&&!Number.isNaN(Date.parse(o.reviewedAt))&&
+    Array.isArray(o.fields)&&o.fields.length>0&&o.fields.length<=4&&
+    o.fields.every(f=>!!f&&typeof f==='object'&&['category','country','abv','age'].includes((f as {field:unknown}).field as string)&&
+      typeof (f as {value:unknown}).value==='string'&&((f as {value:string}).value.length<=200))&&
+    new Set(o.fields.map(f=>(f as {field:string}).field)).size===o.fields.length;
 }
 export interface ProductSourceObservations {
   scope:'PRODUCT_PAGE';status:'CURRENT';bottlingIdentityConfirmed:false;
@@ -146,7 +157,8 @@ export function toAiSuggestion(v:V3Response):AiSuggestionCard|null {
     p.bottledYear!=null && (!Number.isInteger(p.bottledYear) || p.bottledYear<1700 || p.bottledYear>new Date().getFullYear()) ||
     [p.independentBottling,p.oldBottle].some(x=>x!=null && typeof x!=='boolean'))return null;
   // An invalid optional enhancement must not hide an otherwise usable saved AI recommendation.
-  const clean=a.catalogFacts==null || validFacts(a.catalogFacts)?a:{...a,catalogFacts:null};
+  const factsClean=a.catalogFacts==null || validFacts(a.catalogFacts)?a:{...a,catalogFacts:null};
+  const clean=factsClean.operatorReference==null || validOperatorReference(factsClean.operatorReference)?factsClean:{...factsClean,operatorReference:null};
   const sourceClean=clean.productSourceObservations==null || validProductSourceObservations(clean.productSourceObservations)?clean:
     {...clean,productSourceObservations:null};
   if(sourceClean.collectedBottlingInformation==null)return sourceClean;
