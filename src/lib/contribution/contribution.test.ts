@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {contentReady,contributionFailure,describeValue,formReady,publicStatus,urlAllowed,urlReady} from './contribution';
+import {contentReady,contributionFailure,describeValue,formReady,itemResult,publicStatus,urlAllowed,urlReady} from './contribution';
 
 const base={kind:null as null|'CORRECTION'|'NEW_BOTTLE'|'OTHER',targetId:null as number|null,labelName:'',fields:[] as ('ABV'|'PHOTO_MISMATCH')[],
   contents:{} as Record<string,string>,otherText:'',source:null as null|'LABEL'|'OFFICIAL_SITE'|'RETAILER'|'MEMORY',url:''};
@@ -54,4 +54,10 @@ test('operator values read as words, not codes',()=>{
   assert.equal(describeValue('ABV',null),'—');
   assert.match(contributionFailure(409,'CONTRIBUTION_PENDING').message,/빼면/);
   assert.equal(contributionFailure(409,'CONTRIBUTION_PENDING').showMine,true);
+});
+
+test('withdrawn items do not read as still being checked',()=>{
+  assert.equal(itemResult('PENDING','NONE','WITHDRAWN'),'취소해서 확인하지 않았어요');
+  assert.equal(itemResult('PENDING','NONE','IN_REVIEW'),'확인하고 있어요');
+  assert.equal(itemResult('APPROVED','APPLIED','APPLIED'),'반영됐어요');
 });

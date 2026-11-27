@@ -49,8 +49,9 @@ export function publicStatus(c:Pick<ContributionView,'status'|'items'|'kind'>):{
   }
 }
 
-export function itemResult(decision:ItemDecision,apply:ItemApply):string {
+export function itemResult(decision:ItemDecision,apply:ItemApply,status?:ContributionStatus):string {
   if(apply==='APPLIED')return '반영됐어요';
+  if(status==='WITHDRAWN')return '취소해서 확인하지 않았어요';
   if(apply==='REVERTED')return '되돌렸어요';
   if(decision==='REJECTED')return '반영하지 않았어요';
   if(decision==='APPROVED'||decision==='SEPARATE_RELEASE')return '반영을 준비하고 있어요';

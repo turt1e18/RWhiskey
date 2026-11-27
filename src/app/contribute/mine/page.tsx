@@ -29,7 +29,7 @@ function Detail({id,onChanged}:{id:string;onChanged:()=>void}){
   const canWithdraw=['SUBMITTED','IN_REVIEW','NEEDS_INFO','HELD'].includes(view.status);
   return <div className="mt-3 space-y-3 border-t border-[#4a3728]/20 pt-3 text-sm">
     <ul className="space-y-2">{view.items.map(i=><li key={i.field}>
-      <p className="font-semibold">{fieldLabel(i.field)} <span className="font-normal text-stone-600">— {itemResult(i.decision,i.apply)}</span></p>
+      <p className="font-semibold">{fieldLabel(i.field)} <span className="font-normal text-stone-600">— {itemResult(i.decision,i.apply,view.status)}</span></p>
       {i.proposed&&<p className="whitespace-pre-line text-stone-700">{i.proposed}</p>}
       {i.reasonPublic&&<p className="text-stone-700">확인 결과: {i.reasonPublic}</p>}
     </li>)}</ul>
